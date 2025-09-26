@@ -13,32 +13,16 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.DECIMAL(10, 2),
       allowNull: false
     },
-    direccionEntrega: {
-      type: DataTypes.TEXT,
-      allowNull: false
-    },
     descripcion: {
       type: DataTypes.TEXT,
       allowNull: true
     },
-    telefonoContacto: {
-      type: DataTypes.STRING(20),
-      allowNull: false
-    },
-    idCliente: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      references: {
-        model: 'clientes',
-        key: 'id'
-      }
-    }
   }, {
     tableName: 'pedidos',
     timestamps: true
   });
 
-  Pedido.associate = function(models) {
+  Pedido.associate = function (models) {
     Pedido.belongsTo(models.Cliente, {
       foreignKey: 'idCliente',
       as: 'cliente'

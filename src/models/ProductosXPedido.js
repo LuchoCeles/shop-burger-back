@@ -25,10 +25,6 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.INTEGER,
       allowNull: false,
       defaultValue: 1
-    },
-    precioUnitario: {
-      type: DataTypes.DECIMAL(10, 2),
-      allowNull: false
     }
   }, {
     tableName: 'productos_x_pedido',
