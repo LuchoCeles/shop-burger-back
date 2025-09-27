@@ -6,7 +6,7 @@ USE shopdb;
 -- TABLA: Categorias
 -- =======================
 CREATE TABLE Categorias (
-    idCategoria INT AUTO_INCREMENT PRIMARY KEY,
+    id INT AUTO_INCREMENT PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL,
     estado TINYINT DEFAULT 1,
     createAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -17,7 +17,7 @@ CREATE TABLE Categorias (
 -- TABLA: Productos
 -- =======================
 CREATE TABLE Productos (
-    idProducto INT AUTO_INCREMENT PRIMARY KEY,
+    id INT AUTO_INCREMENT PRIMARY KEY,
     idCategoria INT,
     nombre VARCHAR(150) NOT NULL,
     descripcion TEXT,
@@ -36,7 +36,7 @@ CREATE TABLE Productos (
 -- TABLA: Pedidos
 -- =======================
 CREATE TABLE Pedidos (
-    idPedido INT AUTO_INCREMENT PRIMARY KEY,
+    id INT AUTO_INCREMENT PRIMARY KEY,
     precioTotal DECIMAL(10,2) DEFAULT 0,
     descripcion TEXT,
     estado VARCHAR(50) DEFAULT 'pendiente',
@@ -48,7 +48,7 @@ CREATE TABLE Pedidos (
 -- TABLA: Clientes
 -- =======================
 CREATE TABLE Clientes (
-    idCliente INT AUTO_INCREMENT PRIMARY KEY,
+    id INT AUTO_INCREMENT PRIMARY KEY,
     idPedido INT,
     direccion VARCHAR(255) NOT NULL,
     descripcion TEXT,
@@ -60,7 +60,7 @@ CREATE TABLE Clientes (
 -- TABLA: Productos x Pedidos
 -- =======================
 CREATE TABLE ProductosXPedidos (
-    idPxP INT AUTO_INCREMENT PRIMARY KEY,
+    id INT AUTO_INCREMENT PRIMARY KEY,
     idProducto INT,
     idPedido INT,
     cantidad INT DEFAULT 1,
@@ -74,7 +74,7 @@ CREATE TABLE ProductosXPedidos (
 -- TABLA: Datos Bancarios
 -- =======================
 CREATE TABLE DatosBancarios (
-    idDatosBancarios INT AUTO_INCREMENT PRIMARY KEY,
+    id INT AUTO_INCREMENT PRIMARY KEY,
     cuit VARCHAR(20) NOT NULL,
     alias VARCHAR(100) NOT NULL,
     cbu VARCHAR(50) NOT NULL,
@@ -88,7 +88,7 @@ CREATE TABLE DatosBancarios (
 -- TABLA: Pagos
 -- =======================
 CREATE TABLE Pagos (
-    idPago INT AUTO_INCREMENT PRIMARY KEY,
+    id INT AUTO_INCREMENT PRIMARY KEY,
     idPedido INT,
     idDatosBancarios INT,
     estado VARCHAR(50) DEFAULT 'pendiente',
@@ -102,7 +102,7 @@ CREATE TABLE Pagos (
 -- TABLA: Local
 -- =======================
 CREATE TABLE Local (
-    idContacto INT AUTO_INCREMENT PRIMARY KEY,
+    id INT AUTO_INCREMENT PRIMARY KEY,
     telefono VARCHAR(20),
     direccion VARCHAR(255),
     createAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -113,7 +113,7 @@ CREATE TABLE Local (
 -- TABLA: Admin
 -- =======================
 CREATE TABLE Admin (
-    idCategoria INT AUTO_INCREMENT PRIMARY KEY,
+    id INT AUTO_INCREMENT PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL,
     password VARCHAR(255) NOT NULL,
     createAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

@@ -3,9 +3,9 @@ const jwt = require('jsonwebtoken');
 const { Admin } = require('../models');
 
 class AuthAdminService {
-  async login(email, password) {
-    const admin = await Admin.findOne({ where: { email, activo: true } });
-    
+  async login(nombre, password) {
+    const admin = await Admin.findOne({ where: { nombre, activo: true } });
+
     if (!admin) {
       throw new Error('Credenciales inválidas');
     }
@@ -16,7 +16,7 @@ class AuthAdminService {
     }
 
     const token = jwt.sign(
-      { id: admin.id, email: admin.email },
+      { id: admin.id },
       process.env.JWT_SECRET,
       { expiresIn: process.env.JWT_EXPIRES_IN }
     );
@@ -25,28 +25,22 @@ class AuthAdminService {
       token,
       admin: {
         id: admin.id,
-        nombre: admin.nombre,
-        email: admin.email
+        nombre: admin.nombre
       }
     };
   }
 
-  async register(nombre, email, password) {
-    const existingAdmin = await Admin.findOne({ where: { email } });
-    if (existingAdmin) {
-      throw new Error('El email ya está registrado');
-    }
+  async register(nombre, password) {
 
     const hashedPassword = await bcrypt.hash(password, 12);
-    
+
     const admin = await Admin.create({
       nombre,
-      email,
       password: hashedPassword
     });
 
     const token = jwt.sign(
-      { id: admin.id, email: admin.email },
+      { id: admin.id },
       process.env.JWT_SECRET,
       { expiresIn: process.env.JWT_EXPIRES_IN }
     );
@@ -55,8 +49,7 @@ class AuthAdminService {
       token,
       admin: {
         id: admin.id,
-        nombre: admin.nombre,
-        email: admin.email
+        nombre: admin.nombre
       }
     };
   }

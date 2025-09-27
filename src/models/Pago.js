@@ -9,14 +9,6 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.ENUM('pendiente', 'aprobado', 'rechazado'),
       defaultValue: 'pendiente'
     },
-    monto: {
-      type: DataTypes.DECIMAL(10, 2),
-      allowNull: false
-    },
-    comprobante: {
-      type: DataTypes.STRING(500),
-      allowNull: true
-    },
     idPedido: {
       type: DataTypes.INTEGER,
       allowNull: false,
@@ -29,7 +21,7 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: 'datos_bancarios',
+        model: 'DatosBancarios',
         key: 'id'
       }
     }
@@ -38,7 +30,7 @@ module.exports = (sequelize, DataTypes) => {
     timestamps: true
   });
 
-  Pago.associate = function(models) {
+  Pago.associate = function (models) {
     Pago.belongsTo(models.Pedido, {
       foreignKey: 'idPedido',
       as: 'pedido'

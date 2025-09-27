@@ -15,16 +15,20 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
       unique: true
     },
-    titular: {
-      type: DataTypes.STRING(100),
+    cuit: {
+      type: DataTypes.STRING(20),
       allowNull: false
     },
-    activo: {
+    apellido: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: true
+    },
+    nombre: {
       type: DataTypes.BOOLEAN,
       defaultValue: true
     }
   }, {
-    tableName: 'datos_bancarios',
+    tableName: 'DatosBancarios',
     timestamps: true
   });
 

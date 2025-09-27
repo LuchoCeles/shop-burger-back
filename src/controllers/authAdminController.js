@@ -3,9 +3,9 @@ const authAdminService = require('../services/authAdminService');
 class AuthAdminController {
   async login(req, res, next) {
     try {
-      const { email, password } = req.body;
-      const result = await authAdminService.login(email, password);
-      
+      const { nombre, password } = req.body;
+      const result = await authAdminService.login(nombre, password);
+
       res.json({
         success: true,
         message: 'Login exitoso',
@@ -18,9 +18,9 @@ class AuthAdminController {
 
   async register(req, res, next) {
     try {
-      const { nombre, email, password } = req.body;
-      const result = await authAdminService.register(nombre, email, password);
-      
+      const { nombre, password } = req.body;
+      const result = await authAdminService.register(nombre, password);
+
       res.status(201).json({
         success: true,
         message: 'Administrador registrado exitosamente',

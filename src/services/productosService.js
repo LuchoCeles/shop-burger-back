@@ -2,32 +2,9 @@ const { Producto, Categoria } = require('../models');
 const { Op } = require('sequelize');
 
 class ProductosService {
-  async getProductos({ categoria, search, sortBy = 'nombre', sortOrder = 'ASC' }) {
-    const where = { activo: true };
-    const include = [{
-      model: Categoria,
-      as: 'categoria',
-      where: { activa: true },
-      attributes: ['id', 'nombre']
-    }];
-
-    if (categoria) {
-      include[0].where.id = categoria;
-    }
-
-    if (search) {
-      where.nombre = {
-        [Op.like]: `%${search}%`
-      };
-    }
-
-    const order = [[sortBy, sortOrder.toUpperCase()]];
-
-    return await Producto.findAll({
-      where,
-      include,
-      order
-    });
+  async getProductos() {
+    const productos = await Producto.findAll();
+    return productos;
   }
 
   async getProductoById(id) {
@@ -53,7 +30,7 @@ class ProductosService {
 
   async updateProducto(id, updateData) {
     const producto = await Producto.findByPk(id);
-    
+
     if (!producto) {
       throw new Error('Producto no encontrado');
     }
@@ -64,7 +41,7 @@ class ProductosService {
 
   async deleteProducto(id) {
     const producto = await Producto.findByPk(id);
-    
+
     if (!producto) {
       throw new Error('Producto no encontrado');
     }

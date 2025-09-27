@@ -3,13 +3,7 @@ const productosService = require('../services/productosService');
 class ProductosController {
   async getProductos(req, res, next) {
     try {
-      const { categoria, search, sortBy, sortOrder } = req.query;
-      const productos = await productosService.getProductos({
-        categoria,
-        search,
-        sortBy,
-        sortOrder
-      });
+      const productos = await productosService.getProductos();
       
       res.json({
         success: true,

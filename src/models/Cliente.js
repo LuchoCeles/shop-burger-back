@@ -5,20 +5,21 @@ module.exports = (sequelize, DataTypes) => {
       primaryKey: true,
       autoIncrement: true
     },
-    nombre: {
+    idCliente: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: {
+        model: 'clientes',
+        key: 'idCliente'
+      }
+    },
+    descripcion: {
       type: DataTypes.STRING(100),
       allowNull: false
     },
     telefono: {
-      type: DataTypes.STRING(20),
+      type: DataTypes.STRING(40),
       allowNull: false
-    },
-    email: {
-      type: DataTypes.STRING(100),
-      allowNull: true,
-      validate: {
-        isEmail: true
-      }
     },
     direccion: {
       type: DataTypes.TEXT,
@@ -29,7 +30,7 @@ module.exports = (sequelize, DataTypes) => {
     timestamps: true
   });
 
-  Cliente.associate = function(models) {
+  Cliente.associate = function (models) {
     Cliente.hasMany(models.Pedido, {
       foreignKey: 'idCliente',
       as: 'pedidos'
