@@ -7,7 +7,7 @@ class CloudinaryService {
       const uploadStream = cloudinary.uploader.upload_stream(
         {
           folder: folder,
-          resource_type: 'image',
+          resource_type: 'auto',
           quality: 'auto',
           fetch_format: 'auto'
         },
