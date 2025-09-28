@@ -5,6 +5,6 @@ const productosRoutes = require('./productosRoutes');
 const router = express.Router();
 
 router.use('/admin', authAdminRoutes);
-router.use('/', productosRoutes);
+router.use('/api', productosRoutes);
 
 module.exports = router;

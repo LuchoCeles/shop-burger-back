@@ -9,7 +9,7 @@ class ProductosService {
 
   async getProductoById(id) {
     const producto = await Producto.findOne({
-      where: { id, activo: true },
+      where: { id, estado: true },
       include: [{
         model: Categoria,
         as: 'categoria',
@@ -46,7 +46,7 @@ class ProductosService {
       throw new Error('Producto no encontrado');
     }
 
-    await producto.update({ activo: false });
+    await producto.update({ estado: false });
   }
 
   async createCategoria(categoriaData) {

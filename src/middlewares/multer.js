@@ -16,6 +16,6 @@ const multerConfig = multer({
   }
 });
 
-const upload = multerConfig.single('image');
+const upload = multerConfig.single('imagen');
 
 module.exports = upload;
