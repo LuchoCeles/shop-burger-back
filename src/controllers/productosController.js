@@ -31,7 +31,19 @@ class ProductosController {
   async createProducto(req, res, next) {
     try {
       const productoData = req.body;
-      const producto = await productosService.createProducto(productoData);
+      const imageBuffer = req.file ? req.file.buffer : null;
+
+      // Parsear campos numéricos
+      if (productoData.precio) productoData.precio = parseFloat(productoData.precio);
+      if (productoData.descuento) productoData.descuento = parseFloat(productoData.descuento);
+      if (productoData.stock) productoData.stock = parseInt(productoData.stock);
+      if (productoData.idCategoria) productoData.idCategoria = parseInt(productoData.idCategoria);
+
+      if (productoData.isPromocion) {
+        productoData.isPromocion = productoData.isPromocion === 'true';
+      }
+
+      const producto = await productosService.createProducto(productoData, imageBuffer);
 
       res.status(201).json({
         success: true,
@@ -47,7 +59,18 @@ class ProductosController {
     try {
       const { id } = req.params;
       const updateData = req.body;
-      const producto = await productosService.updateProducto(id, updateData);
+      const imageBuffer = req.file ? req.file.buffer : null;
+
+      // Parsear campos numéricos
+      if (updateData.precio) updateData.precio = parseFloat(updateData.precio);
+      if (updateData.descuento) updateData.descuento = parseFloat(updateData.descuento);
+      if (updateData.stock) updateData.stock = parseInt(updateData.stock);
+
+      if (updateData.isPromocion !== undefined) {
+        updateData.isPromocion = updateData.isPromocion === 'true';
+      }
+
+      const producto = await productosService.updateProducto(id, updateData, imageBuffer);
 
       res.json({
         success: true,

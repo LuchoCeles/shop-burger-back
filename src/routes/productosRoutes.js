@@ -3,7 +3,7 @@ const { body } = require('express-validator');
 const productosController = require('../controllers/productosController');
 const authAdmin = require('../middlewares/authAdmin');
 const validateRequest = require('../middlewares/validateRequest');
-const multer = require('../middlewares/multer');
+const handleUpload = require('../middlewares/multerMiddleware');
 
 const router = express.Router();
 
@@ -17,7 +17,7 @@ router.post('/producto', [
   body('precio').isDecimal({ min: 0 }),
   body('stock').isInt({ min: 0 }),
   body('idCategoria').isInt({ min: 1 })
-], validateRequest, multer, productosController.createProducto);
+], validateRequest, handleUpload, productosController.createProducto);
 
 router.post('/categoria', [
   authAdmin,
@@ -34,7 +34,7 @@ router.put('/:id', [
   authAdmin,
   body('precio').optional().isDecimal({ min: 0 }),
   body('stock').optional().isInt({ min: 0 })
-], validateRequest, productosController.updateProducto);
+], validateRequest, handleUpload, productosController.updateProducto);
 
 router.delete('/:id', authAdmin, productosController.deleteProducto);
 
