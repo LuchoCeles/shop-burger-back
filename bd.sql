@@ -9,8 +9,8 @@ CREATE TABLE Categorias (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL,
     estado TINYINT DEFAULT 1,
-    createAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updateAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
 -- =======================
@@ -27,9 +27,9 @@ CREATE TABLE Productos (
     estado TINYINT DEFAULT 1,
     isPromocion BOOLEAN DEFAULT 0,
     url_imagen VARCHAR(500),
-    createAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updateAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    CONSTRAINT fk_producto_categoria FOREIGN KEY (idCategoria) REFERENCES Categorias(idCategoria)
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_producto_categoria FOREIGN KEY (idCategoria) REFERENCES Categorias(id)
 );
 
 -- =======================
@@ -40,8 +40,8 @@ CREATE TABLE Pedidos (
     precioTotal DECIMAL(10,2) DEFAULT 0,
     descripcion TEXT,
     estado VARCHAR(50) DEFAULT 'pendiente',
-    createAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updateAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
 -- =======================
@@ -53,7 +53,7 @@ CREATE TABLE Clientes (
     direccion VARCHAR(255) NOT NULL,
     descripcion TEXT,
     telefono VARCHAR(40) NOT NULL,
-    CONSTRAINT fk_cliente_pedido FOREIGN KEY (idPedido) REFERENCES Pedidos(idPedido)
+    CONSTRAINT fk_cliente_pedido FOREIGN KEY (idPedido) REFERENCES Pedidos(id)
 );
 
 -- =======================
@@ -64,10 +64,10 @@ CREATE TABLE ProductosXPedidos (
     idProducto INT,
     idPedido INT,
     cantidad INT DEFAULT 1,
-    createAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updateAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    CONSTRAINT fk_pxp_producto FOREIGN KEY (idProducto) REFERENCES Productos(idProducto),
-    CONSTRAINT fk_pxp_pedido FOREIGN KEY (idPedido) REFERENCES Pedidos(idPedido)
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_pxp_producto FOREIGN KEY (idProducto) REFERENCES Productos(id),
+    CONSTRAINT fk_pxp_pedido FOREIGN KEY (idPedido) REFERENCES Pedidos(id)
 );
 
 -- =======================
@@ -80,8 +80,8 @@ CREATE TABLE DatosBancarios (
     cbu VARCHAR(50) NOT NULL,
     apellido VARCHAR(100) NOT NULL,
     nombre VARCHAR(100) NOT NULL,
-    createAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updateAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
 -- =======================
@@ -92,10 +92,10 @@ CREATE TABLE Pagos (
     idPedido INT,
     idDatosBancarios INT,
     estado VARCHAR(50) DEFAULT 'pendiente',
-    createAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updateAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    CONSTRAINT fk_pago_pedido FOREIGN KEY (idPedido) REFERENCES Pedidos(idPedido),
-    CONSTRAINT fk_pago_datos FOREIGN KEY (idDatosBancarios) REFERENCES DatosBancarios(idDatosBancarios)
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_pago_pedido FOREIGN KEY (idPedido) REFERENCES Pedidos(id),
+    CONSTRAINT fk_pago_datos FOREIGN KEY (idDatosBancarios) REFERENCES DatosBancarios(id)
 );
 
 -- =======================
@@ -105,8 +105,8 @@ CREATE TABLE Local (
     id INT AUTO_INCREMENT PRIMARY KEY,
     telefono VARCHAR(20),
     direccion VARCHAR(255),
-    createAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updateAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
 -- =======================
@@ -116,6 +116,9 @@ CREATE TABLE Admin (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nombre VARCHAR(100) NOT NULL,
     password VARCHAR(255) NOT NULL,
-    createAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updateAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
+
+
+INSERT INTO `admin` (`id`, `nombre`, `password`, `createdAt`, `updatedAt`) VALUES (NULL, 'admin', '$2a$12$UxAIzdbWGJq9sctMi7942uTnYzRhMJg1VV65/L2VQdQ0w9vKhKana', current_timestamp(), current_timestamp());
