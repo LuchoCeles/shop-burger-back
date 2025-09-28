@@ -9,13 +9,24 @@ const router = express.Router();
 router.get('/', productosController.getProductos);
 router.get('/:id', productosController.getProductoById);
 
-router.post('/', [
+router.post('/producto', [
   authAdmin,
   body('nombre').notEmpty().trim(),
   body('precio').isDecimal({ min: 0 }),
   body('stock').isInt({ min: 0 }),
   body('idCategoria').isInt({ min: 1 })
 ], validateRequest, productosController.createProducto);
+
+router.post('/categoria', [
+  authAdmin,
+  body('nombre').notEmpty().trim()
+], validateRequest, productosController.createCategoria);
+
+router.put('/categoria/:id', [
+  authAdmin,
+  body('nombre').notEmpty().trim(),
+  body('estado').isBoolean().optional()
+], validateRequest, productosController.updateCategoria);
 
 router.put('/:id', [
   authAdmin,

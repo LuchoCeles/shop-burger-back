@@ -4,7 +4,7 @@ class ProductosController {
   async getProductos(req, res, next) {
     try {
       const productos = await productosService.getProductos();
-      
+
       res.json({
         success: true,
         data: productos
@@ -18,7 +18,7 @@ class ProductosController {
     try {
       const { id } = req.params;
       const producto = await productosService.getProductoById(id);
-      
+
       res.json({
         success: true,
         data: producto
@@ -32,7 +32,7 @@ class ProductosController {
     try {
       const productoData = req.body;
       const producto = await productosService.createProducto(productoData);
-      
+
       res.status(201).json({
         success: true,
         message: 'Producto creado exitosamente',
@@ -48,7 +48,7 @@ class ProductosController {
       const { id } = req.params;
       const updateData = req.body;
       const producto = await productosService.updateProducto(id, updateData);
-      
+
       res.json({
         success: true,
         message: 'Producto actualizado exitosamente',
@@ -63,7 +63,7 @@ class ProductosController {
     try {
       const { id } = req.params;
       await productosService.deleteProducto(id);
-      
+
       res.json({
         success: true,
         message: 'Producto eliminado exitosamente'
@@ -72,6 +72,37 @@ class ProductosController {
       next(error);
     }
   }
+
+  async createCategoria(req, res, next) {
+    try {
+      const categoriaData = req.body;
+      const categoria = await productosService.createCategoria(categoriaData);
+      res.status(201).json({
+        success: true,
+        message: 'Categoría creada exitosamente',
+        data: categoria
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async updateCategoria(req, res, next) {
+    try {
+      const { id } = req.params;
+      const updateData = req.body;
+      const categoria = await productosService.updateCategoria(id, updateData);
+      res.json({
+        success: true,
+        message: 'Categoría actualizada exitosamente',
+        data: categoria
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+
 }
 
 module.exports = new ProductosController();

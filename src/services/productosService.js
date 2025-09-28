@@ -48,6 +48,22 @@ class ProductosService {
 
     await producto.update({ activo: false });
   }
+
+  async createCategoria(categoriaData) {
+    return await Categoria.create(categoriaData);
+  }
+
+  async updateCategoria(id, updateData) {
+    const categoria = await Categoria.findByPk(id);
+
+    if (!categoria) {
+      throw new Error('Categoría no encontrada');
+    }
+
+    await categoria.update(updateData);
+    return categoria;
+  }
+  
 }
 
 module.exports = new ProductosService();
