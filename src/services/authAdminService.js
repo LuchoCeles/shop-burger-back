@@ -4,7 +4,7 @@ const { Admin } = require('../models');
 
 class AuthAdminService {
   async login(nombre, password) {
-    const admin = await Admin.findOne({ where: { nombre, activo: true } });
+    const admin = await Admin.findOne({ where: { nombre } });
 
     if (!admin) {
       throw new Error('Credenciales inválidas');

@@ -15,10 +15,10 @@ const authAdmin = async (req, res, next) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const admin = await Admin.findByPk(decoded.id);
     
-    if (!admin || !admin.activo) {
+    if (!admin) {
       return res.status(401).json({
         success: false,
-        message: 'Administrador no válido o inactivo'
+        message: 'Administrador no válido'
       });
     }
 

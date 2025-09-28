@@ -13,7 +13,7 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
 // Routes
-app.use('/api', routes);
+app.use(routes);
 
 // Health check
 app.get('/health', (req, res) => {
