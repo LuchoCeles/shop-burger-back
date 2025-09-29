@@ -1,4 +1,5 @@
 const { Producto, Categoria } = require('../models');
+const cloudinaryService = require('./cloudinaryService');
 const { Op } = require('sequelize');
 
 class ProductosService {
@@ -101,7 +102,7 @@ class ProductosService {
       }
     }
 
-    await producto.update({ activo: false });
+    await producto.update({ estado: false });
   }
 
   async createCategoria(categoriaData) {

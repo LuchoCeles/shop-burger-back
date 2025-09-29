@@ -12,11 +12,11 @@ router.get('/:id', productosController.getProductoById);
 
 router.post('/producto', [
   authAdmin,
-  body('nombre').notEmpty().trim(),
-  body('descripcion').notEmpty().trim(),
-  body('precio').isDecimal({ min: 0 }),
-  body('stock').isInt({ min: 0 }),
-  body('idCategoria').isInt({ min: 1 })
+  body('nombre'),
+  body('descripcion'),
+  body('precio'),
+  body('stock'),
+  body('idCategoria')
 ], validateRequest, handleUpload, productosController.createProducto);
 
 router.post('/categoria', [
