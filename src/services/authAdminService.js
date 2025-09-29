@@ -16,17 +16,16 @@ class AuthAdminService {
     }
 
     const token = jwt.sign(
-      { id: admin.id },
+      {
+        id: admin.id,
+        nombre: admin.nombre
+      },
       process.env.JWT_SECRET,
       { expiresIn: process.env.JWT_EXPIRES_IN }
     );
 
     return {
-      token,
-      admin: {
-        id: admin.id,
-        nombre: admin.nombre
-      }
+      token
     };
   }
 
@@ -40,17 +39,16 @@ class AuthAdminService {
     });
 
     const token = jwt.sign(
-      { id: admin.id },
+      {
+        id: admin.id,
+        nombre: admin.nombre
+      },
       process.env.JWT_SECRET,
       { expiresIn: process.env.JWT_EXPIRES_IN }
     );
 
     return {
-      token,
-      admin: {
-        id: admin.id,
-        nombre: admin.nombre
-      }
+      token
     };
   }
 }

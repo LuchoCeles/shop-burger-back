@@ -3,25 +3,27 @@ const { body } = require('express-validator');
 const productosController = require('../controllers/productosController');
 const authAdmin = require('../middlewares/authAdmin');
 const validateRequest = require('../middlewares/validateRequest');
+const handleUpload = require('../middlewares/multerMiddleware');
 
 const router = express.Router();
 
-router.get('/', productosController.getProductos);
-router.get('/:id', productosController.getProductoById);
+router.get('/producto/', productosController.getProductos);
+router.get('/producto/:id', productosController.getProductoById);
 
-router.post('/', [
+router.post('/producto', [
   authAdmin,
-  body('nombre').notEmpty().trim(),
-  body('precio').isDecimal({ min: 0 }),
-  body('stock').isInt({ min: 0 }),
-  body('idCategoria').isInt({ min: 1 })
-], validateRequest, productosController.createProducto);
+  body('nombre'),
+  body('descripcion'),
+  body('precio'),
+  body('stock'),
+  body('idCategoria')
+], validateRequest, handleUpload, productosController.createProducto);
 
-router.put('/:id', [
+router.patch('/:id', [
   authAdmin,
   body('precio').optional().isDecimal({ min: 0 }),
   body('stock').optional().isInt({ min: 0 })
-], validateRequest, productosController.updateProducto);
+], validateRequest, handleUpload, productosController.updateProducto);
 
 router.delete('/:id', authAdmin, productosController.deleteProducto);
 

@@ -12,8 +12,6 @@ app.use(morgan('combined'));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 
-// Routes
-app.use(routes);
 
 // Health check
 app.get('/health', (req, res) => {
@@ -24,8 +22,8 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Error handler
-app.use(errorHandler);
+// Routes
+app.use(routes);
 
 // 404 handler
 app.use('*', (req, res) => {
@@ -34,5 +32,8 @@ app.use('*', (req, res) => {
     message: 'Endpoint no encontrado'
   });
 });
+
+// Error handler
+app.use(errorHandler);
 
 module.exports = app;

@@ -4,7 +4,7 @@ class ProductosController {
   async getProductos(req, res, next) {
     try {
       const productos = await productosService.getProductos();
-      
+
       res.json({
         success: true,
         data: productos
@@ -18,7 +18,7 @@ class ProductosController {
     try {
       const { id } = req.params;
       const producto = await productosService.getProductoById(id);
-      
+
       res.json({
         success: true,
         data: producto
@@ -31,8 +31,26 @@ class ProductosController {
   async createProducto(req, res, next) {
     try {
       const productoData = req.body;
-      const producto = await productosService.createProducto(productoData);
-      
+      const imageBuffer = req.file ? req.file.buffer : null;
+
+      if (!productoData.nombre || !productoData.descripcion || !productoData.precio || !productoData.stock || !productoData.idCategoria || !imageBuffer) {
+        return res.status(400).json({
+          success: false,
+          message: 'Todos los campos son obligatorios'
+        });
+      }
+
+      if (productoData.precio) productoData.precio = parseFloat(productoData.precio);
+      if (productoData.descuento) productoData.descuento = parseFloat(productoData.descuento);
+      if (productoData.stock) productoData.stock = parseInt(productoData.stock);
+      if (productoData.idCategoria) productoData.idCategoria = parseInt(productoData.idCategoria);
+
+      if (productoData.isPromocion) {
+        productoData.isPromocion = productoData.isPromocion === 'true';
+      }
+
+      const producto = await productosService.createProducto(productoData, imageBuffer);
+
       res.status(201).json({
         success: true,
         message: 'Producto creado exitosamente',
@@ -47,8 +65,19 @@ class ProductosController {
     try {
       const { id } = req.params;
       const updateData = req.body;
-      const producto = await productosService.updateProducto(id, updateData);
-      
+      const imageBuffer = req.file ? req.file.buffer : null;
+
+      // Parsear campos numéricos
+      if (updateData.precio) updateData.precio = parseFloat(updateData.precio);
+      if (updateData.descuento) updateData.descuento = parseFloat(updateData.descuento);
+      if (updateData.stock) updateData.stock = parseInt(updateData.stock);
+
+      if (updateData.isPromocion !== undefined) {
+        updateData.isPromocion = updateData.isPromocion === 'true';
+      }
+
+      const producto = await productosService.updateProducto(id, updateData, imageBuffer);
+
       res.json({
         success: true,
         message: 'Producto actualizado exitosamente',
@@ -63,7 +92,7 @@ class ProductosController {
     try {
       const { id } = req.params;
       await productosService.deleteProducto(id);
-      
+
       res.json({
         success: true,
         message: 'Producto eliminado exitosamente'
@@ -72,6 +101,7 @@ class ProductosController {
       next(error);
     }
   }
+
 }
 
 module.exports = new ProductosController();
