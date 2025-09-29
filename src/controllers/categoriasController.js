@@ -1,14 +1,27 @@
-const categoriasService = require('../services/categoriasService');
+const categoriasService = require("../services/categoriasService");
 
 class CategoriasController {
+  
   async createCategoria(req, res, next) {
     try {
       const categoriaData = req.body;
       const categoria = await categoriasService.createCategoria(categoriaData);
       res.status(201).json({
         success: true,
-        message: 'Categoría creada exitosamente',
-        data: categoria
+        message: "Categoría creada exitosamente",
+        data: categoria,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async getCategoria(req, res, next) {
+    try {
+      const categorias = await categoriasService.getCategorias();
+      res.status(200).json({
+        success: true,
+        data: categorias,
       });
     } catch (error) {
       next(error);
@@ -22,8 +35,8 @@ class CategoriasController {
       const categoria = await categoriasService.updateCategoria(id, updateData);
       res.json({
         success: true,
-        message: 'Categoría actualizada exitosamente',
-        data: categoria
+        message: "Categoría actualizada exitosamente",
+        data: categoria,
       });
     } catch (error) {
       next(error);
