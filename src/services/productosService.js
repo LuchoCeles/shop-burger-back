@@ -2,10 +2,21 @@ const { Producto, Categoria } = require('../models');
 const cloudinaryService = require('./cloudinaryService');
 
 class ProductosService {
+
   async getProductos() {
-    const productos = await Producto.findAll();
+    const productos = await Producto.findAll({
+      include: [
+        {
+          model: Categoria,
+          as:'categoria',
+          attributes: ['nombre'],
+          required: true
+        }
+      ]
+    });
     return productos;
   }
+
 
   async getProductoById(id) {
     const producto = await Producto.findOne({

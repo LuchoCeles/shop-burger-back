@@ -1,3 +1,5 @@
+const { where } = require('sequelize');
+const { Producto } = require('../models');
 const productosService = require('../services/productosService');
 
 class ProductosController {
