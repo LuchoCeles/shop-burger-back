@@ -19,7 +19,7 @@ router.post('/producto', [
   body('idCategoria')
 ], validateRequest, handleUpload, productosController.createProducto);
 
-router.put('/:id', [
+router.patch('/:id', [
   authAdmin,
   body('precio').optional().isDecimal({ min: 0 }),
   body('stock').optional().isInt({ min: 0 })
