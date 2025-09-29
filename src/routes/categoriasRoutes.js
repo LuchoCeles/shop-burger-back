@@ -19,4 +19,6 @@ router.put('/categoria/:id', [
   body('estado').isBoolean().optional()
 ], validateRequest, categoriasController.updateCategoria);
 
+router.delete('/categoria/:id',authAdmin,categoriasController.deleteCategoria);
+
 module.exports = router;

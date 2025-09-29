@@ -1,7 +1,6 @@
 const categoriasService = require("../services/categoriasService");
 
 class CategoriasController {
-  
   async createCategoria(req, res, next) {
     try {
       const categoriaData = req.body;
@@ -42,6 +41,21 @@ class CategoriasController {
       next(error);
     }
   }
+
+  async deleteCategoria(req, res, next) {
+    try {
+      const { id } = req.params;
+      const categoria = await categoriasService.deleteCategoria(id);
+      res.json({
+        success: true,
+        message: "Categoría eliminada exitosamente",
+        data: categoria,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+  
 }
 
 module.exports = new CategoriasController();
