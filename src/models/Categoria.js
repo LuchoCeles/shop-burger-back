@@ -10,10 +10,6 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
       unique: true
     },
-    descripcion: {
-      type: DataTypes.TEXT,
-      allowNull: true
-    },
     estado: {
       type: DataTypes.BOOLEAN,
       defaultValue: true

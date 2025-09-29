@@ -7,8 +7,8 @@ const handleUpload = require('../middlewares/multerMiddleware');
 
 const router = express.Router();
 
-router.get('/', productosController.getProductos);
-router.get('/:id', productosController.getProductoById);
+router.get('/producto/', productosController.getProductos);
+router.get('/producto/:id', productosController.getProductoById);
 
 router.post('/producto', [
   authAdmin,

@@ -15,6 +15,9 @@ class CategoriasService {
     await categoria.update(updateData);
     return categoria;
   }
+  async getCategorias(){
+    return await Categoria.findAll();
+  }
 }
 
 module.exports = new CategoriasService();
