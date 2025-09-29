@@ -1,6 +1,5 @@
 const { Producto, Categoria } = require('../models');
 const cloudinaryService = require('./cloudinaryService');
-const { Op } = require('sequelize');
 
 class ProductosService {
   async getProductos() {
@@ -103,21 +102,6 @@ class ProductosService {
     }
 
     await producto.update({ estado: false });
-  }
-
-  async createCategoria(categoriaData) {
-    return await Categoria.create(categoriaData);
-  }
-
-  async updateCategoria(id, updateData) {
-    const categoria = await Categoria.findByPk(id);
-
-    if (!categoria) {
-      throw new Error('Categoría no encontrada');
-    }
-
-    await categoria.update(updateData);
-    return categoria;
   }
 
 }

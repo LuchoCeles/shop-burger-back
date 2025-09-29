@@ -19,17 +19,6 @@ router.post('/producto', [
   body('idCategoria')
 ], validateRequest, handleUpload, productosController.createProducto);
 
-router.post('/categoria', [
-  authAdmin,
-  body('nombre').notEmpty().trim()
-], validateRequest, productosController.createCategoria);
-
-router.put('/categoria/:id', [
-  authAdmin,
-  body('nombre').notEmpty().trim(),
-  body('estado').isBoolean().optional()
-], validateRequest, productosController.updateCategoria);
-
 router.put('/:id', [
   authAdmin,
   body('precio').optional().isDecimal({ min: 0 }),
