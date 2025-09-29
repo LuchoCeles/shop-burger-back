@@ -52,6 +52,12 @@ module.exports = (sequelize, DataTypes) => {
         model: 'categorias',
         key: 'id'
       }
+    },
+    nombrecategoria:{
+     type: DataTypes.VIRTUAL,
+     get(){
+      return this.categoria ? this.categoria.nombre: null;
+     }
     }
   }, {
     tableName: 'productos',

@@ -16,6 +16,19 @@ class ProductosController {
     }
   }
 
+  async getProductoByCategoria(req,res,next){
+    try {
+       const{idCategoria} = req.params;
+       const productos = await productosService.getProductoByCategoria(idCategoria);
+       res.json({
+        success:true,
+        data:productos
+       });
+    } catch (error) {
+      next(error);
+    }
+  }
+
   async getProductoById(req, res, next) {
     try {
       const { id } = req.params;

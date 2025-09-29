@@ -14,9 +14,14 @@ class ProductosService {
         }
       ]
     });
-    return productos;
+    return productos.map(p => {
+      const plain = p.get({ plain: true });
+      return {
+        ...plain,
+        categoria: plain.categoria ? plain.categoria.nombre : null
+      };
+    });
   }
-
 
   async getProductoById(id) {
     const producto = await Producto.findOne({
