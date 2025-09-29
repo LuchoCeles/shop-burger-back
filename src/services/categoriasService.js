@@ -1,4 +1,5 @@
-const { Categoria } = require('../models');
+
+const { Categoria } = require("../models");
 
 class CategoriasService {
   async createCategoria(categoriaData) {
@@ -9,14 +10,24 @@ class CategoriasService {
     const categoria = await Categoria.findByPk(id);
 
     if (!categoria) {
-      throw new Error('Categoría no encontrada');
+      throw new Error("Categoría no encontrada");
     }
 
     await categoria.update(updateData);
     return categoria;
   }
-  async getCategorias(){
+  async getCategorias() {
     return await Categoria.findAll();
+  }
+
+  async deleteCategoria(id) {
+    const categoria = await Categoria.findByPk(id);
+    if (!categoria) {
+      throw new Error("Categoría no encontrada");
+    }
+    await categoria.update({ estado: false });
+
+    return categoria;
   }
 }
 
