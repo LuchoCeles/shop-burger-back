@@ -17,7 +17,7 @@ class PedidoService {
           {
             model: Cliente,
             as: 'cliente',
-            attributes: ['id', 'nombre', 'email', 'telefono']
+            attributes: ['id', 'nombre', 'telefono']
           },
           {
             model: Producto,
@@ -56,7 +56,7 @@ class PedidoService {
           {
             model: Cliente,
             as: 'cliente',
-            attributes: ['id', 'nombre', 'email', 'telefono']
+            attributes: ['id', 'nombre', 'telefono']
           },
           {
             model: Producto,
@@ -124,53 +124,6 @@ class PedidoService {
       return { mensaje: 'Pedido eliminado exitosamente' };
     } catch (error) {
       throw new Error(`Error al eliminar pedido: ${error.message}`);
-    }
-  }
-
-  async agregarProductos(idPedido, productos) {
-    try {
-      const pedido = await Pedido.findByPk(idPedido);
-      
-      if (!pedido) {
-        throw new Error('Pedido no encontrado');
-      }
-
-      const productosData = productos.map(p => ({
-        idPedido: idPedido,
-        idProducto: p.idProducto,
-        cantidad: p.cantidad,
-        precioUnitario: p.precioUnitario
-      }));
-
-      await ProductosXPedido.bulkCreate(productosData);
-      return await this.obtenerPorId(idPedido);
-    } catch (error) {
-      throw new Error(`Error al agregar productos: ${error.message}`);
-    }
-  }
-
-  async obtenerPorCliente(idCliente) {
-    try {
-      return await Pedido.findAll({
-        where: { idCliente },
-        include: [
-          {
-            model: Producto,
-            as: 'productos',
-            through: {
-              model: ProductosXPedido,
-              attributes: ['cantidad', 'precioUnitario']
-            }
-          },
-          {
-            model: Pago,
-            as: 'pago'
-          }
-        ],
-        order: [['createdAt', 'DESC']]
-      });
-    } catch (error) {
-      throw new Error(`Error al obtener pedidos del cliente: ${error.message}`);
     }
   }
 }

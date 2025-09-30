@@ -1,6 +1,6 @@
 const pedidoService = require('../services/pedido.service');
 
-class PedidoController {
+class PedidosController {
   async crear(req, res) {
     try {
       const { idCliente, precioTotal, descripcion, estado } = req.body;
@@ -29,7 +29,7 @@ class PedidoController {
     }
   }
 
-  async obtenerTodos(req, res) {
+  async getPedidos(req, res) {
     try {
       const { estado, idCliente } = req.query;
       
@@ -50,7 +50,7 @@ class PedidoController {
     }
   }
 
-  async obtenerPorId(req, res) {
+  async getById(req, res) {
     try {
       const { id } = req.params;
       const pedido = await pedidoService.obtenerPorId(id);
@@ -66,7 +66,7 @@ class PedidoController {
     }
   }
 
-  async actualizar(req, res) {
+  async update(req, res) {
     try {
       const { id } = req.params;
       const datos = req.body;
@@ -111,7 +111,7 @@ class PedidoController {
     }
   }
 
-  async eliminar(req, res) {
+  async delete(req, res) {
     try {
       const { id } = req.params;
       const resultado = await pedidoService.eliminar(id);
@@ -124,47 +124,6 @@ class PedidoController {
       });
     }
   }
-
-  async agregarProductos(req, res) {
-    try {
-      const { id } = req.params;
-      const { productos } = req.body;
-
-      if (!productos || !Array.isArray(productos) || productos.length === 0) {
-        return res.status(400).json({
-          error: 'Se requiere un array de productos válido'
-        });
-      }
-
-      const pedido = await pedidoService.agregarProductos(id, productos);
-
-      return res.status(200).json({
-        mensaje: 'Productos agregados exitosamente',
-        data: pedido
-      });
-    } catch (error) {
-      const status = error.message.includes('no encontrado') ? 404 : 500;
-      return res.status(status).json({
-        error: error.message
-      });
-    }
-  }
-
-  async obtenerPorCliente(req, res) {
-    try {
-      const { idCliente } = req.params;
-      const pedidos = await pedidoService.obtenerPorCliente(idCliente);
-
-      return res.status(200).json({
-        data: pedidos,
-        total: pedidos.length
-      });
-    } catch (error) {
-      return res.status(500).json({
-        error: error.message
-      });
-    }
-  }
 }
 
-module.exports = new PedidoController();
+module.exports = new PedidosController();
