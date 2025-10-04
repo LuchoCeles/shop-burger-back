@@ -5,14 +5,6 @@ module.exports = (sequelize, DataTypes) => {
       primaryKey: true,
       autoIncrement: true
     },
-    idCliente: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      references: {
-        model: 'clientes',
-        key: 'idCliente'
-      }
-    },
     descripcion: {
       type: DataTypes.STRING(100),
       allowNull: false
@@ -27,10 +19,13 @@ module.exports = (sequelize, DataTypes) => {
     }
   }, {
     tableName: 'clientes',
-    timestamps: true
+    timestamps: true,
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
   });
 
   Cliente.associate = function (models) {
+    // Un cliente puede tener muchos pedidos
     Cliente.hasMany(models.Pedido, {
       foreignKey: 'idCliente',
       as: 'pedidos'

@@ -17,21 +17,37 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.TEXT,
       allowNull: true
     },
+    idCliente: {  // <-- columna para la relación con Cliente
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: {
+        model: 'clientes',
+        key: 'id'
+      }
+    }
   }, {
     tableName: 'pedidos',
-    timestamps: true
+    timestamps: true,
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
   });
 
   Pedido.associate = function (models) {
+    // Un pedido pertenece a un cliente
     Pedido.belongsTo(models.Cliente, {
       foreignKey: 'idCliente',
       as: 'cliente'
     });
+
+    // Relación muchos a muchos con productos
     Pedido.belongsToMany(models.Producto, {
       through: models.ProductosXPedido,
       foreignKey: 'idPedido',
+      otherKey: 'idProducto',
       as: 'productos'
     });
+
+    // Relación uno a uno con pago
     Pedido.hasOne(models.Pago, {
       foreignKey: 'idPedido',
       as: 'pago'
