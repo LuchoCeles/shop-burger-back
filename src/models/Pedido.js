@@ -6,7 +6,7 @@ module.exports = (sequelize, DataTypes) => {
       autoIncrement: true
     },
     estado: {
-      type: DataTypes.ENUM('pendiente', 'confirmado', 'preparando', 'en_camino', 'entregado', 'cancelado'),
+      type: DataTypes.ENUM('pendiente','entregado', 'cancelado'),
       defaultValue: 'pendiente'
     },
     precioTotal: {

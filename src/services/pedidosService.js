@@ -118,7 +118,7 @@ async obtenerPorId(id) {
   // Actualizar solo el estado
   async actualizarEstado(id, nuevoEstado) {
     try {
-      const estadosValidos = ['pendiente', 'confirmado', 'preparando', 'en_camino', 'entregado', 'cancelado'];
+      const estadosValidos = ['pendiente', 'entregado', 'cancelado'];
       
       if (!estadosValidos.includes(nuevoEstado)) {
         throw new Error('Estado inválido');
