@@ -21,6 +21,12 @@ class PedidosService {
           attributes: ["precio"],
         });
         total += proc.precio * P.cantidad;
+        
+        await Producto.decrement("stock",{
+          by:P.cantidad,
+          where: {id:P.idProducto},
+          transaction
+        });
       }
 
       const c = await Cliente.create(cliente);
@@ -73,6 +79,7 @@ class PedidosService {
     });
 
     // Traemos ProductosXPedido de todos los pedidos
+
     const pedidosConProductos = await Promise.all(
       pedidos.map(async (pedido) => {
         const pxp = await ProductosXPedido.findAll({
