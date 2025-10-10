@@ -8,9 +8,9 @@ const pedidosController = require('../controllers/pedidosController');
 // Crear un nuevo pedido con productos
 router.post('/pedido', [
   authAdmin,
-  body('productos').isArray({ min: 1 }).withMessage('productos debe ser un array con al menos un elemento'),
   body('cliente').notEmpty(),
-  body('descripcion').notEmpty(),
+  body('descripcion'),
+  body('productos').isArray({ min: 1 }).withMessage('productos debe ser un array con al menos un elemento'),
 ], validateRequest, pedidosController.CreateOrder);
 
 // Obtener todos los pedidos (filtros: ?estado=pendiente&idCliente=1)

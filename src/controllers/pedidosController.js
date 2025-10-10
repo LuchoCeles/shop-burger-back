@@ -21,9 +21,9 @@ class PedidosController {
 
       // Validar estructura de productos
       for (const item of productos) {
-        if (!item.idProducto || !item.cantidad) {
+        if (!item.id || !item.cantidad) {
           return res.status(400).json({
-            error: 'Cada producto debe tener idProducto y cantidad'
+            error: 'Cada producto debe tener id y cantidad'
           });
         }
         if (item.cantidad <= 0) {

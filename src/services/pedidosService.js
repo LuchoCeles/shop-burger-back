@@ -7,27 +7,66 @@ const {
   Pago,
 } = require("../models");
 const { sequelize } = require("../models");
-const { where } = require("sequelize");
+const { Op } = require("sequelize");
 
 class PedidosService {
+  
   async Create(datosPedido) {
     const transaction = await sequelize.transaction();
     try {
       const { cliente, productos, descripcion } = datosPedido;
 
       let total = 0;
+
       for (const P of productos) {
-        const proc = await Producto.findByPk(P.idProducto, {
-          attributes: ["precio"],
+        // 1) traemos precio + stock y bloqueamos la fila para esta transacción (evita race conditions)
+        const proc = await Producto.findByPk(P.id, {
+          attributes: ['precio', 'stock'],
+          transaction,
+          lock: transaction.LOCK.UPDATE // bloqueo de fila (si tu dialecto lo soporta)
         });
-        total += proc.precio * P.cantidad;
-        
-        await Producto.decrement("stock",{
-          by:P.cantidad,
-          where: {id:P.idProducto},
+
+        if (!proc) {
+          throw new Error(`El producto con ID ${P.id} no existe`);
+        }
+
+        // 2) verificación inmediata de stock disponible
+        if (proc.stock < P.cantidad) {
+          throw new Error(
+            `Stock insuficiente para el producto ${P.id}. Disponible: ${proc.stock}, solicitado: ${P.cantidad}`
+          );
+        }
+
+        // 3) decrement con condición adicional por seguridad (atomicidad en DB)
+        //    y dentro de la misma transacción
+        const decrementResult = await Producto.decrement('stock', {
+          by: P.cantidad,
+          where: {
+            id: P.id,
+            stock: { [Op.gte]: P.cantidad } // solo decrementa si hay stock suficiente
+          },
           transaction
         });
+
+        // Dependiendo de la versión de Sequelize, el resultado puede variar.
+        // Normalmente devuelve un array con el número de filas afectadas o la instancia.
+        // Hacemos una comprobación simple por seguridad:
+        if (Array.isArray(decrementResult) && decrementResult[0] === 0) {
+          throw new Error(
+            `No fue posible descontar stock para el producto ${P.id} (posible condición de carrera)`
+          );
+        }
+        // alternativa: si tu versión devuelve un número:
+        if (typeof decrementResult === 'number' && decrementResult === 0) {
+          throw new Error(
+            `No fue posible descontar stock para el producto ${P.id} (posible condición de carrera)`
+          );
+        }
+
+        // 4) sumar al total usando el precio que obtuvimos
+        total += Number(proc.precio) * P.cantidad;
       }
+
 
       const c = await Cliente.create(cliente);
 
@@ -44,7 +83,7 @@ class PedidosService {
         await ProductosXPedido.create(
           {
             idPedido: pedido.id,
-            idProducto: P.idProducto,
+            idProducto: P.id,
             cantidad: P.cantidad,
           },
           { transaction }
@@ -62,60 +101,60 @@ class PedidosService {
   }
 
   // Obtener todos los pedidos
- async obtenerTodos(filtros = {}) {
-  try {
-    // Traemos todos los pedidos, con clientes
-    const pedidos = await Pedido.findAll({
-      attributes: ["id", "estado", "precioTotal", "descripcion"],
-      include: [
-        {
-          model: Cliente,
-          as: "cliente",
-          attributes: ["id", "telefono", "direccion"],
-        },
-      ],
-      order: [["id", "DESC"]],
-      where: filtros.estado ? { estado: filtros.estado } : undefined
-    });
+  async obtenerTodos(filtros = {}) {
+    try {
+      // Traemos todos los pedidos, con clientes
+      const pedidos = await Pedido.findAll({
+        attributes: ["id", "estado", "precioTotal", "descripcion"],
+        include: [
+          {
+            model: Cliente,
+            as: "cliente",
+            attributes: ["id", "telefono", "direccion"],
+          },
+        ],
+        order: [["id", "DESC"]],
+        where: filtros.estado ? { estado: filtros.estado } : undefined
+      });
 
-    // Traemos ProductosXPedido de todos los pedidos
+      // Traemos ProductosXPedido de todos los pedidos
 
-    const pedidosConProductos = await Promise.all(
-      pedidos.map(async (pedido) => {
-        const pxp = await ProductosXPedido.findAll({
-          where: { idPedido: pedido.id },
-          include: [
-            {
-              model: Producto,
-              as: "producto",
-              attributes: ["id", "nombre", "precio"],
-            },
-          ],
-        });
+      const pedidosConProductos = await Promise.all(
+        pedidos.map(async (pedido) => {
+          const pxp = await ProductosXPedido.findAll({
+            where: { idPedido: pedido.id },
+            include: [
+              {
+                model: Producto,
+                as: "producto",
+                attributes: ["id", "nombre", "precio"],
+              },
+            ],
+          });
 
-        const productos = pxp.map((item) => ({
-          id: item.producto.id,
-          nombre: item.producto.nombre,
-          precio: item.producto.precio,
-          cantidad: item.cantidad,
-        }));
+          const productos = pxp.map((item) => ({
+            id: item.producto.id,
+            nombre: item.producto.nombre,
+            precio: item.producto.precio,
+            cantidad: item.cantidad,
+          }));
 
-        return {
-          id: pedido.id,
-          estado: pedido.estado,
-          precioTotal: pedido.precioTotal,
-          descripcion: pedido.descripcion,
-          cliente: pedido.cliente,
-          productos,
-        };
-      })
-    );
+          return {
+            id: pedido.id,
+            estado: pedido.estado,
+            precioTotal: pedido.precioTotal,
+            descripcion: pedido.descripcion,
+            cliente: pedido.cliente,
+            productos,
+          };
+        })
+      );
 
-    return pedidosConProductos;
-  } catch (error) {
-    throw new Error(`Error al obtener pedidos: ${error.message}`);
+      return pedidosConProductos;
+    } catch (error) {
+      throw new Error(`Error al obtener pedidos: ${error.message}`);
+    }
   }
-}
 
 
   async obtenerPorId(id) {
