@@ -1,4 +1,5 @@
 
+const { where } = require("sequelize");
 const { Categoria } = require("../models");
 
 class CategoriasService {
@@ -17,7 +18,7 @@ class CategoriasService {
     return categoria;
   }
   async getCategorias() {
-    return await Categoria.findAll();
+   return await Categoria.findAll();
   }
 
   async deleteCategoria(id) { // no elimina, da de baja la categoria

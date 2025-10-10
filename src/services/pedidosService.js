@@ -8,7 +8,7 @@ class PedidosService {
 
   try {
     const { idCliente, productos, descripcion } = datosPedido;
-
+ 
     // Validar cliente
     const cliente = await Cliente.findByPk(idCliente);
     if (!cliente) throw new Error('Cliente no encontrado');

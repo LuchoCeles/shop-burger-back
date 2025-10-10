@@ -10,6 +10,7 @@ class ProductosService {
           model: Categoria,
           as:'categoria',
           attributes: ['nombre'],
+          where: {estado:1},
           required: true
         }
       ]
