@@ -64,7 +64,6 @@ class PedidosController {
 
       return res.status(200).json({
         mensaje: 'Pedidos obtenidos exitosamente',
-        total: pedidos.length,
         data: pedidos
       });
     } catch (error) {
