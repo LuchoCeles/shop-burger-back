@@ -10,7 +10,7 @@ const router = express.Router();
 router.use('/admin', authAdminRoutes);
 router.use('/api', productosRoutes);
 router.use('/api', categoriasRoutes);
-router.use('/api', pedidosRoutes);
+router.use('/admin', pedidosRoutes);
 router.use('/api', clientesRoutes)
 
 module.exports = router;

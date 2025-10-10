@@ -33,27 +33,28 @@ CREATE TABLE Productos (
 );
 
 -- =======================
--- TABLA: Pedidos
+-- TABLA: Clientes
 -- =======================
-CREATE TABLE Pedidos (
+CREATE TABLE Clientes (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    precioTotal DECIMAL(10,2) DEFAULT 0,
-    descripcion TEXT,
-    estado VARCHAR(50) DEFAULT 'pendiente',
+    direccion VARCHAR(255) NOT NULL,
+    telefono VARCHAR(40) NOT NULL,
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
 -- =======================
--- TABLA: Clientes
+-- TABLA: Pedidos
 -- =======================
-CREATE TABLE Clientes (
+CREATE TABLE Pedidos (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    idPedido INT,
-    direccion VARCHAR(255) NOT NULL,
+    idCliente INT,
+    precioTotal DECIMAL(10,2) DEFAULT 0,
     descripcion TEXT,
-    telefono VARCHAR(40) NOT NULL,
-    CONSTRAINT fk_cliente_pedido FOREIGN KEY (idPedido) REFERENCES Pedidos(id)
+    estado VARCHAR(50) DEFAULT 'pendiente',
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_pedido_cliente FOREIGN KEY (idCliente) REFERENCES Clientes(id)
 );
 
 -- =======================
@@ -80,6 +81,7 @@ CREATE TABLE DatosBancarios (
     cbu VARCHAR(50) NOT NULL,
     apellido VARCHAR(100) NOT NULL,
     nombre VARCHAR(100) NOT NULL,
+    password VARCHAR(255) NOT NULL,
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );

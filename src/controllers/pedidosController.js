@@ -2,14 +2,14 @@ const pedidoService = require('../services/pedidosService');
 
 class PedidosController {
   // Crear nuevo pedido con productos
-  async crear(req, res) {
+  async CreateOrder(req, res) {
     try {
-      const { idCliente, productos, descripcion } = req.body;
+      const { cliente, productos, descripcion } = req.body;
 
       // Validaciones
-      if (!idCliente) {
+      if (!cliente) {
         return res.status(400).json({
-          error: 'El campo idCliente es requerido'
+          error: 'El campo debe estar completo'
         });
       }
 
@@ -33,8 +33,8 @@ class PedidosController {
         }
       }
 
-      const pedido = await pedidoService.crear({
-        idCliente,
+      const pedido = await pedidoService.Create({
+        cliente,
         productos,
         descripcion
       });
