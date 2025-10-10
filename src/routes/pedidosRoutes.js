@@ -14,7 +14,7 @@ router.post('/pedido', [
 ], validateRequest, pedidosController.CreateOrder);
 
 // Obtener todos los pedidos (filtros: ?estado=pendiente&idCliente=1)
-router.get('/', authAdmin, pedidosController.getPedidos);
+router.get('/pedidos', authAdmin, pedidosController.getPedidos);
 
 // Actualizar solo el estado
 router.patch('/:id/estado', [
