@@ -10,7 +10,7 @@ const { sequelize } = require("../models");
 const { Op } = require("sequelize");
 
 class PedidosService {
-  
+
   async Create(datosPedido) {
     const transaction = await sequelize.transaction();
     try {
@@ -27,18 +27,15 @@ class PedidosService {
         });
 
         if (!proc) {
-          throw new Error(`El producto con ID ${P.id} no existe`);
+          throw new Error(`El producto ${P.nombre} no existe`);
         }
 
-        // 2) verificación inmediata de stock disponible
         if (proc.stock < P.cantidad) {
           throw new Error(
-            `Stock insuficiente para el producto ${P.id}. Disponible: ${proc.stock}, solicitado: ${P.cantidad}`
+            `Stock insuficiente para el producto ${P.nombre}. Disponible: ${proc.stock}, solicitado: ${P.cantidad}`
           );
         }
 
-        // 3) decrement con condición adicional por seguridad (atomicidad en DB)
-        //    y dentro de la misma transacción
         const decrementResult = await Producto.decrement('stock', {
           by: P.cantidad,
           where: {
@@ -53,17 +50,15 @@ class PedidosService {
         // Hacemos una comprobación simple por seguridad:
         if (Array.isArray(decrementResult) && decrementResult[0] === 0) {
           throw new Error(
-            `No fue posible descontar stock para el producto ${P.id} (posible condición de carrera)`
+            `No fue posible descontar stock para el producto ${P.nombre} ID ${P.id}`
           );
-        }
-        // alternativa: si tu versión devuelve un número:
-        if (typeof decrementResult === 'number' && decrementResult === 0) {
+          // alternativa: si tu versión devuelve un número:
+        } else if (typeof decrementResult === 'number' && decrementResult === 0) {
           throw new Error(
-            `No fue posible descontar stock para el producto ${P.id} (posible condición de carrera)`
+            `No fue posible descontar stock para el producto ${P.nombre} ID ${P.id}`
           );
         }
 
-        // 4) sumar al total usando el precio que obtuvimos
         total += Number(proc.precio) * P.cantidad;
       }
 
