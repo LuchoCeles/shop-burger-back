@@ -1,3 +1,5 @@
+const { where } = require('sequelize');
+const { Producto } = require('../models');
 const productosService = require('../services/productosService');
 
 class ProductosController {
@@ -9,6 +11,19 @@ class ProductosController {
         success: true,
         data: productos
       });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async getProductoByCategoria(req,res,next){
+    try {
+       const{idCategoria} = req.params;
+       const productos = await productosService.getProductoByCategoria(idCategoria);
+       res.json({
+        success:true,
+        data:productos
+       });
     } catch (error) {
       next(error);
     }

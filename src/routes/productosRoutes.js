@@ -10,6 +10,7 @@ const router = express.Router();
 router.get('/producto/', productosController.getProductos);
 router.get('/producto/:id', productosController.getProductoById);
 
+
 router.post('/producto', [
   authAdmin,
   body('nombre'),
