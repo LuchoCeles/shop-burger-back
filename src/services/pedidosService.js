@@ -147,7 +147,14 @@ class PedidosService {
 
       await pedido.update({ estado: nuevoEstado });
 
-      return await this.obtenerPorId(id);
+      const rsp = await Pedido.findByPk(id, {
+        include: [
+          { model: Cliente, as: 'cliente' },
+          { model: Producto, as: 'productos' },
+          { model: Pago, as: 'pago' }
+        ]
+      });
+      return rsp;
     } catch (error) {
       throw new Error(`Error al actualizar estado: ${error.message}`);
     }
