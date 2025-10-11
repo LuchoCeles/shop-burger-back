@@ -105,6 +105,7 @@ class PedidosController {
       const pedido = await pedidoService.updateStatus(id, estado);
 
       return res.status(200).json({
+        suscess: true,
         mensaje: 'Estado actualizado exitosamente',
         data: pedido
       });
