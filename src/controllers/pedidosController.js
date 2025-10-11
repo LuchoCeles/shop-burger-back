@@ -1,12 +1,12 @@
 const pedidoService = require('../services/pedidosService');
+const { Pedido } = require('../models');
 
 class PedidosController {
-  // Crear nuevo pedido con productos
+
   async CreateOrder(req, res) {
     try {
       const { cliente, productos, descripcion } = req.body;
 
-      // Validaciones
       if (!cliente) {
         return res.status(400).json({
           error: 'El campo debe estar completo'
@@ -19,7 +19,6 @@ class PedidosController {
         });
       }
 
-      // Validar estructura de productos
       for (const item of productos) {
         if (!item.id || !item.cantidad) {
           return res.status(400).json({
@@ -51,16 +50,15 @@ class PedidosController {
     }
   }
 
-  // Obtener todos los pedidos con filtros
-  async getPedidos(req, res) {
+  async getOrders(req, res) {
     try {
       const { estado, idCliente } = req.query;
-      
+
       const filtros = {};
       if (estado) filtros.estado = estado;
       if (idCliente) filtros.idCliente = idCliente;
 
-      const pedidos = await pedidoService.obtenerTodos(filtros);
+      const pedidos = await pedidoService.getAll(filtros);
 
       return res.status(200).json({
         mensaje: 'Pedidos obtenidos exitosamente',
@@ -74,71 +72,29 @@ class PedidosController {
     }
   }
 
-  // Obtener pedido por ID
-  async getById(req, res) {
+  async updateStatus(req, res) {
     try {
-      const { id } = req.params;
-      const pedido = await pedidoService.obtenerPorId(id);
+      const { id, estado } = req.body;
 
-      return res.status(200).json({
-        mensaje: 'Pedido obtenido exitosamente',
-        data: pedido
-      });
-    } catch (error) {
-      console.error('Error al obtener pedido:', error);
-      const status = error.message.includes('no encontrado') ? 404 : 500;
-      return res.status(status).json({
-        error: error.message
-      });
-    }
-  }
+      const estadosValidos = ["pendiente", "entregado", "cancelado"];
 
-  // Obtener pedidos de un cliente
-  async getPedidosByCliente(req, res) {
-    try {
-      const { idCliente } = req.params;
-      const pedidos = await pedidoService.obtenerPorCliente(idCliente);
+      if (!estadosValidos.includes(estado)) {
+        throw new Error("Estado inválido");
+      }
+      
+      const pedidoActual = await Pedido.findByPk(id);
 
-      return res.status(200).json({
-        mensaje: 'Pedidos del cliente obtenidos exitosamente',
-        total: pedidos.length,
-        data: pedidos
-      });
-    } catch (error) {
-      console.error('Error al obtener pedidos del cliente:', error);
-      return res.status(500).json({
-        error: error.message
-      });
-    }
-  }
+      if (!pedidoActual) {
+        throw new Error("Pedido no encontrado");
+      }
 
-  // Actualizar pedido (descripción, estado)
-  async update(req, res) {
-    try {
-      const { id } = req.params;
-      const datos = req.body;
+      if (pedidoActual.estado === "entregado") {
+        throw new Error("No se puede cambiar el estado de un pedido entregado");
+      }
 
-      const pedido = await pedidoService.actualizar(id, datos);
-
-      return res.status(200).json({
-        mensaje: 'Pedido actualizado exitosamente',
-        data: pedido
-      });
-    } catch (error) {
-      console.error('Error al actualizar pedido:', error);
-      const status = error.message.includes('no encontrado') ? 404 : 
-                     error.message.includes('No se puede modificar') ? 403 : 500;
-      return res.status(status).json({
-        error: error.message
-      });
-    }
-  }
-
-  // Actualizar solo estado del pedido
-  async actualizarEstado(req, res) {
-    try {
-      const { id } = req.params;
-      const { estado } = req.body;
+      if (pedidoActual.estado === "cancelado" && estado !== "cancelado") {
+        throw new Error("No se puede reactivar un pedido cancelado");
+      }
 
       if (!estado) {
         return res.status(400).json({
@@ -146,7 +102,7 @@ class PedidosController {
         });
       }
 
-      const pedido = await pedidoService.actualizarEstado(id, estado);
+      const pedido = await pedidoService.updateStatus(id, estado);
 
       return res.status(200).json({
         mensaje: 'Estado actualizado exitosamente',
@@ -154,19 +110,18 @@ class PedidosController {
       });
     } catch (error) {
       console.error('Error al actualizar estado:', error);
-      const status = error.message.includes('no encontrado') ? 404 : 
-                     error.message.includes('inválido') || error.message.includes('No se puede') ? 400 : 500;
+      const status = error.message.includes('no encontrado') ? 404 :
+        error.message.includes('inválido') || error.message.includes('No se puede') ? 400 : 500;
       return res.status(status).json({
         error: error.message
       });
     }
   }
 
-  // Cancelar pedido (devuelve stock)
-  async cancelar(req, res) {
+  async cancel(req, res) {
     try {
       const { id } = req.params;
-      const pedido = await pedidoService.cancelar(id);
+      const pedido = await pedidoService.cancel(id);
 
       return res.status(200).json({
         mensaje: 'Pedido cancelado exitosamente',
@@ -174,25 +129,24 @@ class PedidosController {
       });
     } catch (error) {
       console.error('Error al cancelar pedido:', error);
-      const status = error.message.includes('no encontrado') ? 404 : 
-                     error.message.includes('ya está') || error.message.includes('No se puede') ? 400 : 500;
+      const status = error.message.includes('no encontrado') ? 404 :
+        error.message.includes('ya está') || error.message.includes('No se puede') ? 400 : 500;
       return res.status(status).json({
         error: error.message
       });
     }
   }
 
-  // Eliminar pedido
   async delete(req, res) {
     try {
       const { id } = req.params;
-      const resultado = await pedidoService.eliminar(id);
+      const resultado = await pedidoService.delete(id);
 
       return res.status(200).json(resultado);
     } catch (error) {
       console.error('Error al eliminar pedido:', error);
-      const status = error.message.includes('no encontrado') ? 404 : 
-                     error.message.includes('Solo se pueden') ? 403 : 500;
+      const status = error.message.includes('no encontrado') ? 404 :
+        error.message.includes('Solo se pueden') ? 403 : 500;
       return res.status(status).json({
         error: error.message
       });
