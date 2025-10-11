@@ -26,6 +26,18 @@ class DatosBancariosService {
       throw new Error (`Error al cargar los datos: ${error.message}`);
     }
   }
+
+  async get (){
+    try {
+        const datosbancarios = await DatosBancarios.findAll({
+            atribute: ["id","cuit","alias","cbu","apellido","nombre"],
+            order : [["id","DESC"]],
+        });
+        return datosbancarios
+    } catch (error) {
+        throw new Error(`Error al obtener los datos bancarios${error.message}`);
+    }
+  }
 }
 
 module.exports = new DatosBancariosService();

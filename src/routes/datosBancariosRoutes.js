@@ -32,4 +32,10 @@ router.post(
   datosBancariosController.create
 );
 
+router.get(
+  "/datos-bancarios",
+  authAdmin, // puedes quitarlo si no quieres auth
+  datosBancariosController.get
+);
+
 module.exports = router;
