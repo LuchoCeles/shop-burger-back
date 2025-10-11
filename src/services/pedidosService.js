@@ -3,6 +3,7 @@ const {
   Cliente,
   Producto,
   ProductosXPedido,
+  Pago,
 } = require("../models");
 const { sequelize } = require("../models");
 const { Op } = require("sequelize");
