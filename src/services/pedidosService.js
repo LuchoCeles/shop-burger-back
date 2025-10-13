@@ -1,4 +1,3 @@
-const nodemon = require("nodemon");
 const {
   Pedido,
   Cliente,
@@ -19,11 +18,11 @@ class PedidosService {
       let total = 0;
 
       for (const P of productos) {
-        // 1) traemos precio + stock y bloqueamos la fila para esta transacción (evita race conditions)
+        // traemos precio + stock y bloqueamos la fila para esta transacción
         const proc = await Producto.findByPk(P.id, {
           attributes: ['precio', 'stock'],
           transaction,
-          lock: transaction.LOCK.UPDATE // bloqueo de fila (si tu dialecto lo soporta)
+          lock: transaction.LOCK.UPDATE // bloqueo de fila
         });
 
         if (!proc) {
@@ -45,14 +44,10 @@ class PedidosService {
           transaction
         });
 
-        // Dependiendo de la versión de Sequelize, el resultado puede variar.
-        // Normalmente devuelve un array con el número de filas afectadas o la instancia.
-        // Hacemos una comprobación simple por seguridad:
         if (Array.isArray(decrementResult) && decrementResult[0] === 0) {
           throw new Error(
             `No fue posible descontar stock para el producto ${P.nombre} ID ${P.id}`
           );
-          // alternativa: si tu versión devuelve un número:
         } else if (typeof decrementResult === 'number' && decrementResult === 0) {
           throw new Error(
             `No fue posible descontar stock para el producto ${P.nombre} ID ${P.id}`
@@ -61,7 +56,6 @@ class PedidosService {
 
         total += Number(proc.precio) * P.cantidad;
       }
-
 
       const c = await Cliente.create(cliente);
 
@@ -95,10 +89,8 @@ class PedidosService {
     }
   }
 
-  // Obtener todos los pedidos
-  async obtenerTodos(filtros = {}) {
+  async getAll(filtros = {}) {
     try {
-      // Traemos todos los pedidos, con clientes
       const pedidos = await Pedido.findAll({
         attributes: ["id", "estado", "precioTotal", "descripcion"],
         include: [
@@ -111,8 +103,6 @@ class PedidosService {
         order: [["id", "DESC"]],
         where: filtros.estado ? { estado: filtros.estado } : undefined
       });
-
-      // Traemos ProductosXPedido de todos los pedidos
 
       const pedidosConProductos = await Promise.all(
         pedidos.map(async (pedido) => {
@@ -151,53 +141,27 @@ class PedidosService {
     }
   }
 
-
-  async obtenerPorId(id) {
-    const pedido = await Pedido.findByPk(id, {
-      include: [
-        { model: Cliente, as: "cliente" },
-        { model: Producto, as: "productos" },
-        { model: Pago, as: "pago" },
-      ],
-    });
-
-    if (!pedido) throw new Error("Pedido no encontrado");
-    return pedido;
-  }
-
-  // Actualizar solo el estado
-  async actualizarEstado(id, nuevoEstado) {
+  async updateStatus(id, nuevoEstado) {
     try {
-      const estadosValidos = ["pendiente", "entregado", "cancelado"];
-
-      if (!estadosValidos.includes(nuevoEstado)) {
-        throw new Error("Estado inválido");
-      }
 
       const pedido = await Pedido.findByPk(id);
 
-      if (!pedido) {
-        throw new Error("Pedido no encontrado");
-      }
-
-      // Lógica de validación de estados
-      if (pedido.estado === "entregado") {
-        throw new Error("No se puede cambiar el estado de un pedido entregado");
-      }
-
-      if (pedido.estado === "cancelado" && nuevoEstado !== "cancelado") {
-        throw new Error("No se puede reactivar un pedido cancelado");
-      }
-
       await pedido.update({ estado: nuevoEstado });
-      return await this.obtenerPorId(id);
+
+      const rsp = await Pedido.findByPk(id, {
+        include: [
+          { model: Cliente, as: 'cliente' },
+          { model: Producto, as: 'productos' },
+          { model: Pago, as: 'pago' }
+        ]
+      });
+      return rsp;
     } catch (error) {
       throw new Error(`Error al actualizar estado: ${error.message}`);
     }
   }
 
-  // Cancelar pedido (devuelve stock)
-  async cancelar(id) {
+  async cancel(id) {
     const transaction = await sequelize.transaction();
 
     try {
@@ -223,7 +187,6 @@ class PedidosService {
         throw new Error("No se puede cancelar un pedido entregado");
       }
 
-      // Devolver stock de productos
       for (const producto of pedido.productos) {
         await Producto.increment("stock", {
           by: producto.ProductosXPedido.cantidad,
@@ -242,8 +205,7 @@ class PedidosService {
     }
   }
 
-  // Eliminar pedido (solo si está pendiente o cancelado)
-  async eliminar(id) {
+  async delete(id) {
     const transaction = await sequelize.transaction();
 
     try {
@@ -259,7 +221,6 @@ class PedidosService {
         );
       }
 
-      // Desvincular cliente si existe
       const cliente = await Cliente.findOne({ where: { idPedido: id } });
       if (cliente) {
         await cliente.update({ idPedido: null }, { transaction });
