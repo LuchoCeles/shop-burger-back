@@ -5,8 +5,8 @@ class PedidosController {
 
   async CreateOrder(req, res) {
     try {
+      const io = req.app.get('io');
       const { cliente, productos, descripcion } = req.body;
-
       if (!cliente) {
         return res.status(400).json({
           error: 'El campo debe estar completo'
@@ -38,8 +38,10 @@ class PedidosController {
         descripcion
       });
 
+
+      io.emit('nuevoPedido', { message: 'Nuevo pedido recibido' });
       return res.status(201).json({
-        mensaje: 'Pedido creado exitosamente',
+        message: 'Pedido creado exitosamente',
         data: pedido
       });
     } catch (error) {
@@ -61,7 +63,7 @@ class PedidosController {
       const pedidos = await pedidoService.getAll(filtros);
 
       return res.status(200).json({
-        mensaje: 'Pedidos obtenidos exitosamente',
+        message: 'Pedidos obtenidos exitosamente',
         data: pedidos
       });
     } catch (error) {
@@ -81,7 +83,7 @@ class PedidosController {
       if (!estadosValidos.includes(estado)) {
         throw new Error("Estado inválido");
       }
-      
+
       const pedidoActual = await Pedido.findByPk(id);
 
       if (!pedidoActual) {
@@ -106,7 +108,7 @@ class PedidosController {
 
       return res.status(200).json({
         suscess: true,
-        mensaje: 'Estado actualizado exitosamente',
+        message: 'Estado actualizado exitosamente',
         data: pedido
       });
     } catch (error) {
@@ -125,7 +127,7 @@ class PedidosController {
       const pedido = await pedidoService.cancel(id);
 
       return res.status(200).json({
-        mensaje: 'Pedido cancelado exitosamente',
+        message: 'Pedido cancelado exitosamente',
         data: pedido
       });
     } catch (error) {
