@@ -8,7 +8,7 @@ class DatosBancariosController {
       const d = await datosBancariosService.create({banco});
       
       return res.status(201).json({
-        mensaje: "Datos creados exitosamente",
+        message: "Datos creados exitosamente",
         data: d,
       });
     } catch (error) {

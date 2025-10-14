@@ -1,5 +1,4 @@
 const pedidoService = require('../services/pedidosService');
-const { Pedido } = require('../models');
 
 class PedidosController {
 
@@ -84,7 +83,7 @@ class PedidosController {
         throw new Error("Estado inválido");
       }
 
-      const pedidoActual = await Pedido.findByPk(id);
+      const pedidoActual = await pedidoService.getById(id);
 
       if (!pedidoActual) {
         throw new Error("Pedido no encontrado");

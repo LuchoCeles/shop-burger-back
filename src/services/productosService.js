@@ -1,16 +1,19 @@
+const { where } = require('sequelize');
 const { Producto, Categoria } = require('../models');
 const cloudinaryService = require('./cloudinaryService');
 
 class ProductosService {
 
-  async getProductos() {
+  async getProducts(soloActivos = true) {
+    const whereClause = soloActivos ? { estado: 1 } : {};
     const productos = await Producto.findAll({
+      where: whereClause,
       include: [
         {
           model: Categoria,
-          as:'categoria',
+          as: 'categoria',
           attributes: ['nombre'],
-          where: {estado:1},
+          where: { estado: 1 },
           required: true
         }
       ]
@@ -24,9 +27,9 @@ class ProductosService {
     });
   }
 
-  async getProductoById(id) {
+  async getProductById(id) {
     const producto = await Producto.findOne({
-      where: { id, estado: true },
+      where: { id, estado: 1 },
       include: [{
         model: Categoria,
         as: 'categoria',
@@ -41,10 +44,9 @@ class ProductosService {
     return producto;
   }
 
-  async createProducto(productoData, imageBuffer) {
+  async createProduct(productoData, imageBuffer) {
     let imageUrl = null;
 
-    // Subir imagen a Cloudinary si existe
     if (imageBuffer) {
       try {
         const uploadResult = await cloudinaryService.uploadImage(imageBuffer);
@@ -63,7 +65,7 @@ class ProductosService {
   }
 
 
-  async updateProducto(id, updateData, imageBuffer) {
+  async updateProduct(id, updateData, imageBuffer) {
     const producto = await Producto.findByPk(id);
 
     if (!producto) {
@@ -99,7 +101,7 @@ class ProductosService {
     return await this.getProductoById(id);
   }
 
-  async deleteProducto(id) {
+  async deleteProduct(id) {
     const producto = await Producto.findByPk(id);
 
     if (!producto) {

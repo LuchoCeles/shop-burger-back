@@ -141,6 +141,11 @@ class PedidosService {
     }
   }
 
+  async getById(id) {
+    const pedidoActual = await Pedido.findByPk(id);
+    return pedidoActual;
+  }
+
   async updateStatus(id, nuevoEstado) {
     try {
 
