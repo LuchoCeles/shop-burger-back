@@ -1,13 +1,15 @@
-
-const { where } = require("sequelize");
 const { Categoria } = require("../models");
 
 class CategoriasService {
-  async createCategoria(categoriaData) {
+  async getCategories() {
+   return await Categoria.findAll();
+  }
+
+  async createCategorie(categoriaData) {
     return await Categoria.create(categoriaData);
   }
 
-  async updateCategoria(id, updateData) {
+  async updateCategorie(id, updateData) {
     const categoria = await Categoria.findByPk(id);
 
     if (!categoria) {
@@ -17,11 +19,8 @@ class CategoriasService {
     await categoria.update(updateData);
     return categoria;
   }
-  async getCategorias() {
-   return await Categoria.findAll();
-  }
 
-  async deleteCategoria(id) { // no elimina, da de baja la categoria
+  async deleteCategorie(id) { // no elimina, da de baja la categoria
     const categoria = await Categoria.findByPk(id);
     if (!categoria) {
       throw new Error("Categoría no encontrada");

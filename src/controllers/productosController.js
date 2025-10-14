@@ -1,11 +1,10 @@
-const { where } = require('sequelize');
-const { Producto } = require('../models');
 const productosService = require('../services/productosService');
 
 class ProductosController {
-  async getProductos(req, res, next) {
+  async getProducts(req, res, next) {
     try {
-      const productos = await productosService.getProductos();
+      const soloActivos = req.query.soloActivos !== 'false';
+      const productos = await productosService.getProducts(soloActivos);
 
       res.json({
         success: true,
@@ -29,10 +28,10 @@ class ProductosController {
     }
   }
 
-  async getProductoById(req, res, next) {
+  async getProductById(req, res, next) {
     try {
       const { id } = req.params;
-      const producto = await productosService.getProductoById(id);
+      const producto = await productosService.getProductById(id);
 
       res.json({
         success: true,
@@ -43,7 +42,7 @@ class ProductosController {
     }
   }
 
-  async createProducto(req, res, next) {
+  async createProduct(req, res, next) {
     try {
       const productoData = req.body;
       const imageBuffer = req.file ? req.file.buffer : null;
@@ -64,7 +63,7 @@ class ProductosController {
         productoData.isPromocion = productoData.isPromocion === 'true';
       }
 
-      const producto = await productosService.createProducto(productoData, imageBuffer);
+      const producto = await productosService.createProduct(productoData, imageBuffer);
 
       res.status(201).json({
         success: true,
@@ -76,7 +75,7 @@ class ProductosController {
     }
   }
 
-  async updateProducto(req, res, next) {
+  async updateProduct(req, res, next) {
     try {
       const { id } = req.params;
       const updateData = req.body;
@@ -91,7 +90,7 @@ class ProductosController {
         updateData.isPromocion = updateData.isPromocion === 'true';
       }
 
-      const producto = await productosService.updateProducto(id, updateData, imageBuffer);
+      const producto = await productosService.updateProduct(id, updateData, imageBuffer);
 
       res.json({
         success: true,
@@ -103,10 +102,10 @@ class ProductosController {
     }
   }
 
-  async deleteProducto(req, res, next) {
+  async deleteProduct(req, res, next) {
     try {
       const { id } = req.params;
-      await productosService.deleteProducto(id);
+      await productosService.deleteProduct(id);
 
       res.json({
         success: true,
