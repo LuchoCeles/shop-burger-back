@@ -1,16 +1,19 @@
+const { where } = require('sequelize');
 const { Producto, Categoria } = require('../models');
 const cloudinaryService = require('./cloudinaryService');
 
 class ProductosService {
 
-  async getProductos() {
+  async getProductos(soloActivos = true) {
+    const whereClause = soloActivos ? { estado: 1 } : {};
     const productos = await Producto.findAll({
+      where: whereClause,
       include: [
         {
           model: Categoria,
-          as:'categoria',
+          as: 'categoria',
           attributes: ['nombre'],
-          where: {estado:1},
+          where: { estado: 1 },
           required: true
         }
       ]
@@ -26,7 +29,7 @@ class ProductosService {
 
   async getProductoById(id) {
     const producto = await Producto.findOne({
-      where: { id, estado: true },
+      where: { id, estado: 1 },
       include: [{
         model: Categoria,
         as: 'categoria',

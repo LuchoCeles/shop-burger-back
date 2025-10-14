@@ -1,11 +1,10 @@
-const { where } = require('sequelize');
-const { Producto } = require('../models');
 const productosService = require('../services/productosService');
 
 class ProductosController {
   async getProductos(req, res, next) {
     try {
-      const productos = await productosService.getProductos();
+      const soloActivos = req.query.soloActivos !== 'false';
+      const productos = await productosService.getProductos(soloActivos);
 
       res.json({
         success: true,
