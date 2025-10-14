@@ -7,8 +7,8 @@ const handleUpload = require('../middlewares/multerMiddleware');
 
 const router = express.Router();
 
-router.get('/producto/', productosController.getProductos);
-router.get('/producto/:id', productosController.getProductoById);
+router.get('/producto/', productosController.getProducts);
+router.get('/producto/:id', productosController.getProductById);
 
 
 router.post('/producto', [
@@ -18,14 +18,14 @@ router.post('/producto', [
   body('precio'),
   body('stock'),
   body('idCategoria')
-], validateRequest, handleUpload, productosController.createProducto);
+], validateRequest, handleUpload, productosController.createProduct);
 
 router.patch('/:id', [
   authAdmin,
   body('precio').optional().isDecimal({ min: 0 }),
   body('stock').optional().isInt({ min: 0 })
-], validateRequest, handleUpload, productosController.updateProducto);
+], validateRequest, handleUpload, productosController.updateProduct);
 
-router.delete('/:id', authAdmin, productosController.deleteProducto);
+router.delete('/:id', authAdmin, productosController.deleteProduct);
 
 module.exports = router;
