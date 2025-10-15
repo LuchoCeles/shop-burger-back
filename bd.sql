@@ -33,6 +33,34 @@ CREATE TABLE Productos (
 );
 
 -- =======================
+-- TABLA: Adicionales
+-- =======================
+CREATE TABLE Adicionales (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(150) NOT NULL,
+    stock INT DEFAULT 0,
+    precio DECIMAL(10,2) NOT NULL,
+    maxCantidad INT DEFAULT 1,
+    estado TINYINT DEFAULT 1,
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- =======================
+-- TABLA: Adicionales x Productos
+-- =======================
+
+CREATE TABLE AdicionalesXProductos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    idProducto INT,
+    idAdicional INT,
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_axp_producto FOREIGN KEY (idProducto) REFERENCES Productos(id),
+    CONSTRAINT fk_axp_adicional FOREIGN KEY (idAdicional) REFERENCES Adicionales(id)
+);
+
+-- =======================
 -- TABLA: Clientes
 -- =======================
 CREATE TABLE Clientes (
