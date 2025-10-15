@@ -1,17 +1,17 @@
-const adicionales = require('../models');
+const { Adicionales } = require('../models');
 
 class AdicionalesService {
   async getAll(isActive = false) {
-    const query = isActive ? { where: { estado: true } } : {};
-    return await adicionales.findAll(query);
+    const where = isActive ? { where: { estado: true } } : {};
+    return await Adicionales.findAll(where);
   }
 
   async create(adicional) {
-    return await adicionales.create(adicional);
+    return await Adicionales.create(adicional);
   }
 
   async update(id, adicional) {
-    const existingAdicional = await adicionales.findByPk(id);
+    const existingAdicional = await Adicionales.findByPk(id);
     if (!existingAdicional) {
       throw new Error('Adicional no encontrado');
     }
@@ -19,7 +19,7 @@ class AdicionalesService {
   }
 
   async delete(id) {
-    const existingAdicional = await adicionales.findByPk(id);
+    const existingAdicional = await Adicionales.findByPk(id);
     if (!existingAdicional) {
       throw new Error('Adicional no encontrado');
     }
@@ -28,7 +28,7 @@ class AdicionalesService {
   }
 
   async changeState(id) {
-    const existingAdicional = await adicionales.findByPk(id);
+    const existingAdicional = await Adicionales.findByPk(id);
     if (!existingAdicional) {
       throw new Error('Adicional no encontrado');
     }

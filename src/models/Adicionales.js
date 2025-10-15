@@ -26,9 +26,8 @@ module.exports = (sequelize, DataTypes) => {
       defaultValue: 1
     }
   }, {
-    tableName: 'Adicionales',
+    tableName: 'adicionales',
     timestamps: true
-
   });
 
   return Adicionales;

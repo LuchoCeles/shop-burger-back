@@ -19,13 +19,6 @@ class AdicionalesController {
     try {
       const { nombre, precio, stock, maxCantidad } = req.body;
 
-      if (!nombre || !precio || !stock || !maxCantidad) {
-        return res.status(400).json({
-          success: false,
-          message: 'Todos los campos son obligatorios'
-        });
-      }
-
       const nuevoAdicional = await adicionalesService.create({ nombre, precio, stock, maxCantidad });
       res.status(201).json({
         success: true,
@@ -45,13 +38,6 @@ class AdicionalesController {
         return res.status(400).json({
           success: false,
           message: 'El ID del adicional es requerido'
-        });
-      }
-
-      if (!nombre || !precio || !stock || !maxCantidad) {
-        return res.status(400).json({
-          success: false,
-          message: 'Todos los campos son obligatorios'
         });
       }
 
@@ -86,7 +72,7 @@ class AdicionalesController {
     }
   }
 
-  async state(req, res, next) {
+  async changeState(req, res, next) {
     try {
       const { id } = req.params;
       if (!id) {
