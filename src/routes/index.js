@@ -13,4 +13,5 @@ router.use('/api', categoriasRoutes);
 router.use('/admin', pedidosRoutes);
 router.use('/admin', datosBancariosRoutes);
 
+
 module.exports = router;

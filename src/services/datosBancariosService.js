@@ -1,11 +1,23 @@
-const { DatosBancarios,sequelize } = require("../models");
-
+const bcrypt = require("bcrypt");
+const { DatosBancarios, sequelize, Admin } = require("../models");
 
 class DatosBancariosService {
   async create(datosBancarios) {
     const transaction = await sequelize.transaction();
     try {
       const { banco } = datosBancarios;
+
+      if (!banco.password) throw new Error("La contraseña es obligatoria");
+
+      const admins = await Admin.findAll({ attributes: ["password"] });
+      for (const admin of admins) {
+        const match = await bcrypt.compare(banco.password, admin.password);
+        if (match) {
+          throw new Error("La contraseña no puede ser igual a la del Admin");
+        }
+      }
+
+      const hashedPassword = await bcrypt.hash(banco.password, 12);
 
       const b = await DatosBancarios.create(
         {
@@ -14,16 +26,66 @@ class DatosBancariosService {
           cbu: banco.cbu,
           apellido: banco.apellido,
           nombre: banco.nombre,
+          password: hashedPassword,
         },
         { transaction }
       );
+
       await transaction.commit();
       return b;
     } catch (error) {
       if (!transaction.finished) {
         await transaction.rollback();
       }
-      throw new Error (`Error al cargar los datos: ${error.message}`);
+      throw new Error(`Error al cargar los datos: ${error.message}`);
+    }
+  }
+
+  async validateAccess(password) {
+    try {
+      const datos = await DatosBancarios.findOne({
+        order: [["id", "DESC"]],
+      });
+
+      if (!datos.password) throw new Error(`Contraseña invalida`);
+
+      const match = await bcrypt.compare(password, datos.password);
+
+      if (!match) throw new Error(`Contraseña incorrecta`);
+
+      return datos;
+    } catch (error) {
+      throw new Error(`Error al validar acceso: ${error.message}`);
+    }
+  }
+
+  async get() {
+    try {
+      const datosbancarios = await DatosBancarios.findAll({
+        atribute: ["id", "cuit", "alias", "cbu", "apellido", "nombre"],
+        order: [["id", "DESC"]],
+      });
+      return datosbancarios;
+    } catch (error) {
+      throw new Error(`Error al obtener los datos bancarios${error.message}`);
+    }
+  }
+
+  async update(id, datosActualizados, passwordActual) {
+    const transaction = await sequelize.transaction();
+    try {
+      const datos = await DatosBancarios.findByPk(id);
+      if (!datos) throw new Error(`Datos no encontrados`);
+
+      const match = await bcrypt.compare(passwordActual, datos.password);
+      if (!match) throw new Error(`Contraseña Incorrecta`);
+
+      await datos.update(datosActualizados, { transaction });
+      await transaction.commit();
+      return datos;
+    } catch (error) {
+      if (!transaction.finished) await transaction.rollback();
+      throw new Error(`Error al actualizar datos bancarios: ${error.message}`);
     }
   }
 }
