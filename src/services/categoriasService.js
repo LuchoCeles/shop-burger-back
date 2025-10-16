@@ -1,4 +1,4 @@
-const { Categoria } = require("../models");
+const { Categoria, sequelize } = require("../models");
 
 class CategoriasService {
   async getCategories() {
@@ -18,6 +18,22 @@ class CategoriasService {
 
     await categoria.update(updateData);
     return categoria;
+  }
+
+  async updateEstate(id,nuevoEsatdo){
+    const transaction = await sequelize.transaction();
+    try {
+       const categoria = await Categoria.findByPk(id);
+       if(!categoria){
+        throw new Error(`No se encontro la categoria`);
+       }
+       await categoria.update({estado:nuevoEsatdo},{transaction});
+       await transaction.commit();
+       return categoria;
+    } catch (error) {
+      if(!transaction.finished) await transaction.rollback();
+      throw new Error (`Error al cambiar estado: ${error.message}`);
+    }
   }
 
   async deleteCategorie(id) { // no elimina, da de baja la categoria

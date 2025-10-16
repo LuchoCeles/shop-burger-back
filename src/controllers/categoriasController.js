@@ -27,6 +27,36 @@ class CategoriasController {
     }
   }
 
+  async updateEstate(req, res) {
+    try {
+      const { id } = req.params;
+      const { estado } = req.body;
+
+      if(typeof estado === "undefined"){
+        return res.status(400).json({
+          success:false,
+          message: "El campo 'Estado' es obligatorio",
+        });
+      }
+
+      const categoria = await categoriasService.updateEstate(id,estado);
+      res.status(200).json({
+        success:true,
+        message: "Estado aztualizado",
+        data:{
+          id:categoria.id,
+          esatdo:categoria.estado
+        },
+      });
+
+    } catch (error) {
+      res.status(500).json({
+        success:false,
+        message:error.message,
+      });
+    }
+  }
+
   async updateCategorie(req, res, next) {
     try {
       const { id } = req.params;
@@ -55,7 +85,6 @@ class CategoriasController {
       next(error);
     }
   }
-  
 }
 
 module.exports = new CategoriasController();
