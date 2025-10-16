@@ -72,17 +72,19 @@ class CategoriasController {
     }
   }
 
-  async deleteCategorie(req, res, next) {
+  async deleteCategory(req, res) {
     try {
       const { id } = req.params;
-      const categoria = await categoriasService.deleteCategorie(id);
+      const categoria = await categoriasService.deleteCategory(id);
       res.json({
         success: true,
-        message: "Categoría eliminada exitosamente",
-        data: categoria,
+        message:categoria.message,
       });
     } catch (error) {
-      next(error);
+       res.status(500).json({
+        success:false,
+        message: error.message,
+       });
     }
   }
 }

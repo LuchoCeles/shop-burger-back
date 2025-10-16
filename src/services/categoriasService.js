@@ -1,4 +1,5 @@
-const { Categoria, sequelize } = require("../models");
+const { where } = require("sequelize");
+const { Categoria, sequelize, Producto } = require("../models");
 
 class CategoriasService {
   async getCategories() {
@@ -36,14 +37,34 @@ class CategoriasService {
     }
   }
 
-  async deleteCategorie(id) { // no elimina, da de baja la categoria
-    const categoria = await Categoria.findByPk(id);
-    if (!categoria) {
-      throw new Error("Categoría no encontrada");
-    }
-    await categoria.update({ estado: false });
+  async deleteCategory(id) { // no elimina, da de baja la categoria
+    const transaction = await sequelize.transaction();
+    try {
+      const products = await Producto.count({
+        where: {idCategoria:id},
+        transaction,
+      });
 
-    return categoria;
+      if(products>0){
+        throw new Error(`No se puede eliminar la categoria, tiene productos asociados.`);
+      }
+
+      const result = await  Categoria.destroy({
+        where:{id},
+        transaction,
+      });
+
+      if(result===0){
+        throw new Error(`Categoira no encontrada.`);
+      }
+
+      await transaction.commit();
+      return{message:"Categoria eliminada correctamente"};
+
+    } catch (error) {
+      if(!transaction.finished) await transaction.rollback();
+      throw new Error(`Error al eliminar categoria: ${error.message}`);
+    }
   }
 }
 

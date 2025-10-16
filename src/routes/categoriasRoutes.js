@@ -19,7 +19,7 @@ router.put('/:id', [
   body('estado').isBoolean().optional()
 ], validateRequest, categoriasController.updateCategorie);
 
-router.delete('/:id',authAdmin,categoriasController.deleteCategorie);
+router.delete('/:id',authAdmin,categoriasController.deleteCategory);
 
 router.patch('/:id/estado',[
   authAdmin,
