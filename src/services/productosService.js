@@ -1,4 +1,3 @@
-const { where } = require('sequelize');
 const { Producto, Categoria } = require('../models');
 const cloudinaryService = require('./cloudinaryService');
 
@@ -61,7 +60,7 @@ class ProductosService {
       url_imagen: imageUrl
     });
 
-    return await this.getProductoById(producto.id);
+    return await this.getProductById(producto.id);
   }
 
 
