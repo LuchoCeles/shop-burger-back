@@ -7,11 +7,11 @@ const handleUpload = require('../middlewares/multerMiddleware');
 
 const router = express.Router();
 
-router.get('/producto/', productosController.getProducts);
-router.get('/producto/:id', productosController.getProductById);
+router.get('/', productosController.getProducts);
+router.get('/:id', productosController.getProductById);
 
 
-router.post('/producto', [
+router.post('/', [
   authAdmin,
   body('nombre'),
   body('descripcion'),

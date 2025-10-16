@@ -20,13 +20,17 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false
     },
     apellido: {
-      type: DataTypes.BOOLEAN,
+      type: DataTypes.STRING(100),
       defaultValue: true
     },
     nombre: {
-      type: DataTypes.BOOLEAN,
+      type: DataTypes.STRING(100),
       defaultValue: true
-    }
+    },
+    password :{
+      type: DataTypes.STRING, // ← hash bcrypt
+      allowNull: false,
+    },
   }, {
     tableName: 'DatosBancarios',
     timestamps: true
