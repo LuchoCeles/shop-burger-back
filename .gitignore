@@ -1,3 +1,14 @@
+# Ignorar dependencias de Node
 node_modules/
+
+# Ignorar variables de entorno
 .env
+
+# Archivos de logs
+*.log
+
+# Caché del sistema o del IDE
 .DS_Store
+dist/
+build/
+.cache/
