@@ -13,7 +13,7 @@ router.post('/', [
   body('nombre').notEmpty().trim()
 ], validateRequest, categoriasController.createCategorie);
 
-router.put('/:id', [
+router.patch('/:id', [
   authAdmin,
   body('nombre').notEmpty().trim(),
   body('estado').isBoolean().optional()
