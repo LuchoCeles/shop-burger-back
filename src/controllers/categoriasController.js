@@ -27,6 +27,36 @@ class CategoriasController {
     }
   }
 
+  async updateEstate(req, res) {
+    try {
+      const { id } = req.params;
+      const { estado } = req.body;
+
+      if(typeof estado === "undefined"){
+        return res.status(400).json({
+          success:false,
+          message: "El campo 'Estado' es obligatorio",
+        });
+      }
+
+      const categoria = await categoriasService.updateEstate(id,estado);
+      res.status(200).json({
+        success:true,
+        message: "Estado aztualizado",
+        data:{
+          id:categoria.id,
+          esatdo:categoria.estado
+        },
+      });
+
+    } catch (error) {
+      res.status(500).json({
+        success:false,
+        message:error.message,
+      });
+    }
+  }
+
   async updateCategorie(req, res, next) {
     try {
       const { id } = req.params;
@@ -42,20 +72,21 @@ class CategoriasController {
     }
   }
 
-  async deleteCategorie(req, res, next) {
+  async deleteCategory(req, res) {
     try {
       const { id } = req.params;
-      const categoria = await categoriasService.deleteCategorie(id);
+      const categoria = await categoriasService.deleteCategory(id);
       res.json({
         success: true,
-        message: "Categoría eliminada exitosamente",
-        data: categoria,
+        message:categoria.message,
       });
     } catch (error) {
-      next(error);
+       res.status(500).json({
+        success:false,
+        message: error.message,
+       });
     }
   }
-  
 }
 
 module.exports = new CategoriasController();

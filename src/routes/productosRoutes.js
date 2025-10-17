@@ -1,5 +1,5 @@
 const express = require('express');
-const { body } = require('express-validator');
+const { body,param } = require('express-validator');
 const productosController = require('../controllers/productosController');
 const authAdmin = require('../middlewares/authAdmin');
 const validateRequest = require('../middlewares/validateRequest');
@@ -27,5 +27,12 @@ router.patch('/:id', [
 ], validateRequest, handleUpload, productosController.updateProduct);
 
 router.delete('/:id', authAdmin, productosController.deleteProduct);
+
+router.patch("/:id/estado",[
+    authAdmin,
+    param("id").isInt({ min: 1 }).withMessage("ID de producto inválido"),
+    body("estado").isInt({ min: 0, max: 1 }).withMessage("Estado debe ser 0 o 1"),
+    
+  ], validateRequest, productosController.updateEstate);
 
 module.exports = router;

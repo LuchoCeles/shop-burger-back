@@ -1,5 +1,5 @@
 const express = require('express');
-const { body } = require('express-validator');
+const { body,param } = require('express-validator');
 const categoriasController = require('../controllers/categoriasController');
 const authAdmin = require('../middlewares/authAdmin');
 const validateRequest = require('../middlewares/validateRequest');
@@ -19,6 +19,12 @@ router.put('/:id', [
   body('estado').isBoolean().optional()
 ], validateRequest, categoriasController.updateCategorie);
 
-router.delete('/:id',authAdmin,categoriasController.deleteCategorie);
+router.delete('/:id',authAdmin,categoriasController.deleteCategory);
+
+router.patch('/:id/estado',[
+  authAdmin,
+  param("id").isInt({min:1}).withMessage("ID invalido"),
+  body("estado").isInt({min:0, max:1}).withMessage("Estado debe ser 0 o 1"),
+],validateRequest, categoriasController.updateEstate);
 
 module.exports = router;
