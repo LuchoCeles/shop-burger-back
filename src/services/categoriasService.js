@@ -3,7 +3,7 @@ const { Categoria, sequelize, Producto } = require("../models");
 
 class CategoriasService {
   async getCategories() {
-   return await Categoria.findAll();
+    return await Categoria.findAll();
   }
 
   async createCategorie(categoriaData) {
@@ -16,53 +16,58 @@ class CategoriasService {
     if (!categoria) {
       throw new Error("Categoría no encontrada");
     }
-
-    await categoria.update(updateData);
-    return categoria;
-  }
-
-  async updateEstate(id,nuevoEsatdo){
-    const transaction = await sequelize.transaction();
     try {
-       const categoria = await Categoria.findByPk(id);
-       if(!categoria){
-        throw new Error(`No se encontro la categoria`);
-       }
-       await categoria.update({estado:nuevoEsatdo},{transaction});
-       await transaction.commit();
-       return categoria;
+      await categoria.update(updateData);
+      return categoria;
     } catch (error) {
-      if(!transaction.finished) await transaction.rollback();
-      throw new Error (`Error al cambiar estado: ${error.message}`);
+      throw new Error(`No se pudo actualizar la categoria`);
     }
   }
 
-  async deleteCategory(id) { // no elimina, da de baja la categoria
+  async updateEstate(id, nuevoEsatdo) {
+    const transaction = await sequelize.transaction();
+    try {
+      const categoria = await Categoria.findByPk(id);
+      if (!categoria) {
+        throw new Error(`No se encontro la categoria`);
+      }
+      await categoria.update({ estado: nuevoEsatdo }, { transaction });
+      await transaction.commit();
+      return categoria;
+    } catch (error) {
+      if (!transaction.finished) await transaction.rollback();
+      throw new Error(`Error al cambiar estado: ${error.message}`);
+    }
+  }
+
+  async deleteCategory(id) {
+    // no elimina, da de baja la categoria
     const transaction = await sequelize.transaction();
     try {
       const products = await Producto.count({
-        where: {idCategoria:id},
+        where: { idCategoria: id },
         transaction,
       });
 
-      if(products>0){
-        throw new Error(`No se puede eliminar la categoria, tiene productos asociados.`);
+      if (products > 0) {
+        throw new Error(
+          `No se puede eliminar la categoria, tiene productos asociados.`
+        );
       }
 
-      const result = await  Categoria.destroy({
-        where:{id},
+      const result = await Categoria.destroy({
+        where: { id },
         transaction,
       });
 
-      if(result===0){
+      if (result === 0) {
         throw new Error(`Categoira no encontrada.`);
       }
 
       await transaction.commit();
-      return{message:"Categoria eliminada correctamente"};
-
+      return { message: "Categoria eliminada correctamente" };
     } catch (error) {
-      if(!transaction.finished) await transaction.rollback();
+      if (!transaction.finished) await transaction.rollback();
       throw new Error(`Error al eliminar categoria: ${error.message}`);
     }
   }
