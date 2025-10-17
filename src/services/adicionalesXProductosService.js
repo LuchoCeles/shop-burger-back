@@ -1,6 +1,30 @@
 const { where } = require("sequelize");
-const { AdicionalesXProducto, sequelize } = require("../models");
+const { AdicionalesXProducto, sequelize,Producto,Adicionales } = require("../models");
+const models = require("../models");
 class AdicionalesXProductosService {
+  async getAll() {
+    try {
+      const registros = await AdicionalesXProducto.findAll({
+        attributes: [], // con esto no traemos datos de adicionalXPedido,
+        include: [
+          {
+            model: Producto,
+            as: "producto",
+            attributes: ["id", "nombre", "precio"]
+          },
+          {
+            model: Adicionales,
+            as: "adicional",
+            attributes: ["id", "nombre", "precio"]
+          }
+        ],
+        order: [["id", "DESC"]],
+      });
+      return registros;
+    } catch (error) {
+      throw new Error(`Error al obtener adicionales: ${error.message}`);
+    }
+  }
   async create(data) {
     const transaction = await sequelize.transaction();
     try {
@@ -31,7 +55,6 @@ class AdicionalesXProductosService {
       throw new Error(`Error al actualizar relación: ${error.message}`);
     }
   }
-
 
   async delete(id) {
     const transaction = await sequelize.transaction();

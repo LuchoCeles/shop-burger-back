@@ -16,22 +16,34 @@ class AdicionalesXProductosController {
     }
   }
 
-  async update (req,res,next){
+  async getAll(req, res, next) {
     try {
-        const {id} =req.params;
-        const registro = await adicionalesXProductosService.update(id,req.body);
-        res.json({
-            success:true,
-            data:registro,
-        });
+      const registro = await adicionalesXProductosService.getAll();
+      res.status(200).json({
+        success: true,
+        data: registro,
+      });
     } catch (error) {
-        res.status({
-            success:false,
-            message:error.message,
-        });
+      next(error);
     }
   }
-  
+
+  async update(req, res, next) {
+    try {
+      const { id } = req.params;
+      const registro = await adicionalesXProductosService.update(id, req.body);
+      res.json({
+        success: true,
+        data: registro,
+      });
+    } catch (error) {
+      res.status({
+        success: false,
+        message: error.message,
+      });
+    }
+  }
+
   async delete(req, res, next) {
     try {
       const { id } = req.params;
