@@ -1,4 +1,5 @@
-const { Producto, Categoria, sequelize } = require("../models");
+const { where } = require("sequelize");
+const { Producto, Categoria, sequelize, Adicionales } = require("../models");
 const cloudinaryService = require("./cloudinaryService");
 
 class ProductosService {
@@ -14,13 +15,29 @@ class ProductosService {
           where: { estado: 1 },
           required: true,
         },
+        {
+          model: Adicionales,
+          as: "adicionales", // usa la asociación belongsToMany
+          attributes: ["id", "nombre", "precio", "stock", "maxCantidad"],
+          where: { estado: 1 },
+          through: {
+           // attributes: ["id"],
+          }, // para no mostrar la tabla intermedia
+          required: false,
+        },
       ],
     });
+
     return productos.map((p) => {
       const plain = p.get({ plain: true });
+      const adicionalAxP = plain.adicionales?.map((a) => ({
+        ...a,
+        idAxP: a.AdicionalesXProductos?.id,
+      }));
       return {
         ...plain,
         categoria: plain.categoria ? plain.categoria.nombre : null,
+        adicionales: adicionalAxP,
       };
     });
   }
