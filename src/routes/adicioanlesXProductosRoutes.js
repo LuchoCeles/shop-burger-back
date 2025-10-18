@@ -5,8 +5,6 @@ const authAdmin = require("../middlewares/authAdmin");
 const { body } = require("express-validator");
 const validateRequest = require("../middlewares/validateRequest");
 
-router.get("/",adicionalesXProductoController.getAll);
-
 router.post("/create", authAdmin,[
     body("idProducto"),
     body("idAdicional"),
