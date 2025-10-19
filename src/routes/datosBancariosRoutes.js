@@ -20,7 +20,7 @@ router.post("/", [
 ], datosBancariosController.create);
 
 // Acceder a los datos (requiere contraseña guardada)
-router.post("/acceder",
+router.post("/login",
   authAdmin,
   body("password").notEmpty(),
   validateRequest, datosBancariosController.access);
