@@ -78,16 +78,11 @@ class DatosBancariosController {
   async update(req, res) {
     try {
       const { id } = req.params;
-      const { passwordActual, banco } = req.body;
+      const { cuit, alias, nombre, apellido, cbu } = req.body;
 
-      if (!passwordActual) {
-        return res.status(400).json({
-          success: false,
-          message: "La contraseña es obligatoria",
-        });
-      }
+      console.log({ cuit, alias, nombre, apellido, cbu });
 
-      const datos = await datosBancariosService.update(id, banco, passwordActual);
+      const datos = await datosBancariosService.update(id, { cuit, alias, nombre, apellido, cbu });
       res.status(200).json({
         success: true,
         message: "Datos bancarios actualizados",

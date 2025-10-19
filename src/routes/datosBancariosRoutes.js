@@ -27,15 +27,13 @@ router.post("/login",
 
 router.get("/", datosBancariosController.get);
 
-router.put("/:id",
+router.patch("/:id",
   authAdmin, [
-  body("passwordActual").notEmpty().withMessage("La contraseña actual es obligatoria"),
   body("banco.cuit").optional().isString(),
   body("banco.alias").optional().isString(),
   body("banco.cbu").optional().isString(),
   body("banco.apellido").optional().isString(),
   body("banco.nombre").optional().isString(),
-  validateRequest,
-], datosBancariosController.update);
+], validateRequest, datosBancariosController.update);
 
 module.exports = router;
