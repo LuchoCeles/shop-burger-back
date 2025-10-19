@@ -17,7 +17,7 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.TEXT,
       allowNull: true
     },
-    idCliente: {  // <-- columna para la relación con Cliente
+    idCliente: {
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
