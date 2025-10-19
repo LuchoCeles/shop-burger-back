@@ -78,11 +78,9 @@ class DatosBancariosController {
   async update(req, res) {
     try {
       const { id } = req.params;
-      const { cuit, alias, nombre, apellido, cbu } = req.body;
+      const { banco } = req.body;
 
-      console.log({ cuit, alias, nombre, apellido, cbu });
-
-      const datos = await datosBancariosService.update(id, { cuit, alias, nombre, apellido, cbu });
+      const datos = await datosBancariosService.update(id, banco);
       res.status(200).json({
         success: true,
         message: "Datos bancarios actualizados",
