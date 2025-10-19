@@ -20,23 +20,20 @@ router.post("/", [
 ], datosBancariosController.create);
 
 // Acceder a los datos (requiere contraseña guardada)
-router.post("/acceder",
+router.post("/login",
   authAdmin,
   body("password").notEmpty(),
   validateRequest, datosBancariosController.access);
 
-router.get("/",
-  authAdmin, datosBancariosController.get);
+router.get("/", datosBancariosController.get);
 
-router.put("/:id",
+router.patch("/:id",
   authAdmin, [
-  body("passwordActual").notEmpty().withMessage("La contraseña actual es obligatoria"),
-  body("banco.cuit").optional().isString(),
-  body("banco.alias").optional().isString(),
-  body("banco.cbu").optional().isString(),
-  body("banco.apellido").optional().isString(),
-  body("banco.nombre").optional().isString(),
-  validateRequest,
-], datosBancariosController.update);
+  body("banco.cuit").optional().isString().notEmpty().withMessage("El CUIT no puede estar vacío"),
+  body("banco.alias").optional().isString().notEmpty().withMessage("El alias no puede estar vacío"),
+  body("banco.cbu").optional().isString().notEmpty().withMessage("El CBU no puede estar vacío"),
+  body("banco.apellido").optional().isString().notEmpty().withMessage("El apellido no puede estar vacío"),
+  body("banco.nombre").optional().isString().notEmpty().withMessage("El nombre no puede estar vacío"),
+], validateRequest, datosBancariosController.update);
 
 module.exports = router;

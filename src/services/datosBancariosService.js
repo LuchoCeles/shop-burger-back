@@ -43,8 +43,9 @@ class DatosBancariosService {
 
   async validateAccess(password) {
     try {
+
       const datos = await DatosBancarios.findOne({
-        order: [["id", "DESC"]],
+        order: [["id", "DESC"]]
       });
 
       if (!datos.password) throw new Error(`Contraseña invalida`);
@@ -62,8 +63,7 @@ class DatosBancariosService {
   async get() {
     try {
       const datosbancarios = await DatosBancarios.findAll({
-        atribute: ["id", "cuit", "alias", "cbu", "apellido", "nombre"],
-        order: [["id", "DESC"]],
+        attributes: ["id", "cuit", "alias", "cbu", "apellido", "nombre"]
       });
       return datosbancarios;
     } catch (error) {
@@ -71,15 +71,13 @@ class DatosBancariosService {
     }
   }
 
-  async update(id, datosActualizados, passwordActual) {
+  async update(id, datosActualizados) {
     const transaction = await sequelize.transaction();
     try {
       const datos = await DatosBancarios.findByPk(id);
-      if (!datos) throw new Error(`Datos no encontrados`);
+      if (!datos) throw new Error(`Id no encontrada`);
 
-      const match = await bcrypt.compare(passwordActual, datos.password);
-      if (!match) throw new Error(`Contraseña Incorrecta`);
-
+      console.log(datosActualizados);
       await datos.update(datosActualizados, { transaction });
       await transaction.commit();
       return datos;
