@@ -29,11 +29,11 @@ router.get("/", datosBancariosController.get);
 
 router.patch("/:id",
   authAdmin, [
-  body("banco.cuit").optional().isString().notEmpty(),
-  body("banco.alias").optional().isString().notEmpty(),
-  body("banco.cbu").optional().isString().notEmpty(),
-  body("banco.apellido").optional().isString().notEmpty(),
-  body("banco.nombre").optional().isString().notEmpty(),
+  body("banco.cuit").optional().isString().notEmpty().withMessage("El CUIT no puede estar vacío"),
+  body("banco.alias").optional().isString().notEmpty().withMessage("El alias no puede estar vacío"),
+  body("banco.cbu").optional().isString().notEmpty().withMessage("El CBU no puede estar vacío"),
+  body("banco.apellido").optional().isString().notEmpty().withMessage("El apellido no puede estar vacío"),
+  body("banco.nombre").optional().isString().notEmpty().withMessage("El nombre no puede estar vacío"),
 ], validateRequest, datosBancariosController.update);
 
 module.exports = router;
