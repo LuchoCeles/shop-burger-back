@@ -43,14 +43,15 @@ class DatosBancariosService {
 
   async validateAccess(password) {
     try {
+      
       const datos = await DatosBancarios.findOne({
-        order: [["id", "DESC"]],
+        order: [["id", "DESC"]]
       });
-
+      
       if (!datos.password) throw new Error(`Contraseña invalida`);
 
       const match = await bcrypt.compare(password, datos.password);
-
+      
       if (!match) throw new Error(`Contraseña incorrecta`);
 
       return datos;
@@ -62,7 +63,7 @@ class DatosBancariosService {
   async get() {
     try {
       const datosbancarios = await DatosBancarios.findAll({
-        attributes: ["cuit", "alias", "cbu", "apellido", "nombre"]
+        attributes: ["id","cuit", "alias", "cbu", "apellido", "nombre"]
       });
       return datosbancarios;
     } catch (error) {

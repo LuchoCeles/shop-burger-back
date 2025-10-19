@@ -12,11 +12,18 @@ class DatosBancariosController {
         });
       }
 
-      const d = await datosBancariosService.create({ banco });
+      const datos = await datosBancariosService.create({ banco });
 
       return res.status(201).json({
         message: "Datos creados exitosamente",
-        data: d,
+        data: {
+          id: datos.id,
+          cuit: datos.cuit,
+          alias: datos.alias,
+          cbu: datos.cbu,
+          apellido: datos.apellido,
+          nombre: datos.nombre,
+        },
       });
     } catch (error) {
       return res.status(500).json({
@@ -30,7 +37,14 @@ class DatosBancariosController {
       const datos = await datosBancariosService.get();
       res.status(200).json({
         success: true,
-        data: datos,
+        data: {
+          id: datos.id,
+          cuit: datos.cuit,
+          alias: datos.alias,
+          cbu: datos.cbu,
+          apellido: datos.apellido,
+          nombre: datos.nombre,
+        },
       });
     } catch (error) {
       next(error);
@@ -45,6 +59,7 @@ class DatosBancariosController {
         success: true,
         message: "Acceso autorizado",
         data: {
+          id: datos.id,
           cuit: datos.cuit,
           alias: datos.alias,
           cbu: datos.cbu,
@@ -59,7 +74,7 @@ class DatosBancariosController {
       });
     }
   }
-  
+
   async update(req, res) {
     try {
       const { id } = req.params;
@@ -72,11 +87,12 @@ class DatosBancariosController {
         });
       }
 
-      const datos = await datosBancariosService.update(id,banco,passwordActual);
+      const datos = await datosBancariosService.update(id, banco, passwordActual);
       res.status(200).json({
         success: true,
         message: "Datos bancarios actualizados",
         data: {
+          id: datos.id,
           cuit: datos.cuit,
           alias: datos.alias,
           cbu: datos.cbu,
