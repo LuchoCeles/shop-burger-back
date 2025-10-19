@@ -17,12 +17,12 @@ class ProductosService {
         },
         {
           model: Adicionales,
-          as: "adicionales", // usa la asociación belongsToMany
+          as: "adicionales",
           attributes: ["id", "nombre", "precio", "stock", "maxCantidad"],
           where: { estado: 1 },
           through: {
-           // attributes: ["id"],
-          }, // para no mostrar la tabla intermedia
+            attributes: ["id"],
+          },
           required: false,
         },
       ],
@@ -30,14 +30,19 @@ class ProductosService {
 
     return productos.map((p) => {
       const plain = p.get({ plain: true });
-      const adicionalAxP = plain.adicionales?.map((a) => ({
-        ...a,
-        idAxP: a.AdicionalesXProductos?.id,
-      }));
+      const adicionalLimpio = plain.adicionales?.map((a) => {
+        const adicional = {
+          ...a,
+          idAxp: a.AdicionalesXProductos.id
+        };
+        delete adicional.AdicionalesXProductos;
+        return adicional;
+      });
+
       return {
         ...plain,
         categoria: plain.categoria ? plain.categoria.nombre : null,
-        adicionales: adicionalAxP,
+        adicionales: adicionalLimpio,
       };
     });
   }

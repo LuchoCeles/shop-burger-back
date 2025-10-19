@@ -49,20 +49,6 @@ class ProductosController {
       const productoData = req.body;
       const imageBuffer = req.file ? req.file.buffer : null;
 
-      if (
-        !productoData.nombre ||
-        !productoData.descripcion ||
-        !productoData.precio ||
-        !productoData.stock ||
-        !productoData.idCategoria ||
-        !imageBuffer
-      ) {
-        return res.status(400).json({
-          success: false,
-          message: "Todos los campos son obligatorios",
-        });
-      }
-
       if (productoData.precio)
         productoData.precio = parseFloat(productoData.precio);
       if (productoData.descuento)
