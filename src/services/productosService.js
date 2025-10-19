@@ -21,7 +21,7 @@ class ProductosService {
           attributes: ["id", "nombre", "precio", "stock", "maxCantidad"],
           where: { estado: 1 },
           through: {
-            attributes: ["id"],
+           // attributes: ["id"],
           }, // para no mostrar la tabla intermedia
           required: false,
         },
@@ -30,19 +30,14 @@ class ProductosService {
 
     return productos.map((p) => {
       const plain = p.get({ plain: true });
-      const adicionalesLimpios = plain.adicionales?.map((a) => {
-        const adicional = {
-          ...a,
-          idAxP: a.AdicionalesXProductos?.id || null,
-        };
-        delete adicional.AdicionalesXProductos; // eliminar el objeto intermedio
-        return adicional;
-      });
-
+      const adicionalAxP = plain.adicionales?.map((a) => ({
+        ...a,
+        idAxP: a.AdicionalesXProductos?.id,
+      }));
       return {
         ...plain,
         categoria: plain.categoria ? plain.categoria.nombre : null,
-        adicionales: adicionalesLimpios,
+        adicionales: adicionalAxP,
       };
     });
   }
