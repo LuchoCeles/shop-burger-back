@@ -17,7 +17,7 @@ class AdicionalesController {
 
   async create(req, res, next) {
     try {
-      const { nombre, precio, stock, maxCantidad } = req.body;
+      const {nombre, precio, stock, maxCantidad} = req.body;
 
       const nuevoAdicional = await adicionalesService.create({ nombre, precio, stock, maxCantidad });
       res.status(201).json({

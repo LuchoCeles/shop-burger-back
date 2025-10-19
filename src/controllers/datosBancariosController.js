@@ -24,6 +24,7 @@ class DatosBancariosController {
       });
     }
   }
+
   async get(req, res, next) {
     try {
       const datos = await datosBancariosService.get();
@@ -58,6 +59,7 @@ class DatosBancariosController {
       });
     }
   }
+  
   async update(req, res) {
     try {
       const { id } = req.params;

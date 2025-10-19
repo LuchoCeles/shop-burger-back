@@ -25,8 +25,7 @@ router.post("/acceder",
   body("password").notEmpty(),
   validateRequest, datosBancariosController.access);
 
-router.get("/",
-  authAdmin, datosBancariosController.get);
+router.get("/", datosBancariosController.get);
 
 router.put("/:id",
   authAdmin, [
