@@ -16,17 +16,6 @@ class AdicionalesXProductosController {
     }
   }
 
-  async getAll(req, res, next) {
-    try {
-      const registro = await adicionalesXProductosService.getAll();
-      res.status(200).json({
-        success: true,
-        data: registro,
-      });
-    } catch (error) {
-      next(error);
-    }
-  }
 
   async update(req, res, next) {
     try {

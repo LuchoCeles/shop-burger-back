@@ -36,4 +36,11 @@ router.patch("/:id",
   body("banco.nombre").optional().isString().notEmpty().withMessage("El nombre no puede estar vacío"),
 ], validateRequest, datosBancariosController.update);
 
+router.patch("/password/:id",
+  authAdmin, [
+    body("password").notEmpty().withMessage("Contraseña actual requerida"),
+    body("newPassword").isLength({min:6}).withMessage("Minimo debe tener 6 caracteres"),
+  ], validateRequest, datosBancariosController.updatePassword
+);
+
 module.exports = router;
