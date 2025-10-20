@@ -34,7 +34,7 @@ module.exports = (sequelize, DataTypes) => {
       },
     },
     {
-      tableName: "adicionalesXProductoXPedidos",
+      tableName: "AdicionalesXProductoXPedidos",
       timestamps: false,
     }
   );
@@ -42,7 +42,7 @@ module.exports = (sequelize, DataTypes) => {
   AdicionalesXProductoXPedidos.associate = function (models) {
     AdicionalesXProductoXPedidos.belongsTo(models.ProductosXPedido, {
       foreignKey: "idProductoXPedido",
-      as: "producto",
+      as: "productoXPedido",
     });
     AdicionalesXProductoXPedidos.belongsTo(models.Adicionales, {
       foreignKey: "idAdicional",
