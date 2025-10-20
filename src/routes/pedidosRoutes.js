@@ -6,8 +6,7 @@ const validateRequest = require('../middlewares/validateRequest');
 const pedidosController = require('../controllers/pedidosController');
 
 // Crear un nuevo pedido con productos
-router.post('/', [
-  authAdmin,
+router.post('/', authAdmin, [
   body('cliente').notEmpty(),
   body('descripcion'),
   body('productos').isArray({ min: 1 }).withMessage('productos debe ser un array con al menos un elemento'),
@@ -17,23 +16,20 @@ router.post('/', [
 router.get('/', authAdmin, pedidosController.getOrders);
 
 // Actualizar solo el estado
-router.patch('/estado', [
-  authAdmin,
+router.patch('/estado', authAdmin, [
   body('id').isInt({ min: 1 }).withMessage('ID debe ser válido'),
   body('estado').notEmpty().withMessage('estado es requerido')
-    .isIn(['pendiente','entregado', 'cancelado'])
+    .isIn(['pendiente', 'entregado', 'cancelado'])
     .withMessage('Estado inválido')
 ], validateRequest, pedidosController.updateStatus);
 
 // Cancelar pedido (devuelve stock)
-router.patch('/:id/cancelar', [
-  authAdmin,
+router.patch('/:id/cancelar', authAdmin, [
   param('id').isInt({ min: 1 }).withMessage('ID debe ser válido')
 ], validateRequest, pedidosController.cancel);
 
 // Eliminar pedido
-router.delete('/:id', [
-  authAdmin,
+router.delete('/:id', authAdmin, [
   param('id').isInt({ min: 1 }).withMessage('ID debe ser válido')
 ], validateRequest, pedidosController.delete);
 

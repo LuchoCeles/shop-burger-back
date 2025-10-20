@@ -47,6 +47,7 @@ class ProductosController {
   async createProduct(req, res, next) {
     try {
       const productoData = req.body;
+
       const imageBuffer = req.file ? req.file.buffer : null;
 
       if (productoData.precio)
@@ -78,24 +79,24 @@ class ProductosController {
 
   async updateEstate(req, res) {
     try {
-      const {id}= req.params;
-      const{estado}= req.body;
+      const { id } = req.params;
+      const { estado } = req.body;
 
-      if(typeof estado ==="undefined"){
+      if (typeof estado === "undefined") {
         return res.status(400).json({
-          success:false,
+          success: false,
           message: "El campo 'estado' es obligatorio",
         });
       }
 
-      const producto = await productosService.updateEstate(id,estado);
+      const producto = await productosService.updateEstate(id, estado);
 
       res.status(200).json({
-        success:true,
+        success: true,
         message: "Estado actualizado",
-        data:{
+        data: {
           id: producto.id,
-          estado:producto.estado,
+          estado: producto.estado,
         },
       });
 
