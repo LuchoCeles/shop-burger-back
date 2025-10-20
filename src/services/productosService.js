@@ -1,4 +1,3 @@
-const { where } = require("sequelize");
 const { Producto, Categoria, sequelize, Adicionales } = require("../models");
 const cloudinaryService = require("./cloudinaryService");
 
@@ -86,7 +85,7 @@ class ProductosService {
     return await this.getProductById(producto.id);
   }
 
-  async updateEstate(id, nuevoEstado) {
+  async updateState(id, nuevoEstado) {
     const transaction = await sequelize.transaction();
     try {
       const producto = await Producto.findByPk(id);
@@ -140,7 +139,7 @@ class ProductosService {
       url_imagen: imageUrl,
     });
 
-    return await this.getProductoById(id);
+    return await this.getProductById(id);
   }
 
   async deleteProduct(id) {
