@@ -43,9 +43,8 @@ class DatosBancariosService {
 
   async validateAccess(password) {
     try {
-
       const datos = await DatosBancarios.findOne({
-        order: [["id", "DESC"]]
+        order: [["id", "DESC"]],
       });
 
       if (!datos.password) throw new Error(`Contraseña invalida`);
@@ -63,11 +62,34 @@ class DatosBancariosService {
   async get() {
     try {
       const datosbancarios = await DatosBancarios.findAll({
-        attributes: ["id", "cuit", "alias", "cbu", "apellido", "nombre"]
+        attributes: ["id", "cuit", "alias", "cbu", "apellido", "nombre"],
       });
       return datosbancarios;
     } catch (error) {
       throw new Error(`Error al obtener los datos bancarios${error.message}`);
+    }
+  }
+
+  async updatePassword(id, password, newPassword) {
+    const transaction = await sequelize.transaction();
+
+    try {
+      const datos = await DatosBancarios.findByPk(id);
+      if (!datos) throw new Error(`Usuario no encontrado`);
+
+      const match = await bcrypt.compare(password, datos.password);
+      if (!match) throw new Error(`Contraseña incorrecta`);
+
+      const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+      await datos.update({ password: hashedPassword });
+
+      await transaction.commit();
+
+      return "Contraseña actualizada";
+    } catch (error) {
+      await transaction.rollback();
+      throw new Error(`Error al actualizar la contraseña: ${error.message}`);
     }
   }
 
