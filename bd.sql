@@ -86,6 +86,20 @@ CREATE TABLE Pedidos (
 );
 
 -- =======================
+-- TABLA: Productos x Pedidos
+-- =======================
+CREATE TABLE ProductosXPedidos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    idProducto INT,
+    idPedido INT,
+    cantidad INT DEFAULT 1,
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_pxp_producto FOREIGN KEY (idProducto) REFERENCES Productos(id),
+    CONSTRAINT fk_pxp_pedido FOREIGN KEY (idPedido) REFERENCES Pedidos(id)
+);
+
+-- =======================
 -- TABLA: Adicionales x Productos x Pedidos
 -- =======================
 CREATE TABLE AdicionalesXProductosXPedidos (
@@ -98,22 +112,6 @@ CREATE TABLE AdicionalesXProductosXPedidos (
     updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT fk_axpxp_producto_pedido FOREIGN KEY (idProductoXPedido) REFERENCES ProductosXPedidos(id),
     CONSTRAINT fk_axpxp_adicional FOREIGN KEY (idAdicional) REFERENCES Adicionales(id)
-);
-
--- =======================
--- TABLA: Productos x Pedidos
--- =======================
-CREATE TABLE ProductosXPedidos (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    idProducto INT,
-    idPedido INT,
-    idAxPxP INT,
-    cantidad INT DEFAULT 1,
-    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    CONSTRAINT fk_pxp_producto FOREIGN KEY (idProducto) REFERENCES Productos(id),
-    CONSTRAINT fk_pxp_axpxp FOREIGN KEY (idAxPxP) REFERENCES AdicionalesXProductosXPedidos(id),
-    CONSTRAINT fk_pxp_pedido FOREIGN KEY (idPedido) REFERENCES Pedidos(id)
 );
 
 -- =======================
@@ -169,3 +167,5 @@ CREATE TABLE Admin (
 
 
 INSERT INTO `admin` (`id`, `nombre`, `password`, `createdAt`, `updatedAt`) VALUES (NULL, 'admin', '$2a$12$UxAIzdbWGJq9sctMi7942uTnYzRhMJg1VV65/L2VQdQ0w9vKhKana', current_timestamp(), current_timestamp());
+
+INSERT INTO `DatosBancarios` (`id`, `cuit`, `alias`, `cbu`, `apellido`, `nombre`, `password`, `createdAt`, `updatedAt`) VALUES (NULL, '20-12345678-9', 'mi_alias_bancario', '1234567890123456789012', 'Perez', 'Juan', '$2a$12$UnGu/sK.zOLy9La4VuMGBeYCrHLw8gzblkYt6/HgjcPbblXgjrfiW', current_timestamp(), current_timestamp());
