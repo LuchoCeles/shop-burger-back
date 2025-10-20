@@ -74,6 +74,10 @@ class DatosBancariosService {
     const transaction = await sequelize.transaction();
 
     try {
+      if (password === newPassword) {
+        throw new Error(`La nueva contraseña no puede ser igual a la anterior`);
+      }
+
       const datos = await DatosBancarios.findByPk(id);
       if (!datos) throw new Error(`Usuario no encontrado`);
 
