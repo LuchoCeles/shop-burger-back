@@ -1,3 +1,4 @@
+const { Namespace } = require("socket.io");
 const datosBancariosService = require("../services/datosBancariosService");
 
 class DatosBancariosController {
@@ -72,6 +73,33 @@ class DatosBancariosController {
         success: false,
         message: error.message,
       });
+    }
+  }
+
+  async updatePassword(req, res, next) {
+    try {
+      const { id } = req.params;
+      const { password, newPassword } = req.body;
+
+      if (!password || !newPassword) {
+        return res.status(400).json({
+          success: false,
+          message: "Campo requerido",
+        });
+      }
+
+      const result = await datosBancariosService.updatePassword(
+        id,
+        password,
+        newPassword
+      );
+
+      res.status(200).json({
+        success: true,
+        message: result,
+      });
+    } catch (error) {
+      next(error);
     }
   }
 

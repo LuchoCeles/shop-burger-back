@@ -1,8 +1,13 @@
 const { where } = require("sequelize");
-const { AdicionalesXProducto, sequelize,Producto,Adicionales } = require("../models");
+const {
+  AdicionalesXProducto,
+  sequelize,
+  Producto,
+  Adicionales,
+} = require("../models");
 const models = require("../models");
 class AdicionalesXProductosService {
- 
+  
   async create(data) {
     const transaction = await sequelize.transaction();
     try {
@@ -19,7 +24,7 @@ class AdicionalesXProductosService {
       throw new Error(`Error al crear relación: ${error.message}`);
     }
   }
-  
+
   async update(id, data) {
     const transaction = await sequelize.transaction();
     try {
