@@ -7,8 +7,7 @@ const handleUpload = require('../middlewares/multerMiddleware');
 
 const router = express.Router();
 
-router.get('/', productosController.getProducts);
-router.get('/:id', productosController.getProductById);
+router.get('/:soloActivos/', productosController.getProducts);
 
 
 router.post('/', authAdmin, handleUpload, [
@@ -28,7 +27,7 @@ router.delete('/:id', authAdmin, productosController.deleteProduct);
 
 router.patch("/:id/estado", authAdmin, [
   param("id").isInt({ min: 1 }).withMessage("ID de producto inválido"),
-  body("estado").isInt({ min: 0, max: 1 }).withMessage("Estado debe ser 0 o 1"),
-], validateRequest, productosController.updateEstate);
+  body("estado").isBoolean().withMessage("Estado debe ser 0 o 1"),
+], validateRequest, productosController.updateState);
 
 module.exports = router;
