@@ -46,6 +46,7 @@ CREATE TABLE Adicionales (
     updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
+
 -- =======================
 -- TABLA: Adicionales x Productos
 -- =======================
@@ -85,6 +86,22 @@ CREATE TABLE Pedidos (
     CONSTRAINT fk_pedido_cliente FOREIGN KEY (idCliente) REFERENCES Clientes(id)
 );
 
+
+-- =======================
+-- TABLA: Productos x Pedidos
+-- =======================
+CREATE TABLE ProductosXPedidos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    idProducto INT,
+    idPedido INT,
+    idAxPxP INT,
+    cantidad INT DEFAULT 1,
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_pxp_producto FOREIGN KEY (idProducto) REFERENCES Productos(id),
+    CONSTRAINT fk_pxp_pedido FOREIGN KEY (idPedido) REFERENCES Pedidos(id)
+);
+
 -- =======================
 -- TABLA: Adicionales x Productos x Pedidos
 -- =======================
@@ -99,23 +116,6 @@ CREATE TABLE AdicionalesXProductosXPedidos (
     CONSTRAINT fk_axpxp_producto_pedido FOREIGN KEY (idProductoXPedido) REFERENCES ProductosXPedidos(id),
     CONSTRAINT fk_axpxp_adicional FOREIGN KEY (idAdicional) REFERENCES Adicionales(id)
 );
-
--- =======================
--- TABLA: Productos x Pedidos
--- =======================
-CREATE TABLE ProductosXPedidos (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    idProducto INT,
-    idPedido INT,
-    idAxPxP INT,
-    cantidad INT DEFAULT 1,
-    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    CONSTRAINT fk_pxp_producto FOREIGN KEY (idProducto) REFERENCES Productos(id),
-    CONSTRAINT fk_pxp_axpxp FOREIGN KEY (idAxPxP) REFERENCES AdicionalesXProductosXPedidos(id),
-    CONSTRAINT fk_pxp_pedido FOREIGN KEY (idPedido) REFERENCES Pedidos(id)
-);
-
 -- =======================
 -- TABLA: Datos Bancarios
 -- =======================
