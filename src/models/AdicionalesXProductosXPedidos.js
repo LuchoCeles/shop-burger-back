@@ -1,4 +1,5 @@
 module.exports = (sequelize, DataTypes) => {
+  
   const AdicionalesXProductosXPedidos = sequelize.define(
     "AdicionalesXProductosXPedidos",
     {
@@ -23,12 +24,12 @@ module.exports = (sequelize, DataTypes) => {
           key: "id",
         },
       },
-      Cantidad: {
+      cantidad: {
         type: DataTypes.INTEGER,
         allowNull: false,
         defaultValue: 1,
       },
-      Precio: {
+      precio: {
         type: DataTypes.DECIMAL(10, 2),
         allowNull: false,
       },

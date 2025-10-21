@@ -4,6 +4,8 @@ const {
   Producto,
   ProductosXPedido,
   Pago,
+  Adicionales,
+  AdicionalesXProductosXPedidos,
 } = require("../models");
 const { sequelize } = require("../models");
 const { Op } = require("sequelize");
@@ -14,62 +16,41 @@ class PedidosService {
     const transaction = await sequelize.transaction();
     try {
       const { cliente, productos, descripcion } = datosPedido;
-
       let total = 0;
-
-      for (const P of productos) {
-        // traemos precio + stock y bloqueamos la fila para esta transacción
-        const proc = await Producto.findByPk(P.id, {
-          attributes: ['precio', 'stock'],
-          transaction,
-          lock: transaction.LOCK.UPDATE // bloqueo de fila
-        });
-
-        if (!proc) {
-          throw new Error(`El producto ${P.nombre} no existe`);
-        }
-
-        if (proc.stock < P.cantidad) {
-          throw new Error(
-            `Stock insuficiente para el producto ${P.nombre}. Disponible: ${proc.stock}, solicitado: ${P.cantidad}`
-          );
-        }
-
-        const decrementResult = await Producto.decrement('stock', {
-          by: P.cantidad,
-          where: {
-            id: P.id,
-            stock: { [Op.gte]: P.cantidad } // solo decrementa si hay stock suficiente
-          },
-          transaction
-        });
-
-        if (Array.isArray(decrementResult) && decrementResult[0] === 0) {
-          throw new Error(
-            `No fue posible descontar stock para el producto ${P.nombre} ID ${P.id}`
-          );
-        } else if (typeof decrementResult === 'number' && decrementResult === 0) {
-          throw new Error(
-            `No fue posible descontar stock para el producto ${P.nombre} ID ${P.id}`
-          );
-        }
-
-        total += Number(proc.precio) * P.cantidad;
-      }
-
-      const c = await Cliente.create(cliente);
-
+  
+      const c = await Cliente.create(cliente, { transaction });
+  
       const pedido = await Pedido.create(
         {
           idCliente: c.id,
-          descripcion: descripcion,
+          descripcion,
           precioTotal: total,
         },
         { transaction }
       );
-
+  
+      // 🔁 Recorrer los productos
       for (const P of productos) {
-        await ProductosXPedido.create(
+        const proc = await Producto.findByPk(P.id, {
+          attributes: ['precio', 'stock'],
+          transaction,
+          lock: transaction.LOCK.UPDATE
+        });
+  
+        if (!proc) throw new Error(`El producto ${P.nombre} no existe`);
+        if (proc.stock < P.cantidad)
+          throw new Error(`Stock insuficiente para ${P.nombre}. Disponible: ${proc.stock}, solicitado: ${P.cantidad}`);
+  
+        await Producto.decrement('stock', {
+          by: P.cantidad,
+          where: { id: P.id, stock: { [Op.gte]: P.cantidad } },
+          transaction
+        });
+  
+        total += Number(proc.precio) * P.cantidad;
+  
+        // ✅ Crear registro de producto en el pedido
+        const prodXPedido = await ProductosXPedido.create(
           {
             idPedido: pedido.id,
             idProducto: P.id,
@@ -77,17 +58,53 @@ class PedidosService {
           },
           { transaction }
         );
+  
+        // 🔁 Procesar adicionales (solo si existen)
+        if (P.adicionales && Array.isArray(P.adicionales) && P.adicionales.length > 0) {
+          for (const A of P.adicionales) {
+            const adicional = await Adicionales.findByPk(A.id, {
+              attributes: ['precio', 'stock', 'nombre'],
+              transaction,
+              lock: transaction.LOCK.UPDATE,
+            });
+  
+            if (!adicional) throw new Error(`El adicional ${A.nombre} no existe`);
+            if (adicional.stock < A.cantidad)
+              throw new Error(`Stock insuficiente para el adicional ${A.nombre}`);
+  
+            await Adicionales.decrement('stock', {
+              by: A.cantidad || 1,
+              where: { id: A.id, stock: { [Op.gte]: A.cantidad || 1 } },
+              transaction,
+            });
+  
+            const subtotal = Number(adicional.precio) * (A.cantidad || 1);
+            total += subtotal;
+  
+            await AdicionalesXProductosXPedidos.create(
+              {
+                idProductoXPedido: prodXPedido.id,
+                idAdicional: A.id,
+                cantidad: A.cantidad || 1,
+                crecio: adicional.precio,
+              },
+              { transaction }
+            );
+          }
+        }
       }
-
+  
+      // 💰 Actualizar total del pedido
+      await pedido.update({ precioTotal: total }, { transaction });
       await transaction.commit();
+  
       return pedido.id;
     } catch (error) {
-      if (!transaction.finished) {
-        await transaction.rollback();
-      }
+      if (!transaction.finished) await transaction.rollback();
       throw new Error(`Error al crear pedido: ${error.message}`);
     }
   }
+  
 
   async getAll(filtros = {}) {
     try {

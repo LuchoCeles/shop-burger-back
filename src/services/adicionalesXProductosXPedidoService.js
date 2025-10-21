@@ -1,11 +1,11 @@
-const { sequelize, AdicionalesXProductosXpedido } = require("../models");
+const { sequelize, AdicionalesXProductosXPedido } = require("../models");
 
-class AdicionalesXProductosXpedido {
+class AdicionalesXProductosXPedidoService {
   async create(data) {
     const transaction = await sequelize.transaction();
     try {
       const { idAdicional, cantidad, precio } = data;
-      const registro = await AdicionalesXProductosXpedido.create(
+      const registro = await AdicionalesXProductosXPedido.create(
         {
           idAdicional,
           cantidad,
@@ -25,7 +25,7 @@ class AdicionalesXProductosXpedido {
 
   async getAll() {
     try {
-      const adicionales = await AdicionalesXProductosXpedido.findAll({
+      const adicionales = await AdicionalesXProductosXPedido.findAll({
         include: [
           {
             model: ProductosXPedidos,
@@ -50,7 +50,7 @@ class AdicionalesXProductosXpedido {
   async update(id, data) {
     const transaction = await sequelize.transaction();
     try {
-      const registro = await AdicionalesXProductosXpedido.findByPk(id);
+      const registro = await AdicionalesXProductosXPedido.findByPk(id);
       if (!registro) throw new Error(`Adicionales no encontrados`);
       await registro.update(data, { transaction });
       await transaction.commit();
@@ -64,7 +64,7 @@ class AdicionalesXProductosXpedido {
   async delete(id) {
     const transaction = await sequelize.transaction();
     try {
-      const registro = await AdicionalesXProductosXpedido.findByPk(id);
+      const registro = await AdicionalesXProductosXPedido.findByPk(id);
       if (!registro) throw new Error(`No encontrado`);
       await registro.destroy({ transaction });
       await transaction.commit();
@@ -75,4 +75,4 @@ class AdicionalesXProductosXpedido {
     }
   }
 }
-module.exports = new AdicionalesXProductosXpedido();
+module.exports = new AdicionalesXProductosXPedidoService();
