@@ -29,6 +29,13 @@ class PedidosController {
             error: 'La cantidad debe ser mayor a 0'
           });
         }
+
+        if(item.adicionales && !Array.isArray(item.adicionales)){
+          return res.status(400).json({
+            success:false,
+            message: "Adicionales"
+          });
+        }
       }
 
       const pedido = await pedidoService.Create({
@@ -43,6 +50,7 @@ class PedidosController {
         message: 'Pedido creado exitosamente',
         data: pedido
       });
+
     } catch (error) {
       console.error('Error al crear pedido:', error);
       return res.status(500).json({

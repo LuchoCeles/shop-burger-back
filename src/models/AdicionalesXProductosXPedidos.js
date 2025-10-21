@@ -1,6 +1,6 @@
 module.exports = (sequelize, DataTypes) => {
-  const AdicionalesXProductoXPedidos = sequelize.define(
-    "AdicionalesXProductoXPedidos",
+  const AdicionalesXProductosXPedidos = sequelize.define(
+    "AdicionalesXProductosXPedidos",
     {
       id: {
         type: DataTypes.INTEGER,
@@ -34,21 +34,21 @@ module.exports = (sequelize, DataTypes) => {
       },
     },
     {
-      tableName: "AdicionalesXProductoXPedidos",
+      tableName: "AdicionalesXProductosXPedidos",
       timestamps: false,
     }
   );
 
-  AdicionalesXProductoXPedidos.associate = function (models) {
-    AdicionalesXProductoXPedidos.belongsTo(models.ProductosXPedido, {
+  AdicionalesXProductosXPedidos.associate = function (models) {
+    AdicionalesXProductosXPedidos.belongsTo(models.ProductosXPedido, {
       foreignKey: "idProductoXPedido",
       as: "productoXPedido",
     });
-    AdicionalesXProductoXPedidos.belongsTo(models.Adicionales, {
+    AdicionalesXProductosXPedidos.belongsTo(models.Adicionales, {
       foreignKey: "idAdicional",
       as: "adicional",
     });
   };
 
-  return AdicionalesXProductoXPedidos;
+  return AdicionalesXProductosXPedidos;
 };
