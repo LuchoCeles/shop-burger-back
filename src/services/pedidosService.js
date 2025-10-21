@@ -5,7 +5,7 @@ const {
   ProductosXPedido,
   Pago,
   Adicionales,
-  AdicionalesXProductosXPedidos,
+  AdicionalesXProductosXPedidos
 } = require("../models");
 const { sequelize } = require("../models");
 const { Op } = require("sequelize");
@@ -29,7 +29,7 @@ class PedidosService {
         { transaction }
       );
   
-      // 🔁 Recorrer los productos
+      //  Recorrer los productos
       for (const P of productos) {
         const proc = await Producto.findByPk(P.id, {
           attributes: ['precio', 'stock'],
@@ -49,7 +49,7 @@ class PedidosService {
   
         total += Number(proc.precio) * P.cantidad;
   
-        // ✅ Crear registro de producto en el pedido
+        //  Crear registro de producto en el pedido
         const prodXPedido = await ProductosXPedido.create(
           {
             idPedido: pedido.id,
@@ -59,7 +59,7 @@ class PedidosService {
           { transaction }
         );
   
-        // 🔁 Procesar adicionales (solo si existen)
+        //  Procesar adicionales (solo si existen)
         if (P.adicionales && Array.isArray(P.adicionales) && P.adicionales.length > 0) {
           for (const A of P.adicionales) {
             const adicional = await Adicionales.findByPk(A.id, {
@@ -86,7 +86,7 @@ class PedidosService {
                 idProductoXPedido: prodXPedido.id,
                 idAdicional: A.id,
                 cantidad: A.cantidad || 1,
-                crecio: adicional.precio,
+                precio: adicional.precio,
               },
               { transaction }
             );
@@ -94,7 +94,7 @@ class PedidosService {
         }
       }
   
-      // 💰 Actualizar total del pedido
+      //  Actualizar total del pedido
       await pedido.update({ precioTotal: total }, { transaction });
       await transaction.commit();
   
