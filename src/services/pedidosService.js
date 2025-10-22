@@ -118,9 +118,9 @@ class PedidosService {
           },
         ],
         order: [["id", "DESC"]],
-        where: filtros.estado ? { estado: filtros.estado } : undefined
+        where: filtros.estado ? { estado: filtros.estado } : undefined,
       });
-
+  
       const pedidosConProductos = await Promise.all(
         pedidos.map(async (pedido) => {
           const pxp = await ProductosXPedido.findAll({
@@ -133,14 +133,38 @@ class PedidosService {
               },
             ],
           });
-
-          const productos = pxp.map((item) => ({
-            id: item.producto.id,
-            nombre: item.producto.nombre,
-            precio: item.producto.precio,
-            cantidad: item.cantidad,
-          }));
-
+  
+          const productos = await Promise.all(
+            pxp.map(async (item) => {
+              // 🔹 Buscar adicionales para este producto del pedido
+              const adicionalesXPxP = await AdicionalesXProductosXPedidos.findAll({
+                where: { idProductoXPedido: item.id },
+                include: [
+                  {
+                    model: Adicionales,
+                    as: "adicional",
+                    attributes: ["id", "nombre", "precio"],
+                  },
+                ],
+              });
+  
+              const adicionales = adicionalesXPxP.map((a) => ({
+                id: a.adicional.id,
+                nombre: a.adicional.nombre,
+                precio: a.adicional.precio,
+                cantidad: a.Cantidad,
+              }));
+  
+              return {
+                id: item.producto.id,
+                nombre: item.producto.nombre,
+                precio: item.producto.precio,
+                cantidad: item.cantidad,
+                adicionales,
+              };
+            })
+          );
+  
           return {
             id: pedido.id,
             estado: pedido.estado,
@@ -151,12 +175,13 @@ class PedidosService {
           };
         })
       );
-
+  
       return pedidosConProductos;
     } catch (error) {
       throw new Error(`Error al obtener pedidos: ${error.message}`);
     }
   }
+  
 
   async getById(id) {
     const pedidoActual = await Pedido.findByPk(id);
