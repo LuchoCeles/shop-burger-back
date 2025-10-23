@@ -1,10 +1,12 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { Admin } = require('../models');
+const { sequelize } = require('../config/db');
 
 class AuthAdminService {
   async login(nombre, password) {
-    const admin = await Admin.findOne({ where: { nombre } });
+    const [admin] = await sequelize.query("CALL login(:nombre);", {
+      replacements: { nombre }
+    });
 
     if (!admin) {
       throw new Error('Credenciales inválidas');
