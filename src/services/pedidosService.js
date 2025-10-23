@@ -77,11 +77,12 @@ class PedidosService {
               where: { id: A.id, stock: { [Op.gte]: A.cantidad || 1 } },
               transaction,
             });
-  
+            
+
             const subtotal = Number(adicional.precio) * (A.cantidad || 1);
             total += subtotal;
   
-            await AdicionalesXProductosXPedidos.create(
+           const nuevoAdi = await AdicionalesXProductosXPedidos.create(
               {
                 idProductoXPedido: prodXPedido.id,
                 idAdicional: A.id,
@@ -90,6 +91,7 @@ class PedidosService {
               },
               { transaction }
             );
+            console.log("Adicionales insertado: ", nuevoAdi.toJSON() );
           }
         }
       }
@@ -152,7 +154,7 @@ class PedidosService {
                 id: a.adicional.id,
                 nombre: a.adicional.nombre,
                 precio: a.adicional.precio,
-                cantidad: a.Cantidad,
+                cantidad: a.cantidad,
               }));
   
               return {

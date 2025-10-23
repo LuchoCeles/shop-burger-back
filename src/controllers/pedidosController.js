@@ -6,6 +6,7 @@ class PedidosController {
     try {
       const io = req.app.get('io');
       const { cliente, productos, descripcion } = req.body;
+
       if (!cliente) {
         return res.status(400).json({
           error: 'El campo debe estar completo'
@@ -24,6 +25,7 @@ class PedidosController {
             error: 'Cada producto debe tener id y cantidad'
           });
         }
+        
         if (item.cantidad <= 0) {
           return res.status(400).json({
             error: 'La cantidad debe ser mayor a 0'
