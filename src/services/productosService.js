@@ -37,7 +37,6 @@ class ProductosService {
         delete adicional.AdicionalesXProductos;
         return adicional;
       });
-
       return {
         ...plain,
         categoria: plain.categoria ? plain.categoria.nombre : null,
