@@ -31,10 +31,10 @@ router.patch('/:id/cancelar', [
   param('id').isInt({ min: 1 }).withMessage('ID debe ser válido')
 ], validateRequest, pedidosController.cancel);
 
-// Eliminar pedido
-router.delete('/:id', [
+
+router.patch('/:id/update',[
   authAdmin,
   param('id').isInt({ min: 1 }).withMessage('ID debe ser válido')
-], validateRequest, pedidosController.delete);
+],validateRequest, pedidosController.updateOrder);
 
 module.exports = router;

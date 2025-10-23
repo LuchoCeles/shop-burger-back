@@ -5,21 +5,21 @@ const {
   ProductosXPedido,
   Pago,
   Adicionales,
-  AdicionalesXProductosXPedidos
+  AdicionalesXProductosXPedidos,
 } = require("../models");
 const { sequelize } = require("../models");
-const { Op } = require("sequelize");
+const { Op, where } = require("sequelize");
+const { lock } = require("../routes/pedidosRoutes");
 
 class PedidosService {
-
   async Create(datosPedido) {
     const transaction = await sequelize.transaction();
     try {
       const { cliente, productos, descripcion } = datosPedido;
       let total = 0;
-  
+
       const c = await Cliente.create(cliente, { transaction });
-  
+
       const pedido = await Pedido.create(
         {
           idCliente: c.id,
@@ -28,27 +28,29 @@ class PedidosService {
         },
         { transaction }
       );
-  
+
       //  Recorrer los productos
       for (const P of productos) {
         const proc = await Producto.findByPk(P.id, {
-          attributes: ['precio', 'stock'],
+          attributes: ["precio", "stock"],
           transaction,
-          lock: transaction.LOCK.UPDATE
+          lock: transaction.LOCK.UPDATE,
         });
-  
+
         if (!proc) throw new Error(`El producto ${P.nombre} no existe`);
         if (proc.stock < P.cantidad)
-          throw new Error(`Stock insuficiente para ${P.nombre}. Disponible: ${proc.stock}, solicitado: ${P.cantidad}`);
-  
-        await Producto.decrement('stock', {
+          throw new Error(
+            `Stock insuficiente para ${P.nombre}. Disponible: ${proc.stock}, solicitado: ${P.cantidad}`
+          );
+
+        await Producto.decrement("stock", {
           by: P.cantidad,
           where: { id: P.id, stock: { [Op.gte]: P.cantidad } },
-          transaction
+          transaction,
         });
-  
+
         total += Number(proc.precio) * P.cantidad;
-  
+
         //  Crear registro de producto en el pedido
         const prodXPedido = await ProductosXPedido.create(
           {
@@ -58,31 +60,37 @@ class PedidosService {
           },
           { transaction }
         );
-  
+
         //  Procesar adicionales (solo si existen)
-        if (P.adicionales && Array.isArray(P.adicionales) && P.adicionales.length > 0) {
+        if (
+          P.adicionales &&
+          Array.isArray(P.adicionales) &&
+          P.adicionales.length > 0
+        ) {
           for (const A of P.adicionales) {
             const adicional = await Adicionales.findByPk(A.id, {
-              attributes: ['precio', 'stock', 'nombre'],
+              attributes: ["precio", "stock", "nombre"],
               transaction,
               lock: transaction.LOCK.UPDATE,
             });
-  
-            if (!adicional) throw new Error(`El adicional ${A.nombre} no existe`);
+
+            if (!adicional)
+              throw new Error(`El adicional ${A.nombre} no existe`);
             if (adicional.stock < A.cantidad)
-              throw new Error(`Stock insuficiente para el adicional ${A.nombre}`);
-  
-            await Adicionales.decrement('stock', {
+              throw new Error(
+                `Stock insuficiente para el adicional ${A.nombre}`
+              );
+
+            await Adicionales.decrement("stock", {
               by: A.cantidad || 1,
               where: { id: A.id, stock: { [Op.gte]: A.cantidad || 1 } },
               transaction,
             });
-            
 
             const subtotal = Number(adicional.precio) * (A.cantidad || 1);
             total += subtotal;
-  
-           const nuevoAdi = await AdicionalesXProductosXPedidos.create(
+
+            const nuevoAdi = await AdicionalesXProductosXPedidos.create(
               {
                 idProductoXPedido: prodXPedido.id,
                 idAdicional: A.id,
@@ -91,22 +99,21 @@ class PedidosService {
               },
               { transaction }
             );
-            console.log("Adicionales insertado: ", nuevoAdi.toJSON() );
+            console.log("Adicionales insertado: ", nuevoAdi.toJSON());
           }
         }
       }
-  
+
       //  Actualizar total del pedido
       await pedido.update({ precioTotal: total }, { transaction });
       await transaction.commit();
-  
+
       return pedido.id;
     } catch (error) {
       if (!transaction.finished) await transaction.rollback();
       throw new Error(`Error al crear pedido: ${error.message}`);
     }
   }
-  
 
   async getAll(filtros = {}) {
     try {
@@ -122,7 +129,7 @@ class PedidosService {
         order: [["id", "DESC"]],
         where: filtros.estado ? { estado: filtros.estado } : undefined,
       });
-  
+
       const pedidosConProductos = await Promise.all(
         pedidos.map(async (pedido) => {
           const pxp = await ProductosXPedido.findAll({
@@ -135,28 +142,29 @@ class PedidosService {
               },
             ],
           });
-  
+
           const productos = await Promise.all(
             pxp.map(async (item) => {
               // Buscar adicionales para este producto del pedido
-              const adicionalesXPxP = await AdicionalesXProductosXPedidos.findAll({
-                where: { idProductoXPedido: item.id },
-                include: [
-                  {
-                    model: Adicionales,
-                    as: "adicional",
-                    attributes: ["id", "nombre", "precio"],
-                  },
-                ],
-              });
-  
+              const adicionalesXPxP =
+                await AdicionalesXProductosXPedidos.findAll({
+                  where: { idProductoXPedido: item.id },
+                  include: [
+                    {
+                      model: Adicionales,
+                      as: "adicional",
+                      attributes: ["id", "nombre", "precio"],
+                    },
+                  ],
+                });
+
               const adicionales = adicionalesXPxP.map((a) => ({
                 id: a.adicional.id,
                 nombre: a.adicional.nombre,
                 precio: a.adicional.precio,
                 cantidad: a.cantidad,
               }));
-  
+
               return {
                 id: item.producto.id,
                 nombre: item.producto.nombre,
@@ -166,7 +174,7 @@ class PedidosService {
               };
             })
           );
-  
+
           return {
             id: pedido.id,
             estado: pedido.estado,
@@ -177,13 +185,12 @@ class PedidosService {
           };
         })
       );
-  
+
       return pedidosConProductos;
     } catch (error) {
       throw new Error(`Error al obtener pedidos: ${error.message}`);
     }
   }
-  
 
   async getById(id) {
     const pedidoActual = await Pedido.findByPk(id);
@@ -192,17 +199,16 @@ class PedidosService {
 
   async updateStatus(id, nuevoEstado) {
     try {
-
       const pedido = await Pedido.findByPk(id);
 
       await pedido.update({ estado: nuevoEstado });
 
       const rsp = await Pedido.findByPk(id, {
         include: [
-          { model: Cliente, as: 'cliente' },
-          { model: Producto, as: 'productos' },
-          { model: Pago, as: 'pago' }
-        ]
+          { model: Cliente, as: "cliente" },
+          { model: Producto, as: "productos" },
+          { model: Pago, as: "pago" },
+        ],
       });
       return rsp;
     } catch (error) {
@@ -254,34 +260,144 @@ class PedidosService {
     }
   }
 
-  async delete(id) {
+  async updateOrder(id, datosActualizados) {
     const transaction = await sequelize.transaction();
 
     try {
-      const pedido = await Pedido.findByPk(id);
+      const { cliente, producto, descripcion, estado } = datosActualizados;
 
-      if (!pedido) {
-        throw new Error("Pedido no encontrado");
-      }
+      const pedido = await Pedido.findByPk(id, { transaction });
+      if (!pedido) throw new Error(`Pedido no encontrado`);
 
-      if (!["pendiente", "cancelado"].includes(pedido.estado)) {
-        throw new Error(
-          "Solo se pueden eliminar pedidos pendientes o cancelados"
-        );
-      }
+      if (pedido.estado === "entregado")
+        throw new Error(`No se puede modificar, pedido ya ENTREGADO`);
 
-      const cliente = await Cliente.findOne({ where: { idPedido: id } });
       if (cliente) {
-        await cliente.update({ idPedido: null }, { transaction });
+        await Cliente.update(cliente, {
+          where: { id: pedido.idCliente },
+          transaction,
+        });
       }
 
-      await pedido.destroy({ transaction });
-      await transaction.commit();
+      const productosPedido = await ProductosXPedido.findAll({
+        where: { idPedido: id },
+        include: [
+          {
+            model: Producto,
+            as: "producto",
+            attributes: ["id", "stock", "precio"],
+          },
+        ],
+        transaction,
+      });
 
-      return { mensaje: "Pedido eliminado exitosamente" };
+      for (const pxp of productosPedido) {
+        await Producto.increment("stock", {
+          by: pxp.cantidad,
+          where: { id: pxp.idProducto },
+          transaction,
+        });
+
+        const adicionales = await AdicionalesXProductosXPedidos.findAll({
+          where: { idProductoXPedido: pxp.id },
+          include: [
+            { model: Adicionales, as: "adicional", attributes: ["id"] },
+          ],
+          transaction,
+        });
+
+        for (const a of adicionales) {
+          await Adicionales.increment("stock", {
+            by: a.cantidad,
+            where: { id: a.idAdicional },
+            transaction,
+          });
+        }
+
+        await AdicionalesXProductosXPedidos.destroy({
+          where: { idProductoXPedido: pxp.id },
+          transaction,
+        });
+      }
+      await ProductosXPedido.destroy({
+        where: { idPedido: id },
+        transaction,
+      });
+
+      let total = 0;
+
+      for (const P of producto) {
+        const prod = await Producto.findByPk(P.id, {
+          transaction,
+          lock: transaction.LOCK.UPDATE,
+        });
+
+        if (!prod) throw new Error(`Producto no encontrado`);
+        if (prod.stock < P.cantidad)
+          throw new Error(`Stock insuficiente para: ${P.nombre}`);
+
+        await Producto.decrement("stock", {
+          by: P.cantidad,
+          where: { id: P.id },
+          transaction,
+        });
+
+        total += Number(prod.precio) * P.cantidad;
+
+        const prodPedido = await ProductosXPedido.create(
+          {
+            idProducto: P.id,
+            idPedido: pedido.id,
+            cantidad: P.cantidad,
+          },
+          { transaction }
+        );
+
+        if (P.adicional && Array.isArray(P.adicional)) {
+          for (const A of P.adicional) {
+            const adicional = await Adicionales.findByPk(A.id, {
+              transaction,
+              lock: transaction.LOCK.UPDATE,
+            });
+
+            if (!adicional) throw new Error(`no existe el adicional`);
+            if (adicional.stock < A.cantidad)
+              throw new Error(`Stock insuficiente para : ${A.nombre}`);
+
+            await Adicionales.decrement({
+              by: A.cantidad,
+              where: { id: A.id },
+              transaction,
+            });
+
+            await AdicionalesXProductosXPedidos.create(
+              {
+                idProductoXPedido: prodPedido.id,
+                idAdicional: A.id,
+                cantidad: A.cantidad,
+                precio: adicional.precio,
+              },
+              { transaction }
+            );
+
+            total += Number(adicional.precio) * A.cantidad;
+          }
+        }
+      }
+      await pedido.update(
+        {
+          descripcion: descripcion ?? pedido.descripcion,
+          estado: estado ?? pedido.estado,
+          precioTotal: total,
+        },
+        { transaction }
+      );
+
+      await transaction.commit();
+      return { message: "Pedido actualizado correctamente" };
     } catch (error) {
-      await transaction.rollback();
-      throw new Error(`Error al eliminar pedido: ${error.message}`);
+      if (!transaction.finished) await transaction.rollback();
+      throw new Error(`Error al actualziar el pedido: ${error.message}`);
     }
   }
 }
