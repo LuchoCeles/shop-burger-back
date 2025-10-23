@@ -6,6 +6,7 @@ class PedidosController {
     try {
       const io = req.app.get('io');
       const { cliente, productos, descripcion } = req.body;
+
       if (!cliente) {
         return res.status(400).json({
           error: 'El campo debe estar completo'
@@ -24,9 +25,17 @@ class PedidosController {
             error: 'Cada producto debe tener id y cantidad'
           });
         }
+
         if (item.cantidad <= 0) {
           return res.status(400).json({
             error: 'La cantidad debe ser mayor a 0'
+          });
+        }
+
+        if(item.adicionales && !Array.isArray(item.adicionales)){
+          return res.status(400).json({
+            success:false,
+            message: "Adicionales"
           });
         }
       }
@@ -43,6 +52,7 @@ class PedidosController {
         message: 'Pedido creado exitosamente',
         data: pedido
       });
+
     } catch (error) {
       console.error('Error al crear pedido:', error);
       return res.status(500).json({
@@ -139,21 +149,62 @@ class PedidosController {
     }
   }
 
-  async delete(req, res) {
+  async updateOrder(req,res){
     try {
-      const { id } = req.params;
-      const resultado = await pedidoService.delete(id);
+      const io = req.app.get('io');
+      const {id} =  req.params;
+      const {cliente,producto,descripcion,estado} = req.body;
 
-      return res.status(200).json(resultado);
+      if(!producto || !Array.isArray(producto)|| producto.length===0){
+        return res.status(400).json({
+          success:false,
+          message:" Debe incluir al menos un producto"
+        });
+      }
+
+      for(const item of producto){
+        if(!item|| !item.cantidad){
+          return res.status(400).json({
+            success:false,
+            message: "Cada prducto debe tener id y cantidad"
+          });
+        }
+        if(item.cantidad<=0){
+          return res.status(400).json({
+            message: "La cantidad debe ser mayor a 0"
+          });
+        }
+
+        if(item.adicionales && !Array.isArray(item.adicionales)){
+          return res.status(400).json({
+            message: "Error al cargar adicionales"
+          });
+        }
+      }
+
+      const result = await pedidoService.updateOrder(id,{
+        cliente,
+        producto,
+        descripcion,
+        estado
+      });
+
+      io.emit("PedidoActualizado", {message: 'Pedido actualizado', pedidoId:id});
+
+      return res.status(200).json({
+        success:true,
+        message:'Pedidoa actualizado',
+        data:result
+      });
+
     } catch (error) {
-      console.error('Error al eliminar pedido:', error);
-      const status = error.message.includes('no encontrado') ? 404 :
-        error.message.includes('Solo se pueden') ? 403 : 500;
-      return res.status(status).json({
-        error: error.message
+      console.error('Error al actualizar pedido', error);
+      return res.status(500).json({
+        message: error.message
       });
     }
   }
+
 }
 
 module.exports = new PedidosController();
