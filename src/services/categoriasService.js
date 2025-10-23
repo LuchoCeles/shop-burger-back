@@ -1,9 +1,8 @@
-const { where } = require("sequelize");
-const { Categoria, sequelize, Producto } = require("../models");
+const { sequelize } = require("../config/db")
 
 class CategoriasService {
   async getCategories() {
-    return await Categoria.findAll();
+    return await sequelize.query("CALL getAllCategories();");
   }
 
   async createCategorie(categoriaData) {
