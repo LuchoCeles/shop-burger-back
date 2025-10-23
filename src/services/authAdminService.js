@@ -35,9 +35,8 @@ class AuthAdminService {
 
     const hashedPassword = await bcrypt.hash(password, 12);
 
-    const admin = await Admin.create({
-      nombre,
-      password: hashedPassword
+    const admin = await sequelize.query("CALL createAdmin(:nombre, :password);", {
+      replacements: { nombre, password: hashedPassword }
     });
 
     const token = jwt.sign(
