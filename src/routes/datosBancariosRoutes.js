@@ -6,8 +6,7 @@ const datosBancariosController = require("../controllers/datosBancariosControlle
 const authAdmin = require("../middlewares/authAdmin");
 const validateRequest = require("../middlewares/validateRequest");
 
-router.post("/", [
-  authAdmin,
+router.post("/", authAdmin, [
   body("banco.cuit")
     .notEmpty()
     .isString(),
@@ -16,14 +15,10 @@ router.post("/", [
   body("banco.apellido").notEmpty().withMessage("El apellido es obligatorio"),
   body("banco.nombre").notEmpty().withMessage("El nombre es obligatorio"),
   body("banco.password").notEmpty().withMessage("La password es obligatorio"),
-  validateRequest, // ✅ Valida todos los campos antes de ejecutar el controlador
-], datosBancariosController.create);
+], validateRequest, datosBancariosController.create);
 
 // Acceder a los datos (requiere contraseña guardada)
-router.post("/login",
-  authAdmin,
-  body("password").notEmpty(),
-  validateRequest, datosBancariosController.access);
+router.post("/login", authAdmin, body("password").notEmpty(), validateRequest, datosBancariosController.access);
 
 router.get("/", datosBancariosController.get);
 
@@ -36,11 +31,9 @@ router.patch("/:id",
   body("banco.nombre").optional().isString().notEmpty().withMessage("El nombre no puede estar vacío"),
 ], validateRequest, datosBancariosController.update);
 
-router.patch("/password/:id",
-  authAdmin, [
-    body("password").notEmpty().withMessage("Contraseña actual requerida"),
-    body("newPassword").isLength({min:6}).withMessage("Minimo debe tener 6 caracteres"),
-  ], validateRequest, datosBancariosController.updatePassword
-);
+router.patch("/password/:id", authAdmin, [
+  body("password").notEmpty().withMessage("Contraseña actual requerida"),
+  body("newPassword").isLength({ min: 6 }).withMessage("Minimo debe tener 6 caracteres"),
+], validateRequest, datosBancariosController.updatePassword);
 
 module.exports = router;
