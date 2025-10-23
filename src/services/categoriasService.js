@@ -6,7 +6,11 @@ class CategoriasService {
   }
 
   async createCategorie(categoriaData) {
-    return await Categoria.create(categoriaData);
+    return await sequelize.query("CALL createCategorie(:nombre);", {
+      replacements: {
+        nombre: categoriaData.nombre,
+      },
+    });
   }
 
   async updateCategorie(id, updateData) {
