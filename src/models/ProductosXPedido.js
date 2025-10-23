@@ -25,7 +25,7 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.INTEGER,
       allowNull: false,
       defaultValue: 1
-    }
+    },
   }, {
     tableName: 'productosxpedidos',
     timestamps: false
@@ -36,10 +36,16 @@ module.exports = (sequelize, DataTypes) => {
       foreignKey: 'idPedido',
       as: 'pedido'
     });
+
     ProductosXPedido.belongsTo(models.Producto, {
       foreignKey: 'idProducto',
       as: 'producto'
     });
+
+    ProductosXPedido.hasMany(models.AdicionalesXProductosXPedidos,{
+      foreignKey: "idProductoXPedido",
+      as: "AxPxP",
+    })
   };
 
   return ProductosXPedido;

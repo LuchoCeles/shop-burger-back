@@ -136,7 +136,7 @@ class PedidosService {
   
           const productos = await Promise.all(
             pxp.map(async (item) => {
-              // 🔹 Buscar adicionales para este producto del pedido
+              // Buscar adicionales para este producto del pedido
               const adicionalesXPxP = await AdicionalesXProductosXPedidos.findAll({
                 where: { idProductoXPedido: item.id },
                 include: [
