@@ -61,7 +61,7 @@ class DatosBancariosService {
 
   async get() {
     try {
-      const datosbancarios = await DatosBancarios.findAll({
+      const datosbancarios = await DatosBancarios.findOne({
         attributes: ["id", "cuit", "alias", "cbu", "apellido", "nombre"],
       });
       return datosbancarios;

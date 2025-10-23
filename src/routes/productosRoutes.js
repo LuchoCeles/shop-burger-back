@@ -10,7 +10,8 @@ const router = express.Router();
 router.get('/:soloActivos/', productosController.getProducts);
 
 
-router.post('/', authAdmin, handleUpload, [
+router.post('/', [
+  authAdmin,handleUpload,
   body('nombre').notEmpty().withMessage('El nombre es obligatorio'),
   body('descripcion').notEmpty().withMessage('La descripción es obligatoria'),
   body('precio').notEmpty().isDecimal({ min: 0 }).withMessage('El precio es obligatorio y debe ser un número positivo'),
