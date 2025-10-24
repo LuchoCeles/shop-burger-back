@@ -1,30 +1,50 @@
 DROP PROCEDURE IF EXISTS getProducts//
 
 DELIMITER //
-     CREATE PROCEDURE getProducts()
+     CREATE PROCEDURE getProducts(
+        IN p_estado boolean
+     )
         BEGIN
+            SELECT
+        p.id,
+        p.nombre,
+        p.descripcion,
+        p.precio,
+        p.url_imagen,
+        p.stock,
+        p.idCategoria,
+        p.descuento,
+        p.isPromocion,
+        p.estado,
+        p.createdAt,
+        p.updatedAt,
+        (SELECT c.nombre 
+         FROM categorias c 
+         WHERE c.id = p.idCategoria AND c.estado = 1
+         LIMIT 1) AS categoria,
+        (
             SELECT 
-                p_id AS id_producto,
-                p_nombre AS nombre_producto,
-                p_precio AS precio_producto,
-                p_stock AS stock_producto,
-                c_nombre AS nombre_categoria,
-                a_id AS id_adicional,
-                a_nombre AS nombre_adicional,
-                a_precio AS precio_adicional,
-                a_stock AS stock_adicional,
-                a_maxCantidad AS max_cantidad_adicional,
-                axp_id AS idAxp
-            FROM productos p
-            INNER JOIN categorias c 
-            ON p_idCategoria = c_id
-            AND c_estado = 1
-            LEFT JOIN adicionalesxproductos AS axp 
-            ON p_id = axp_idProducto
-            LEFT JOIN adicionales a 
-            ON axp_idAdicional = a_id
-            AND a_estado = 1
-            WHERE p_estado = 1;
-
+                CONCAT(
+                    '[', 
+                    GROUP_CONCAT(
+                        CONCAT(
+                            '{"id":', a.id,
+                            ',"nombre":"', a.nombre, '"',
+                            ',"precio":', a.precio,
+                            ',"stock":', a.stock,
+                            ',"maxCantidad":', a.maxCantidad,
+                            ',"idAxp":', axp.id,
+                            '}'
+                        ) SEPARATOR ','
+                    ),
+                    ']'
+                )
+            FROM adicionalesxproductos axp
+            INNER JOIN adicionales a ON axp.idAdicional = a.id
+            WHERE axp.idProducto = p.id
+              AND a.estado = 1
+        ) AS adicionales
+    FROM productos p
+    WHERE (p_estado = 0 OR p.estado = 1);
     END//
 DELIMITER;
