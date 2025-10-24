@@ -159,6 +159,7 @@ BEGIN
       SET v_i = v_i + 1;
     END WHILE;
 
+    SELECT v_idPedido AS id;
 END //
 
-DELIMITER ;    
+DELIMITER ;
