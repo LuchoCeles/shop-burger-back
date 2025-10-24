@@ -11,7 +11,7 @@ class ProductosController {
 
       res.json({
         success: true,
-        data: productos,
+        data: productos
       });
     } catch (error) {
       next(error);
@@ -26,7 +26,7 @@ class ProductosController {
       );
       res.json({
         success: true,
-        data: productos,
+        data: productos
       });
     } catch (error) {
       next(error);
