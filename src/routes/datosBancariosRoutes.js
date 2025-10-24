@@ -4,12 +4,11 @@ const router = express.Router();
 
 const datosBancariosController = require("../controllers/datosBancariosController");
 const authAdmin = require("../middlewares/authAdmin");
+const authBanco = require("../middlewares/authBanco");
 const validateRequest = require("../middlewares/validateRequest");
 
 router.post("/", authAdmin, [
-  body("banco.cuit")
-    .notEmpty()
-    .isString(),
+  body("banco.cuit").notEmpty().isString().withMessage("El CUIT es obligatorio"),
   body("banco.alias").notEmpty().withMessage("El alias es obligatorio"),
   body("banco.cbu").notEmpty().withMessage("El CBU es obligatorio"),
   body("banco.apellido").notEmpty().withMessage("El apellido es obligatorio"),
@@ -17,13 +16,16 @@ router.post("/", authAdmin, [
   body("banco.password").notEmpty().withMessage("La password es obligatorio"),
 ], validateRequest, datosBancariosController.create);
 
-// Acceder a los datos (requiere contraseña guardada)
-router.post("/login", authAdmin, body("password").notEmpty(), validateRequest, datosBancariosController.access);
-
 router.get("/", datosBancariosController.get);
 
+// Acceder a los datos (requiere contraseña guardada)
+router.post("/login", authAdmin, [
+  body("cuit").notEmpty().withMessage("El CUIT es obligatorio"),
+  body("password").notEmpty().withMessage("La Contraseña es obligatoria")
+], validateRequest, datosBancariosController.login);
+
 router.patch("/:id",
-  authAdmin, [
+  authAdmin, authBanco, [
   body("banco.cuit").optional().isString().notEmpty().withMessage("El CUIT no puede estar vacío"),
   body("banco.alias").optional().isString().notEmpty().withMessage("El alias no puede estar vacío"),
   body("banco.cbu").optional().isString().notEmpty().withMessage("El CBU no puede estar vacío"),
@@ -31,9 +33,9 @@ router.patch("/:id",
   body("banco.nombre").optional().isString().notEmpty().withMessage("El nombre no puede estar vacío"),
 ], validateRequest, datosBancariosController.update);
 
-router.patch("/password/:id", authAdmin, [
+router.patch("/password/:id", authAdmin, authBanco, [
   body("password").notEmpty().withMessage("Contraseña actual requerida"),
-  body("newPassword").isLength({ min: 6 }).withMessage("Minimo debe tener 6 caracteres"),
+  body("newPassword").notEmpty().isLength({ min: 6 }).withMessage("Contraseña nueva requerida y Minimo debe tener 6 caracteres"),
 ], validateRequest, datosBancariosController.updatePassword);
 
 module.exports = router;

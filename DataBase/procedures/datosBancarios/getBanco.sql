@@ -1,0 +1,10 @@
+DELIMITER //
+
+CREATE PROCEDURE getBanco()
+BEGIN
+    SELECT id, cuit, alias, cbu, apellido, nombre
+      FROM DatosBancarios
+    LIMIT 1;
+END //
+
+DELIMITER ;

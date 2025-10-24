@@ -1,5 +1,5 @@
 const bcrypt = require("bcrypt");
-const { DatosBancarios, sequelize, Admin } = require("../models");
+const { sequelize } = require("../config/db");
 
 class DatosBancariosService {
   async create(datosBancarios) {
@@ -41,58 +41,51 @@ class DatosBancariosService {
     }
   }
 
-  async validateAccess(password) {
+  async login(cuit, password) {
     try {
-      const datos = await DatosBancarios.findOne({
-        order: [["id", "DESC"]],
+      const datos = await sequelize.query("CALL loginBanco(:cuit);", {
+        replacements: { cuit }
       });
 
-      if (!datos.password) throw new Error(`Contraseña invalida`);
+      if (!datos[0]) throw new Error(`Usuario no encontrado`);
 
-      const match = await bcrypt.compare(password, datos.password);
+      const match = await bcrypt.compare(password, datos[0].password);
 
       if (!match) throw new Error(`Contraseña incorrecta`);
 
-      return datos;
+      return datos[0];
     } catch (error) {
-      throw new Error(`Error al validar acceso: ${error.message}`);
+      throw new Error(`Error al autenticar los Datos: ${error.message}`);
     }
   }
 
+
   async get() {
     try {
-      const datosbancarios = await DatosBancarios.findOne({
-        attributes: ["id", "cuit", "alias", "cbu", "apellido", "nombre"],
-      });
-      return datosbancarios;
+      const datosbancarios = await sequelize.query("CALL getBanco();");
+      return datosbancarios[0];
     } catch (error) {
-      throw new Error(`Error al obtener los datos bancarios${error.message}`);
+      throw new Error(`Error al obtener los datos bancarios: ${error.message}`);
     }
   }
 
   async updatePassword(id, password, newPassword) {
-    const transaction = await sequelize.transaction();
-
     try {
       if (password === newPassword) {
         throw new Error(`La nueva contraseña no puede ser igual a la anterior`);
       }
 
-      const datos = await DatosBancarios.findByPk(id);
-      if (!datos) throw new Error(`Usuario no encontrado`);
-
       const match = await bcrypt.compare(password, datos.password);
       if (!match) throw new Error(`Contraseña incorrecta`);
 
-      const hashedPassword = await bcrypt.hash(newPassword, 10);
+      const hashedPassword = await bcrypt.hash(newPassword, 12);
 
-      await datos.update({ password: hashedPassword });
-
-      await transaction.commit();
+      const datos = await sequelize.query("CALL updatePassworBanco(:id, :password);", {
+        replacements: { id, hashedPassword }
+      });
 
       return "Contraseña actualizada";
     } catch (error) {
-      await transaction.rollback();
       throw new Error(`Error al actualizar la contraseña: ${error.message}`);
     }
   }

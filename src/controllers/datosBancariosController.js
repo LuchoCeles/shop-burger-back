@@ -1,5 +1,5 @@
-const { Namespace } = require("socket.io");
 const datosBancariosService = require("../services/datosBancariosService");
+const jwt = require('jsonwebtoken');
 
 class DatosBancariosController {
   async create(req, res) {
@@ -44,7 +44,7 @@ class DatosBancariosController {
           alias: datos.alias,
           cbu: datos.cbu,
           apellido: datos.apellido,
-          nombre: datos.nombre,
+          nombre: datos.nombre
         },
       });
     } catch (error) {
@@ -52,21 +52,31 @@ class DatosBancariosController {
     }
   }
 
-  async access(req, res) {
-    const { password } = req.body;
+  async login(req, res) {
+    const { cuit, password } = req.body;
     try {
-      const datos = await datosBancariosService.validateAccess(password);
+      const datos = await datosBancariosService.login(cuit, password);
+
+      const token = jwt.sign(
+        {
+          id: datos.id,
+        },
+        process.env.JWT_SECRET,
+        { expiresIn: process.env.JWT_BANK_EXPIRES_IN }
+      );
+
       res.status(200).json({
         success: true,
         message: "Acceso autorizado",
+        token,
         data: {
           id: datos.id,
           cuit: datos.cuit,
           alias: datos.alias,
           cbu: datos.cbu,
           apellido: datos.apellido,
-          nombre: datos.nombre,
-        },
+          nombre: datos.nombre
+        }
       });
     } catch (error) {
       res.status(403).json({
@@ -81,14 +91,7 @@ class DatosBancariosController {
       const { id } = req.params;
       const { password, newPassword } = req.body;
 
-      if (!password || !newPassword) {
-        return res.status(400).json({
-          success: false,
-          message: "Campo requerido",
-        });
-      }
-
-      const result = await datosBancariosService.updatePassword(
+      await datosBancariosService.updatePassword(
         id,
         password,
         newPassword
@@ -96,7 +99,7 @@ class DatosBancariosController {
 
       res.status(200).json({
         success: true,
-        message: result,
+        message: "Contraseña actualizada"
       });
     } catch (error) {
       next(error);
@@ -118,7 +121,7 @@ class DatosBancariosController {
           alias: datos.alias,
           cbu: datos.cbu,
           apellido: datos.apellido,
-          nombre: datos.nombre,
+          nombre: datos.nombre
         },
       });
     } catch (error) {

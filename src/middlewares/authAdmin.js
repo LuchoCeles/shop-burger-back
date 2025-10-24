@@ -4,7 +4,7 @@ const { Admin } = require('../models');
 const authAdmin = async (req, res, next) => {
   try {
     const token = req.header('Authorization')?.replace('Bearer ', '');
-    
+
     if (!token) {
       return res.status(401).json({
         success: false,
@@ -13,8 +13,17 @@ const authAdmin = async (req, res, next) => {
     }
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+    const hora = Math.floor(Date.now() / 1000);
+    if (decoded.exp < hora) {
+      return res.status(401).json({
+        success: false,
+        message: 'Token de autenticación vencido'
+      });
+    }
+
     const admin = await Admin.findByPk(decoded.id);
-    
+
     if (!admin) {
       return res.status(401).json({
         success: false,
