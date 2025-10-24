@@ -5,7 +5,7 @@ const jwt = require('jsonwebtoken');
 // middleware banco cuit + password
 const authBanco = async (req, res, next) => {
   try {
-    const bancoToken = req.header('Authorization')?.replace('Bearer ', '');
+    const bancoToken = req.header('Authorization-Second')?.replace('Bearer ', '');
 
     if (!bancoToken) {
       return res.status(401).json({

@@ -67,7 +67,7 @@ class DatosBancariosService {
         { expiresIn: process.env.JWT_BANK_EXPIRES_IN }
       );
 
-      return bancoToken;
+      return { bancoToken };
     } catch (error) {
       throw new Error(`Error al autenticar los Datos: ${error.message}`);
     }

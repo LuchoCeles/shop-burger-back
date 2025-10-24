@@ -43,7 +43,7 @@ class DatosBancariosController {
           alias: datos.alias,
           cbu: datos.cbu,
           apellido: datos.apellido,
-          nombre: datos.nombre,
+          nombre: datos.nombre
         },
       });
     } catch (error) {
@@ -58,14 +58,7 @@ class DatosBancariosController {
       res.status(200).json({
         success: true,
         message: "Acceso autorizado",
-        data: {
-          id: datos.id,
-          cuit: datos.cuit,
-          alias: datos.alias,
-          cbu: datos.cbu,
-          apellido: datos.apellido,
-          nombre: datos.nombre,
-        },
+        data: datos
       });
     } catch (error) {
       res.status(403).json({
@@ -80,14 +73,7 @@ class DatosBancariosController {
       const { id } = req.params;
       const { password, newPassword } = req.body;
 
-      if (!password || !newPassword) {
-        return res.status(400).json({
-          success: false,
-          message: "Campo requerido",
-        });
-      }
-
-      const result = await datosBancariosService.updatePassword(
+      await datosBancariosService.updatePassword(
         id,
         password,
         newPassword
@@ -95,7 +81,7 @@ class DatosBancariosController {
 
       res.status(200).json({
         success: true,
-        message: result,
+        message: "Contraseña actualizada"
       });
     } catch (error) {
       next(error);
@@ -117,7 +103,7 @@ class DatosBancariosController {
           alias: datos.alias,
           cbu: datos.cbu,
           apellido: datos.apellido,
-          nombre: datos.nombre,
+          nombre: datos.nombre
         },
       });
     } catch (error) {
