@@ -8,8 +8,7 @@ const {
   AdicionalesXProductosXPedidos,
 } = require("../models");
 const { sequelize } = require("../models");
-const { Op, where } = require("sequelize");
-const { lock } = require("../routes/pedidosRoutes");
+const { Op} = require("sequelize");
 
 class PedidosService {
   async Create(datosPedido) {
