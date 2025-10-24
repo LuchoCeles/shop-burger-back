@@ -1,4 +1,5 @@
 const datosBancariosService = require("../services/datosBancariosService");
+const jwt = require('jsonwebtoken');
 
 class DatosBancariosController {
   async create(req, res) {
@@ -55,10 +56,27 @@ class DatosBancariosController {
     const { cuit, password } = req.body;
     try {
       const datos = await datosBancariosService.login(cuit, password);
+
+      const token = jwt.sign(
+        {
+          id: datos.id,
+        },
+        process.env.JWT_SECRET,
+        { expiresIn: process.env.JWT_BANK_EXPIRES_IN }
+      );
+
       res.status(200).json({
         success: true,
         message: "Acceso autorizado",
-        data: datos
+        token,
+        data: {
+          id: datos.id,
+          cuit: datos.cuit,
+          alias: datos.alias,
+          cbu: datos.cbu,
+          apellido: datos.apellido,
+          nombre: datos.nombre
+        }
       });
     } catch (error) {
       res.status(403).json({
