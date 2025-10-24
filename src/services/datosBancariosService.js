@@ -1,5 +1,5 @@
 const bcrypt = require("bcrypt");
-const { DatosBancarios, sequelize, Admin } = require("../models");
+const { sequelize } = require("../config/db");
 
 class DatosBancariosService {
   async create(datosBancarios) {
@@ -41,21 +41,21 @@ class DatosBancariosService {
     }
   }
 
-  async validateAccess(password) {
+  async validateAccess(cuit, password) {
     try {
-      const datos = await DatosBancarios.findOne({
-        order: [["id", "DESC"]],
+      const datos = await sequelize.query("CALL loginBanco(:cuit);", {
+        replacements: { cuit }
       });
+      
+      if (!datos[0]) throw new Error(`Usuario no encontrado`);
 
-      if (!datos.password) throw new Error(`Contraseña invalida`);
-
-      const match = await bcrypt.compare(password, datos.password);
+      const match = await bcrypt.compare(password, datos[0].password);
 
       if (!match) throw new Error(`Contraseña incorrecta`);
 
-      return datos;
+      return datos[0];
     } catch (error) {
-      throw new Error(`Error al validar acceso: ${error.message}`);
+      throw new Error(`Error al validar acceso. ${error.message}`);
     }
   }
 

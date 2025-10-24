@@ -18,7 +18,10 @@ router.post("/", authAdmin, [
 ], validateRequest, datosBancariosController.create);
 
 // Acceder a los datos (requiere contraseña guardada)
-router.post("/login", authAdmin, body("password").notEmpty(), validateRequest, datosBancariosController.access);
+router.post("/login", authAdmin, [
+  body("cuit").notEmpty().withMessage("El CUIT es obligatorio"),
+  body("password").notEmpty().withMessage("La Contraseña es obligatoria")
+], validateRequest, datosBancariosController.access);
 
 router.get("/", datosBancariosController.get);
 

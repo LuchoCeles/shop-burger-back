@@ -32,19 +32,10 @@ class CategoriasController {
       const { id } = req.params;
       const { estado } = req.body;
 
-      console.log(estado);
-
-      if (typeof estado === "undefined") {
-        return res.status(400).json({
-          success: false,
-          message: "El campo 'Estado' es obligatorio",
-        });
-      }
-
       const categoria = await categoriasService.updateEstate(id, estado);
       res.status(200).json({
         success: true,
-        message: "Estado aztualizado",
+        message: "Estado actualizado",
         data: {
           id: categoria.id,
           esatdo: categoria.estado

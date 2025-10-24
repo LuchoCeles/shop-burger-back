@@ -1,4 +1,3 @@
-const { Namespace } = require("socket.io");
 const datosBancariosService = require("../services/datosBancariosService");
 
 class DatosBancariosController {
@@ -53,9 +52,9 @@ class DatosBancariosController {
   }
 
   async access(req, res) {
-    const { password } = req.body;
+    const { cuit, password } = req.body;
     try {
-      const datos = await datosBancariosService.validateAccess(password);
+      const datos = await datosBancariosService.validateAccess(cuit, password);
       res.status(200).json({
         success: true,
         message: "Acceso autorizado",
