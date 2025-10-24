@@ -54,20 +54,25 @@ class DatosBancariosService {
 
       if (!match) throw new Error(`Contraseña incorrecta`);
 
-      const bancoToken = jwt.sign(
+      const token = jwt.sign(
         {
+          id: datos[0].id,
+        },
+        process.env.JWT_SECRET,
+        { expiresIn: process.env.JWT_BANK_EXPIRES_IN }
+      );
+
+      return {
+        token,
+        datos: {
           id: datos[0].id,
           cuit: datos[0].cuit,
           alias: datos[0].alias,
           cbu: datos[0].cbu,
           apellido: datos[0].apellido,
           nombre: datos[0].nombre
-        },
-        process.env.JWT_SECRET,
-        { expiresIn: process.env.JWT_BANK_EXPIRES_IN }
-      );
-
-      return { bancoToken };
+        }
+      };
     } catch (error) {
       throw new Error(`Error al autenticar los Datos: ${error.message}`);
     }
