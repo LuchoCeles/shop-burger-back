@@ -61,12 +61,10 @@ class DatosBancariosService {
 
   async get() {
     try {
-      const datosbancarios = await DatosBancarios.findOne({
-        attributes: ["id", "cuit", "alias", "cbu", "apellido", "nombre"],
-      });
-      return datosbancarios;
+      const datosbancarios = await sequelize.query("CALL getBanco();");
+      return datosbancarios[0];
     } catch (error) {
-      throw new Error(`Error al obtener los datos bancarios${error.message}`);
+      throw new Error(`Error al obtener los datos bancarios: ${error.message}`);
     }
   }
 
