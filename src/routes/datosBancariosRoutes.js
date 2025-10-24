@@ -8,6 +8,7 @@ const authBanco = require("../middlewares/authBanco");
 const validateRequest = require("../middlewares/validateRequest");
 
 router.post("/", authAdmin, [
+  body("id").notEmpty().withMessage("El ID es obligatorio"),
   body("banco.cuit").notEmpty().isString().withMessage("El CUIT es obligatorio"),
   body("banco.alias").notEmpty().withMessage("El alias es obligatorio"),
   body("banco.cbu").notEmpty().withMessage("El CBU es obligatorio"),

@@ -4,16 +4,9 @@ const jwt = require('jsonwebtoken');
 class DatosBancariosController {
   async create(req, res) {
     try {
-      const { banco } = req.body;
+      const { id, banco } = req.body;
 
-      if (!banco.password) {
-        return res.status(400).json({
-          success: false,
-          message: "La contraseña es obligatoria",
-        });
-      }
-
-      const datos = await datosBancariosService.create({ banco });
+      const datos = await datosBancariosService.create(id, { banco });
 
       return res.status(201).json({
         message: "Datos creados exitosamente",
