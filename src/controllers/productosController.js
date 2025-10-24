@@ -102,6 +102,8 @@ class ProductosController {
           estado: producto.estado,
         },
       });
+      
+      
 
     } catch (error) {
       res.status(500).json({
