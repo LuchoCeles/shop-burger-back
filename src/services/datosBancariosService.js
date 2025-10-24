@@ -1,4 +1,5 @@
 const bcrypt = require("bcrypt");
+const jwt = require('jsonwebtoken');
 const { sequelize } = require("../config/db");
 
 class DatosBancariosService {
@@ -41,6 +42,38 @@ class DatosBancariosService {
     }
   }
 
+  async login(cuit, password) {
+    try {
+      const datos = await sequelize.query("CALL loginBanco(:cuit);", {
+        replacements: { cuit }
+      });
+
+      if (!datos[0]) throw new Error(`Usuario no encontrado`);
+
+      const match = await bcrypt.compare(password, datos[0].password);
+
+      if (!match) throw new Error(`Contraseña incorrecta`);
+
+      const bancoToken = jwt.sign(
+        {
+          id: datos[0].id,
+          cuit: datos[0].cuit,
+          alias: datos[0].alias,
+          cbu: datos[0].cbu,
+          apellido: datos[0].apellido,
+          nombre: datos[0].nombre
+        },
+        process.env.JWT_SECRET,
+        { expiresIn: process.env.JWT_BANK_EXPIRES_IN }
+      );
+
+      return bancoToken;
+    } catch (error) {
+      throw new Error(`Error al autenticar los Datos: ${error.message}`);
+    }
+  }
+
+
   async get() {
     try {
       const datosbancarios = await sequelize.query("CALL getBanco();");
@@ -60,11 +93,11 @@ class DatosBancariosService {
       if (!match) throw new Error(`Contraseña incorrecta`);
 
       const hashedPassword = await bcrypt.hash(newPassword, 12);
-      
+
       const datos = await sequelize.query("CALL updatePassworBanco(:id, :password);", {
         replacements: { id, hashedPassword }
       });
-      
+
       return "Contraseña actualizada";
     } catch (error) {
       throw new Error(`Error al actualizar la contraseña: ${error.message}`);

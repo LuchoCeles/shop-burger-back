@@ -51,10 +51,10 @@ class DatosBancariosController {
     }
   }
 
-  async access(req, res) {
+  async login(req, res) {
     const { cuit, password } = req.body;
     try {
-      const datos = await datosBancariosService.validateAccess(cuit, password);
+      const datos = await datosBancariosService.login(cuit, password);
       res.status(200).json({
         success: true,
         message: "Acceso autorizado",
