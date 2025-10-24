@@ -4,6 +4,7 @@ const router = express.Router();
 
 const datosBancariosController = require("../controllers/datosBancariosController");
 const authAdmin = require("../middlewares/authAdmin");
+const authBanco = require("../middlewares/authBanco");
 const validateRequest = require("../middlewares/validateRequest");
 
 router.post("/", authAdmin, [
@@ -21,7 +22,7 @@ router.post("/", authAdmin, [
 router.post("/login", authAdmin, [
   body("cuit").notEmpty().withMessage("El CUIT es obligatorio"),
   body("password").notEmpty().withMessage("La Contraseña es obligatoria")
-], validateRequest, datosBancariosController.access);
+], validateRequest, authBanco, datosBancariosController.get);
 
 router.get("/", datosBancariosController.get);
 
