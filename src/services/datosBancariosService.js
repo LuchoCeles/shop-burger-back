@@ -75,33 +75,33 @@ class DatosBancariosService {
         throw new Error(`La nueva contraseña no puede ser igual a la anterior`);
       }
 
-      const match = await bcrypt.compare(password, datos.password);
-      if (!match) throw new Error(`Contraseña incorrecta`);
-
       const hashedPassword = await bcrypt.hash(newPassword, 12);
 
-      const datos = await sequelize.query("CALL updatePassworBanco(:id, :password);", {
+      await sequelize.query("CALL updatePassworBanco(:id, :password);", {
         replacements: { id, hashedPassword }
       });
 
-      return "Contraseña actualizada";
+      return;
     } catch (error) {
       throw new Error(`Error al actualizar la contraseña: ${error.message}`);
     }
   }
 
   async update(id, datosActualizados) {
-    const transaction = await sequelize.transaction();
     try {
-      const datos = await DatosBancarios.findByPk(id);
-      if (!datos) throw new Error(`Id no encontrada`);
+      const datos = await sequelize.query("CALL updateDatosBancarios(:id, :cuit, :alias, :cbu, :apellido, :nombre);", {
+        replacements: {
+          id,
+          cuit: datosActualizados.cuit,
+          alias: datosActualizados.alias,
+          cbu: datosActualizados.cbu,
+          apellido: datosActualizados.apellido,
+          nombre: datosActualizados.nombre
+        }
+      });
 
-      console.log(datosActualizados);
-      await datos.update(datosActualizados, { transaction });
-      await transaction.commit();
-      return datos;
+      return datos[0];
     } catch (error) {
-      if (!transaction.finished) await transaction.rollback();
       throw new Error(`Error al actualizar datos bancarios: ${error.message}`);
     }
   }
