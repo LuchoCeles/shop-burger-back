@@ -13,15 +13,14 @@ router.post('/', authAdmin, [
 ], validateRequest, categoriasController.createCategorie);
 
 router.patch('/:id', authAdmin, [
-  body('nombre').notEmpty().trim(),
-  body('estado').isBoolean().optional()
+  body('nombre').notEmpty().trim()
 ], validateRequest, categoriasController.updateCategorie);
 
 router.delete('/:id', authAdmin, categoriasController.deleteCategory);
 
 router.patch('/:id/estado', authAdmin, [
   param("id").isInt({ min: 1 }).withMessage("ID invalido"),
-  body("estado").isInt({ min: 0, max: 1 }).withMessage("Estado debe ser 0 o 1"),
+  body("estado").isBoolean().withMessage("El campo 'Estado' debe ser un valor booleano"),
 ], validateRequest, categoriasController.updateEstate);
 
 module.exports = router;

@@ -32,27 +32,29 @@ class CategoriasController {
       const { id } = req.params;
       const { estado } = req.body;
 
-      if(typeof estado === "undefined"){
+      console.log(estado);
+
+      if (typeof estado === "undefined") {
         return res.status(400).json({
-          success:false,
+          success: false,
           message: "El campo 'Estado' es obligatorio",
         });
       }
 
-      const categoria = await categoriasService.updateEstate(id,estado);
+      const categoria = await categoriasService.updateEstate(id, estado);
       res.status(200).json({
-        success:true,
+        success: true,
         message: "Estado aztualizado",
-        data:{
-          id:categoria.id,
-          esatdo:categoria.estado
+        data: {
+          id: categoria.id,
+          esatdo: categoria.estado
         },
       });
 
     } catch (error) {
       res.status(500).json({
-        success:false,
-        message:error.message,
+        success: false,
+        message: error.message,
       });
     }
   }
@@ -60,8 +62,8 @@ class CategoriasController {
   async updateCategorie(req, res, next) {
     try {
       const { id } = req.params;
-      const updateData = req.body;
-      const categoria = await categoriasService.updateCategorie(id, updateData);
+      const { nombre } = req.body;
+      const categoria = await categoriasService.updateCategorie(id, nombre);
       res.json({
         success: true,
         message: "Categoría actualizada exitosamente",
@@ -78,13 +80,13 @@ class CategoriasController {
       const categoria = await categoriasService.deleteCategory(id);
       res.json({
         success: true,
-        message:categoria.message,
+        message: categoria.message,
       });
     } catch (error) {
-       res.status(500).json({
-        success:false,
+      res.status(500).json({
+        success: false,
         message: error.message,
-       });
+      });
     }
   }
 }
