@@ -1,48 +1,20 @@
-const { Producto, Categoria, sequelize, Adicionales } = require("../models");
+const { Producto, Categoria, Adicionales } = require("../models");
 const cloudinaryService = require("./cloudinaryService");
+const { sequelize } = require("../config/db");
 
 class ProductosService {
   async getProducts(soloActivos = true) {
-    const whereClause = soloActivos ? { estado: 1 } : {};
-    const productos = await Producto.findAll({
-      where: whereClause,
-      include: [
-        {
-          model: Categoria,
-          as: "categoria",
-          attributes: ["nombre"],
-          where: { estado: 1 },
-          required: true,
-        },
-        {
-          model: Adicionales,
-          as: "adicionales",
-          attributes: ["id", "nombre", "precio", "stock", "maxCantidad"],
-          where: { estado: 1 },
-          through: {
-            attributes: ["id"],
-          },
-          required: false,
-        },
-      ],
+    const whereClause = soloActivos ? 1 : 0;
+    const productos = await sequelize.query("CALL getProducts(:estado)", {
+      replacements: { estado: whereClause },
     });
 
-    return productos.map((p) => {
-      const plain = p.get({ plain: true });
-      const adicionalLimpio = plain.adicionales?.map((a) => {
-        const adicional = {
-          ...a,
-          idAxp: a.AdicionalesXProductos.id
-        };
-        delete adicional.AdicionalesXProductos;
-        return adicional;
-      });
-      return {
-        ...plain,
-        categoria: plain.categoria ? plain.categoria.nombre : null,
-        adicionales: adicionalLimpio,
-      };
-    });
+    const productosParseados = productos.map((p) => ({
+      ...p,
+      adicionales: JSON.parse(p.adicionales),
+    }));
+
+    return productosParseados;
   }
 
   async getProductById(id) {
