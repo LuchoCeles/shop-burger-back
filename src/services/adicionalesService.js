@@ -1,5 +1,5 @@
-const { where } = require("sequelize");
-const { Adicionales, sequelize, AdicionalesXProducto } = require("../models");
+const {sequelize} = require("../config/db");
+const { Adicionales, AdicionalesXProducto } = require("../models");
 
 class AdicionalesService {
   async getAll(isActive = false) {
@@ -20,30 +20,23 @@ class AdicionalesService {
   }
 
   async delete(id) {
-    const transaction = await sequelize.transaction();
+     const transaction = await sequelize.transaction();
+
     try {
-      const existingAdicional = await Adicionales.findByPk(id, { transaction });
-      if (!existingAdicional) {
-        throw new Error("Adicional no encontrado");
-      }
-
-      const asociados = await AdicionalesXProducto.count({
-        where: { idAdicional: id }, //verificar
-        transaction,
-      });
-
-      if (asociados > 0) {
-        throw new Error(`No se puede eliminar, esta asociado a un producto.`);
-      }
-
-      await existingAdicional.destroy({ transaction });
+      // Llamamos al procedimiento
+      await sequelize.query(
+        "CALL deleteAdicional(:id)",
+        { replacements: { id }, transaction }
+      );
 
       await transaction.commit();
-
       return { message: "Adicional eliminado correctamente" };
-      
     } catch (error) {
       if (!transaction.finished) await transaction.rollback();
+
+      console.error("💥 Error SQL al eliminar adicional:", error); // <-- Log completo en consola
+
+      // Lanzamos el error original para que llegue al controller
       throw new Error(`Error al eliminar adicional: ${error.message}`);
     }
   }
