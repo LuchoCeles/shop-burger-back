@@ -1,41 +1,51 @@
-const { where } = require("sequelize");
-const { Categoria, sequelize, Producto } = require("../models");
+const { sequelize } = require("../config/db")
 
 class CategoriasService {
   async getCategories() {
-    return await Categoria.findAll();
+    return await sequelize.query("CALL getAllCategories();");
   }
 
   async createCategorie(categoriaData) {
-    return await Categoria.create(categoriaData);
+    return await sequelize.query("CALL createCategorie(:nombre);", {
+      replacements: {
+        nombre: categoriaData.nombre,
+      },
+    });
   }
 
-  async updateCategorie(id, updateData) {
-    const categoria = await Categoria.findByPk(id);
-
-    if (!categoria) {
-      throw new Error("Categoría no encontrada");
-    }
+  async updateCategorie(id, nombre) {
     try {
-      await categoria.update(updateData);
+      const categoria = await sequelize.query("CALL updateCategorie(:id, :nombre);", {
+        replacements: {
+          id, nombre
+        },
+      });
+
+      if (!categoria) {
+        throw new Error("Categoría no encontrada");
+      }
+
       return categoria;
     } catch (error) {
       throw new Error(`No se pudo actualizar la categoria`);
     }
   }
 
-  async updateEstate(id, nuevoEsatdo) {
-    const transaction = await sequelize.transaction();
+  async updateEstate(id, nuevoEstado) {
     try {
-      const categoria = await Categoria.findByPk(id);
+      const categoria = await sequelize.query("CALL updateCategorieState(:id, :estado);", {
+        replacements: {
+          id,
+          estado: nuevoEstado,
+        },
+      });
+
       if (!categoria) {
         throw new Error(`No se encontro la categoria`);
       }
-      await categoria.update({ estado: nuevoEsatdo }, { transaction });
-      await transaction.commit();
+
       return categoria;
     } catch (error) {
-      if (!transaction.finished) await transaction.rollback();
       throw new Error(`Error al cambiar estado: ${error.message}`);
     }
   }

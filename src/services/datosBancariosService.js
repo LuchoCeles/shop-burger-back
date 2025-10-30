@@ -1,38 +1,31 @@
 const bcrypt = require("bcrypt");
-const { DatosBancarios, sequelize, Admin } = require("../models");
+const { sequelize } = require("../config/db");
+const { Admin } = require("../models");
+
 
 class DatosBancariosService {
-  async create(datosBancarios) {
-    const transaction = await sequelize.transaction();
+  async create(adminId, datosBancarios) {
     try {
-      const { banco } = datosBancarios;
-
-      if (!banco.password) throw new Error("La contraseña es obligatoria");
-
-      const admins = await Admin.findAll({ attributes: ["password"] });
-      for (const admin of admins) {
-        const match = await bcrypt.compare(banco.password, admin.password);
-        if (match) {
-          throw new Error("La contraseña no puede ser igual a la del Admin");
-        }
+      const adminData = await Admin.findByPk(adminId);
+      const hashedPassword = await bcrypt.hash(datosBancarios.password, 12);
+      const match = await bcrypt.compare(datosBancarios.password, adminData.password);
+      if (match) {
+        throw new Error('La Contraseña no puede ser igual a la de su Cuenta');
       }
-
-      const hashedPassword = await bcrypt.hash(banco.password, 12);
-
-      const b = await DatosBancarios.create(
+      
+      const datos = await sequelize.query("CALL createBanco(:cuit, :alias, :cbu, :apellido, :nombre, :password);",
         {
-          cuit: banco.cuit,
-          alias: banco.alias,
-          cbu: banco.cbu,
-          apellido: banco.apellido,
-          nombre: banco.nombre,
-          password: hashedPassword,
-        },
-        { transaction }
-      );
+          replacements: {
+            cuit: datosBancarios.cuit,
+            alias: datosBancarios.alias,
+            cbu: datosBancarios.cbu,
+            apellido: datosBancarios.apellido,
+            nombre: datosBancarios.nombre,
+            password: hashedPassword
+          }
+        });
 
-      await transaction.commit();
-      return b;
+      return datos[0];
     } catch (error) {
       if (!transaction.finished) {
         await transaction.rollback();
@@ -41,74 +34,66 @@ class DatosBancariosService {
     }
   }
 
-  async validateAccess(password) {
+  async login(cuit, password) {
     try {
-      const datos = await DatosBancarios.findOne({
-        order: [["id", "DESC"]],
+      const datos = await sequelize.query("CALL loginBanco(:cuit);", {
+        replacements: { cuit }
       });
 
-      if (!datos.password) throw new Error(`Contraseña invalida`);
+      if (!datos[0]) throw new Error(`Usuario no encontrado`);
 
-      const match = await bcrypt.compare(password, datos.password);
+      const match = await bcrypt.compare(password, datos[0].password);
 
       if (!match) throw new Error(`Contraseña incorrecta`);
 
-      return datos;
+      return datos[0];
     } catch (error) {
-      throw new Error(`Error al validar acceso: ${error.message}`);
+      throw new Error(`Error al autenticar los Datos: ${error.message}`);
     }
   }
 
   async get() {
     try {
-      const datosbancarios = await DatosBancarios.findOne({
-        attributes: ["id", "cuit", "alias", "cbu", "apellido", "nombre"],
-      });
-      return datosbancarios;
+      const datosbancarios = await sequelize.query("CALL getBanco();");
+      return datosbancarios[0];
     } catch (error) {
-      throw new Error(`Error al obtener los datos bancarios${error.message}`);
+      throw new Error(`Error al obtener los datos bancarios: ${error.message}`);
     }
   }
 
   async updatePassword(id, password, newPassword) {
-    const transaction = await sequelize.transaction();
-
     try {
       if (password === newPassword) {
         throw new Error(`La nueva contraseña no puede ser igual a la anterior`);
       }
 
-      const datos = await DatosBancarios.findByPk(id);
-      if (!datos) throw new Error(`Usuario no encontrado`);
+      const hashedPassword = await bcrypt.hash(newPassword, 12);
 
-      const match = await bcrypt.compare(password, datos.password);
-      if (!match) throw new Error(`Contraseña incorrecta`);
+      await sequelize.query("CALL updatePassworBanco(:id, :password);", {
+        replacements: { id, hashedPassword }
+      });
 
-      const hashedPassword = await bcrypt.hash(newPassword, 10);
-
-      await datos.update({ password: hashedPassword });
-
-      await transaction.commit();
-
-      return "Contraseña actualizada";
+      return;
     } catch (error) {
-      await transaction.rollback();
       throw new Error(`Error al actualizar la contraseña: ${error.message}`);
     }
   }
 
   async update(id, datosActualizados) {
-    const transaction = await sequelize.transaction();
     try {
-      const datos = await DatosBancarios.findByPk(id);
-      if (!datos) throw new Error(`Id no encontrada`);
+      const datos = await sequelize.query("CALL updateDatosBancarios(:id, :cuit, :alias, :cbu, :apellido, :nombre);", {
+        replacements: {
+          id,
+          cuit: datosActualizados.cuit,
+          alias: datosActualizados.alias,
+          cbu: datosActualizados.cbu,
+          apellido: datosActualizados.apellido,
+          nombre: datosActualizados.nombre
+        }
+      });
 
-      console.log(datosActualizados);
-      await datos.update(datosActualizados, { transaction });
-      await transaction.commit();
-      return datos;
+      return datos[0];
     } catch (error) {
-      if (!transaction.finished) await transaction.rollback();
       throw new Error(`Error al actualizar datos bancarios: ${error.message}`);
     }
   }
