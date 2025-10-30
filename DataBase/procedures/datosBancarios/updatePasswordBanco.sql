@@ -9,7 +9,7 @@ CREATE PROCEDURE updatePasswordBanco(
 
 BEGIN
     UPDATE DatosBancarios 
-      SET password = p_password 
+      SET password = p_password, updatedAt = CURRENT_TIMESTAMP()
     WHERE id = p_id;
 END //
 

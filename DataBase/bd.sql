@@ -105,21 +105,6 @@ CREATE TABLE ProductosXPedidos (
 -- =======================
 CREATE TABLE AdicionalesXProductosXPedidos (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    idProducto INT,
-    idPedido INT,
-    cantidad INT DEFAULT 1,
-    precio DECIMAL(10,2) DEFAULT 0,
-    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    CONSTRAINT fk_pxp_producto FOREIGN KEY (idProducto) REFERENCES Productos(id),
-    CONSTRAINT fk_pxp_pedido FOREIGN KEY (idPedido) REFERENCES Pedidos(id)
-);
-
--- =======================
--- TABLA: Adicionales x Productos x Pedidos
--- =======================
-CREATE TABLE AdicionalesXProductosXPedidos (
-    id INT AUTO_INCREMENT PRIMARY KEY,
     idProductoXPedido INT,
     idAdicional INT,
     cantidad INT DEFAULT 1,
@@ -144,19 +129,32 @@ CREATE TABLE DatosBancarios (
     updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
+
+-- =======================
+-- TABLA: Metodos de Pago
+-- =======================
+CREATE TABLE MetodosDePago (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(100) NOT NULL,
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
 -- =======================
 -- TABLA: Pagos
 -- =======================
 CREATE TABLE Pagos (
     id INT AUTO_INCREMENT PRIMARY KEY,
     idPedido INT,
-    idDatosBancarios INT,
+    idMetodoDePago INT,
     estado VARCHAR(50) DEFAULT 'pendiente',
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT fk_pago_pedido FOREIGN KEY (idPedido) REFERENCES Pedidos(id),
-    CONSTRAINT fk_pago_datos FOREIGN KEY (idDatosBancarios) REFERENCES DatosBancarios(id)
+    CONSTRAINT fk_pago_datos FOREIGN KEY (idMetodoDePago) REFERENCES MetodosDePago(id)
 );
+
+
 
 -- =======================
 -- TABLA: Local
@@ -183,4 +181,8 @@ CREATE TABLE Admin (
 
 INSERT INTO `admin` (`id`, `nombre`, `password`, `createdAt`, `updatedAt`) VALUES (NULL, 'admin', '$2a$12$UxAIzdbWGJq9sctMi7942uTnYzRhMJg1VV65/L2VQdQ0w9vKhKana', current_timestamp(), current_timestamp());
 
-INSERT INTO `DatosBancarios` (`id`, `cuit`, `alias`, `cbu`, `apellido`, `nombre`, `password`, `createdAt`, `updatedAt`) VALUES (NULL, '20-12345678-9', 'mi_alias_bancario', '1234567890123456789012', 'Perez', 'Juan', '$2a$12$UnGu/sK.zOLy9La4VuMGBeYCrHLw8gzblkYt6/HgjcPbblXgjrfiW', current_timestamp(), current_timestamp());
+INSERT INTO `DatosBancarios` (`cuit`, `alias`, `cbu`, `apellido`, `nombre`, `password`, `createdAt`, `updatedAt`) VALUES ('20-12345678-9', 'mi_alias_bancario', '1234567890123456789012', 'Perez', 'Juan', '$2a$12$UnGu/sK.zOLy9La4VuMGBeYCrHLw8gzblkYt6/HgjcPbblXgjrfiW', current_timestamp(), current_timestamp());
+
+INSERT INTO `MetodosDePago` (`nombre`, `createdAt`, `updatedAt`) VALUES ('Efectivo', current_timestamp(), current_timestamp());
+INSERT INTO `MetodosDePago` (`nombre`, `createdAt`, `updatedAt`) VALUES ('Trasferencia', current_timestamp(), current_timestamp());
+INSERT INTO `MetodosDePago` (`nombre`, `createdAt`, `updatedAt`) VALUES ('Mercado Pago', current_timestamp(), current_timestamp());

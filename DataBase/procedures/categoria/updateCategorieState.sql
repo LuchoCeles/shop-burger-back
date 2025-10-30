@@ -1,3 +1,5 @@
+DROP PROCEDURE IF EXISTS updateCategorieState;
+
 DELIMITER //
 
 CREATE PROCEDURE updateCategorieState(
@@ -6,7 +8,7 @@ CREATE PROCEDURE updateCategorieState(
 )
 BEGIN
     UPDATE Categorias
-    SET estado = p_estado
+    SET estado = p_estado, updatedAt = CURRENT_TIMESTAMP()
     WHERE id = p_id;
 
     SELECT * FROM Categorias WHERE id = p_id;

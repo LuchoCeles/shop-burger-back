@@ -1,3 +1,5 @@
+DROP PROCEDURE IF EXISTS createCategorie;
+
 DELIMITER //
 CREATE PROCEDURE createCategorie(
     IN p_nombre VARCHAR(100)

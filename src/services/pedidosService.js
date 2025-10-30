@@ -7,110 +7,18 @@ const {
   Adicionales,
   AdicionalesXProductosXPedidos,
 } = require("../models");
-const { sequelize } = require("../models");
-const { Op, where } = require("sequelize");
-const { lock } = require("../routes/pedidosRoutes");
+const { sequelize } = require("../config/db");
 
 class PedidosService {
   async Create(datosPedido) {
-    const transaction = await sequelize.transaction();
     try {
-      const { cliente, productos, descripcion } = datosPedido;
-      let total = 0;
-
-      const c = await Cliente.create(cliente, { transaction });
-
-      const pedido = await Pedido.create(
-        {
-          idCliente: c.id,
-          descripcion,
-          precioTotal: total,
-        },
-        { transaction }
-      );
-
-      //  Recorrer los productos
-      for (const P of productos) {
-        const proc = await Producto.findByPk(P.id, {
-          attributes: ["precio", "stock"],
-          transaction,
-          lock: transaction.LOCK.UPDATE,
-        });
-
-        if (!proc) throw new Error(`El producto ${P.nombre} no existe`);
-        if (proc.stock < P.cantidad)
-          throw new Error(
-            `Stock insuficiente para ${P.nombre}. Disponible: ${proc.stock}, solicitado: ${P.cantidad}`
-          );
-
-        await Producto.decrement("stock", {
-          by: P.cantidad,
-          where: { id: P.id, stock: { [Op.gte]: P.cantidad } },
-          transaction,
-        });
-
-        total += Number(proc.precio) * P.cantidad;
-
-        //  Crear registro de producto en el pedido
-        const prodXPedido = await ProductosXPedido.create(
-          {
-            idPedido: pedido.id,
-            idProducto: P.id,
-            cantidad: P.cantidad,
-          },
-          { transaction }
-        );
-
-        //  Procesar adicionales (solo si existen)
-        if (
-          P.adicionales &&
-          Array.isArray(P.adicionales) &&
-          P.adicionales.length > 0
-        ) {
-          for (const A of P.adicionales) {
-            const adicional = await Adicionales.findByPk(A.id, {
-              attributes: ["precio", "stock", "nombre"],
-              transaction,
-              lock: transaction.LOCK.UPDATE,
-            });
-
-            if (!adicional)
-              throw new Error(`El adicional ${A.nombre} no existe`);
-            if (adicional.stock < A.cantidad)
-              throw new Error(
-                `Stock insuficiente para el adicional ${A.nombre}`
-              );
-
-            await Adicionales.decrement("stock", {
-              by: A.cantidad || 1,
-              where: { id: A.id, stock: { [Op.gte]: A.cantidad || 1 } },
-              transaction,
-            });
-
-            const subtotal = Number(adicional.precio) * (A.cantidad || 1);
-            total += subtotal;
-
-            const nuevoAdi = await AdicionalesXProductosXPedidos.create(
-              {
-                idProductoXPedido: prodXPedido.id,
-                idAdicional: A.id,
-                cantidad: A.cantidad || 1,
-                precio: adicional.precio,
-              },
-              { transaction }
-            );
-            console.log("Adicionales insertado: ", nuevoAdi.toJSON());
-          }
+      const pedido = await sequelize.query("CALL createPedido(:datos)", {
+        replacements: {
+          datos: JSON.stringify(datosPedido),
         }
-      }
-
-      //  Actualizar total del pedido
-      await pedido.update({ precioTotal: total }, { transaction });
-      await transaction.commit();
-
-      return pedido.id;
+      })
+      return pedido[0];
     } catch (error) {
-      if (!transaction.finished) await transaction.rollback();
       throw new Error(`Error al crear pedido: ${error.message}`);
     }
   }

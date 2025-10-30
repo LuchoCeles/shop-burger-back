@@ -8,7 +8,7 @@ CREATE PROCEDURE updateCategorie(
 
 BEGIN
     UPDATE Categorias
-    SET nombre = p_nombre
+    SET nombre = p_nombre, updatedAt = CURRENT_TIMESTAMP()
     WHERE id = p_id;
 
     SELECT * FROM Categorias WHERE id = p_id;
