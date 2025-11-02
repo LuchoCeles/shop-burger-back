@@ -34,6 +34,10 @@ router.patch("/:id",
   body("banco.nombre").optional().isString().notEmpty().withMessage("El nombre no puede estar vacío"),
 ], validateRequest, datosBancariosController.update);
 
+router.patch("/:id/stateMP", authAdmin, authBanco, [
+  body("mpEstado").notEmpty().toBoolean().isBoolean().withMessage("El estado de MP es obligatorio"),
+], validateRequest, datosBancariosController.updateMPState);
+
 router.patch("/password/:id", authAdmin, authBanco, [
   body("password").notEmpty().withMessage("Contraseña actual requerida"),
   body("newPassword").notEmpty().isLength({ min: 6 }).withMessage("Contraseña nueva requerida y Minimo debe tener 6 caracteres"),

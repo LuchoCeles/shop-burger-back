@@ -32,7 +32,7 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
     },
   }, {
-    tableName: 'DatosBancarios',
+    tableName: 'datosBancarios',
     timestamps: true
   });
 
