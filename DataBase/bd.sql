@@ -154,19 +154,6 @@ CREATE TABLE Pagos (
     CONSTRAINT fk_pago_datos FOREIGN KEY (idMetodoDePago) REFERENCES MetodosDePago(id)
 );
 
-
-
--- =======================
--- TABLA: Local
--- =======================
-CREATE TABLE Local (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    telefono VARCHAR(20),
-    direccion VARCHAR(255),
-    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
-
 -- =======================
 -- TABLA: Admin
 -- =======================

@@ -26,8 +26,8 @@ BEGIN
 
     DECLARE v_i INT DEFAULT 0;
     DECLARE v_j INT DEFAULT 0;
-    DECLARE v_path VARCHAR(100); --where no deja usar concat directamente en json_extract, por eso esta variable
-
+    DECLARE v_path VARCHAR(100);
+    
     -- Extraer datos del pedido
     SET v_telefono = JSON_UNQUOTE(JSON_EXTRACT(p_data, '$.cliente.telefono'));
     SET v_direccion = JSON_UNQUOTE(JSON_EXTRACT(p_data, '$.cliente.direccion'));
