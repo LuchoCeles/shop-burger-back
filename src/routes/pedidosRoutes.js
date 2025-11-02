@@ -12,7 +12,7 @@ router.post('/', [
   body('productos').isArray({ min: 1 }).notEmpty().withMessage('productos debe ser un array con al menos un elemento'),
   body('adicionales').isArray({ min: 1 }).optional().withMessage('adicionales debe ser un array con al menos un elemento'),
   body('metodoDePago').notEmpty().isString().withMessage('metodoDePago es requerido')
-], validateRequest, pedidosController.CreateOrder);
+], validateRequest, pedidosController.CreateOrder.bind(pedidosController));
 
 // Obtener todos los pedidos (filtros: ?estado=pendiente&idCliente=1)
 router.get('/', pedidosController.getOrders);

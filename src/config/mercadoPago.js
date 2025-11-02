@@ -1,4 +1,4 @@
-const { MercadoPagoConfig, Order } = require("mercadopago");
+const { MercadoPagoConfig, Preference } = require("mercadopago");
 require("dotenv").config();
 
 const client = new MercadoPagoConfig({
@@ -6,6 +6,6 @@ const client = new MercadoPagoConfig({
   options: { timeout: 5000 }
 })
 
-const order = new Order(client);
+const preference = new Preference(client);
 
-module.exports = order;
+module.exports = preference;
