@@ -78,11 +78,11 @@ class PedidosController {
           failure: `${process.env.FRONTEND_URL}/checkout`,
           pending: `${process.env.FRONTEND_URL}/checkout`,
         },
+        notification_url: "https://487aec2ec0fc.ngrok-free.app/admin/pedido/webhooks/mercadopago",
       };
 
       const mpResponse = await MercadoPagoService.create(body);
 
-      // devuelve al cliente la URL para redirigir al checkout
       return {
         pedidoId: pedido.id,
         init_point: mpResponse.init_point,
@@ -101,6 +101,19 @@ class PedidosController {
     } catch (error) {
       console.error('Error al obtener pedido:', error);
       throw error;
+    }
+  }
+
+  async webHooksMercadoPago(req, res) {
+    try {
+      console.log(req.query);
+
+      res.send("webhook");
+    } catch (error) {
+      console.error('Error al procesar webhook');
+      return res.status(500).json({
+        error: error.message
+      });
     }
   }
 

@@ -35,4 +35,6 @@ router.patch('/:id/update', [
   param('id').isInt({ min: 1 }).withMessage('ID debe ser válido')
 ], validateRequest, pedidosController.updateOrder);
 
+router.post('/webhooks/mercadopago', pedidosController.webHooksMercadoPago);
+
 module.exports = router;
