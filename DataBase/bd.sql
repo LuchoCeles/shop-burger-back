@@ -125,6 +125,7 @@ CREATE TABLE DatosBancarios (
     apellido VARCHAR(100) NOT NULL,
     nombre VARCHAR(100) NOT NULL,
     password VARCHAR(255) NOT NULL,
+    mpEstado TINYINT DEFAULT 1 NOT NULL,
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
@@ -168,7 +169,8 @@ CREATE TABLE Admin (
 
 INSERT INTO `admin` (`id`, `nombre`, `password`, `createdAt`, `updatedAt`) VALUES (NULL, 'admin', '$2a$12$UxAIzdbWGJq9sctMi7942uTnYzRhMJg1VV65/L2VQdQ0w9vKhKana', current_timestamp(), current_timestamp());
 
-INSERT INTO `DatosBancarios` (`cuit`, `alias`, `cbu`, `apellido`, `nombre`, `password`, `createdAt`, `updatedAt`) VALUES ('20-12345678-9', 'mi_alias_bancario', '1234567890123456789012', 'Perez', 'Juan', '$2a$12$UnGu/sK.zOLy9La4VuMGBeYCrHLw8gzblkYt6/HgjcPbblXgjrfiW', current_timestamp(), current_timestamp());
+INSERT INTO `DatosBancarios` (`cuit`, `alias`, `cbu`, `apellido`, `nombre`, `password`, `createdAt`, `updatedAt`) 
+    VALUES ('20-12345678-9', 'mi_alias_bancario', '1234567890123456789012', 'Perez', 'Juan', '$2a$12$UnGu/sK.zOLy9La4VuMGBeYCrHLw8gzblkYt6/HgjcPbblXgjrfiW', current_timestamp(), current_timestamp());
 
 INSERT INTO `MetodosDePago` (`nombre`, `createdAt`, `updatedAt`) VALUES ('Efectivo', current_timestamp(), current_timestamp());
 INSERT INTO `MetodosDePago` (`nombre`, `createdAt`, `updatedAt`) VALUES ('Trasferencia', current_timestamp(), current_timestamp());

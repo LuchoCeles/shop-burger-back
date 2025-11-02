@@ -10,6 +10,8 @@ router.post('/', authAdmin, [
   body('cliente').notEmpty(),
   body('descripcion'),
   body('productos').isArray({ min: 1 }).withMessage('productos debe ser un array con al menos un elemento'),
+  body('adicionales').isArray({ min: 1 }).withMessage('adicionales debe ser un array con al menos un elemento'),
+  body('metodoDePago').notEmpty().withMessage('metodoDePago es requerido')
 ], validateRequest, pedidosController.CreateOrder);
 
 // Obtener todos los pedidos (filtros: ?estado=pendiente&idCliente=1)
