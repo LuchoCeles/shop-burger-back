@@ -5,19 +5,7 @@ class PedidosController {
   async CreateOrder(req, res) {
     try {
       const io = req.app.get('io');
-      const { cliente, productos, descripcion } = req.body;
-
-      if (!cliente) {
-        return res.status(400).json({
-          error: 'El campo debe estar completo'
-        });
-      }
-
-      if (!productos || !Array.isArray(productos) || productos.length === 0) {
-        return res.status(400).json({
-          error: 'Debe incluir al menos un producto en el array productos'
-        });
-      }
+      const { cliente, productos, descripcion, metodoDePago} = req.body;
 
       for (const item of productos) {
         if (!item.id || !item.cantidad) {
@@ -43,7 +31,8 @@ class PedidosController {
       const pedido = await pedidoService.Create({
         cliente,
         productos,
-        descripcion
+        descripcion,
+        metodoDePago
       });
 
 

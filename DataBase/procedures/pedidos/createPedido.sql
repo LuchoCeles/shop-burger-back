@@ -8,6 +8,8 @@ BEGIN
     DECLARE v_telefono VARCHAR(40);
     DECLARE v_direccion VARCHAR(255);
     DECLARE v_descripcion TEXT;
+    DECLARE v_metodoDePago VARCHAR(100);
+
 
     DECLARE v_precioProducto DECIMAL(10,2);
     DECLARE v_cantidadProducto INT;
@@ -119,6 +121,11 @@ BEGIN
 
         SET v_i = v_i + 1;
     END WHILE;
+
+    -- Insertar metodo de pago
+    SELECT id INTO v_metodoDePago FROM MetodosDePago WHERE nombre = JSON_UNQUOTE(JSON_EXTRACT(p_data, '$.metodoDePago'));
+    INSERT INTO Pagos (idPedido, idMetodoDePago, createdAt, updatedAt)
+    VALUES (v_idPedido, v_metodoDePago, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP());
 
     -- Actualizar precio total del pedido
     SET v_precioTotal = v_subTotalProductos + v_subTotalAdicionales;
