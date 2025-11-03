@@ -1,5 +1,6 @@
 const pedidoService = require('../services/pedidosService');
 const MercadoPagoService = require('../services/mercadoPagoService');
+const mercadoPagoService = require('../services/mercadoPagoService');
 require("dotenv").config();
 
 class PedidosController {
@@ -106,13 +107,18 @@ class PedidosController {
 
   async webHooksMercadoPago(req, res) {
     try {
-      console.log(req.query);
+      const payment = req.query;
 
-      res.send("webhook");
+      if(payment.type === "payment"){
+        const data = await mercadoPagoService.getById(payment['data.id']);
+        console.log(data);
+      }
+
+      res.status(200);
     } catch (error) {
       console.error('Error al procesar webhook');
       return res.status(500).json({
-        error: error.message
+        message: error.message
       });
     }
   }

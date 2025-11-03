@@ -10,6 +10,16 @@ class MercadoPagoService {
       throw error;
     }
   }
+
+  async getById(id) {
+    try {
+      const rsp = await preference.get({ id });
+      return rsp;
+    } catch (error) {
+      console.error("MercadoPago payment.findById error:", error);
+      throw error;
+    }
+  }
 }
 
 module.exports = new MercadoPagoService();
