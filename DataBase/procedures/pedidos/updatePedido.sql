@@ -27,10 +27,62 @@ BEGIN
     DECLARE v_path VARCHAR(200);
     DECLARE v_idProdXPED INT;
 
+    DECLARE v_estadoActual VARCHAR(50);
+    DECLARE v_createdAt DATETIME;
+
+    DECLARE done INT DEFAULT 0;
+    DECLARE v_oldProdtId INT;
+    DECLARE v_oldCantProd INT;
+
+    DECLARE cur_oldProductos CURSOR FOR
+        SELECT idProducto, cantidad from productosxpedidos WHERE idPedido = v_idPedido;
+    DECLARE CONTINUE HANDLER FOR NOT FOUND SET done = 1;
+
     -- ===============================
-    -- 1️⃣ Extraer datos del pedido
+    -- 1️⃣ Extraer datos del pedido Y validamos estado y tiempo
     -- ===============================
-    SET v_idPedido = JSON_EXTRACT(p_data, '$.id');
+    SET v_idPedido = JSON_UNQUOTE(JSON_EXTRACT(p_data, '$.idPedido'));
+
+    SELECT estado, createdAt INTO v_estadoActual, v_createdAt FROM pedidos WHERE id = v_idPedido;
+
+    IF v_estadoActual  IS NULL THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El pedido no existe';
+    END IF;
+
+    IF v_estadoActual <> 'pendiente' THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Solo se pueden actualizar pedidos en estado pendiente';
+    END IF;
+
+    /*IF TIMESTAMPDIFF(MINUTE, v_createdAt, CURRENT_TIMESTAMP()) > 5 THEN
+        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El tiempo para actualizar el pedido ha expirado';
+    END IF;*/
+
+    SET done = 0;
+
+    OPEN cur_oldProductos;
+    restore_loop: LOOP
+        FETCH cur_oldProductos INTO v_oldProdtId, v_oldCantProd;
+        IF done THEN
+            LEAVE restore_loop;
+        END IF;
+
+        -- Restaurar stock del producto
+        UPDATE productos
+        SET stock = stock + v_oldCantProd
+        WHERE id = v_oldProdtId;
+
+        UPDATE adicionales a
+        JOIN adicionalesxproductosxpedidos axp ON a.id = axp.idAdicional
+        SET a.stock = a.stock + axp.cantidad
+        WHERE axp.idProductoXPedido IN (
+            SELECT id FROM productosxpedidos WHERE idProducto = v_oldProdtId AND idPedido = v_idPedido
+        );
+    END LOOP;
+
+    CLOSE cur_oldProductos;
+
+    DELETE FROM ProductosXPedidos WHERE idPedido = v_idPedido;
+
     SET v_descripcion = JSON_UNQUOTE(JSON_EXTRACT(p_data, '$.descripcion'));
     SET v_telefono = JSON_UNQUOTE(JSON_EXTRACT(p_data, '$.cliente.telefono'));
     SET v_direccion = JSON_UNQUOTE(JSON_EXTRACT(p_data, '$.cliente.direccion'));
@@ -47,6 +99,13 @@ BEGIN
             updatedAt = CURRENT_TIMESTAMP()
         WHERE id = v_idCliente;
     END IF;
+
+  DELETE FROM adicionalesxproductosxpedidos
+  WHERE idProductoXPedido IN (
+    SELECT id FROM productosxpedidos WHERE idPedido = v_idPedido
+    );
+
+DELETE FROM productosxpedidos WHERE idPedido = v_idPedido;
 
 
     DELETE FROM productosxpedidos WHERE idPedido = v_idPedido;
@@ -68,6 +127,7 @@ BEGIN
             SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Stock insuficiente para producto';
         END IF;
 
+        
         -- Actualizar stock producto
         UPDATE productos
         SET stock = stock - v_cantidadProducto
@@ -111,7 +171,10 @@ BEGIN
             WHERE id = JSON_UNQUOTE(JSON_EXTRACT(p_data, v_path));
 
             DELETE FROM adicionalesxproductosxpedidos
-WHERE idProductoXPedido = v_idProdXPED;
+            WHERE idProductoXPedido IN(
+                SELECT id from productosxpedidos
+                WHERE idPedido = v_idPedido
+            );
 
 
             -- Insertar en AdicionalesXProductosXPedidos
