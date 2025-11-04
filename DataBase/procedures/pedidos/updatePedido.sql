@@ -53,9 +53,9 @@ BEGIN
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Solo se pueden actualizar pedidos en estado pendiente';
     END IF;
 
-    /*IF TIMESTAMPDIFF(MINUTE, v_createdAt, CURRENT_TIMESTAMP()) > 5 THEN
+    IF TIMESTAMPDIFF(MINUTE, v_createdAt, CURRENT_TIMESTAMP()) > 5 THEN  /* desde que se crea el pedido, cambiamos la variable y es desde que se modifica el pedido*/
         SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El tiempo para actualizar el pedido ha expirado';
-    END IF;*/
+    END IF;
 
     SET done = 0;
 
@@ -81,7 +81,6 @@ BEGIN
 
     CLOSE cur_oldProductos;
 
-    DELETE FROM ProductosXPedidos WHERE idPedido = v_idPedido;
 
     SET v_descripcion = JSON_UNQUOTE(JSON_EXTRACT(p_data, '$.descripcion'));
     SET v_telefono = JSON_UNQUOTE(JSON_EXTRACT(p_data, '$.cliente.telefono'));
@@ -100,15 +99,13 @@ BEGIN
         WHERE id = v_idCliente;
     END IF;
 
-  DELETE FROM adicionalesxproductosxpedidos
-  WHERE idProductoXPedido IN (
-    SELECT id FROM productosxpedidos WHERE idPedido = v_idPedido
-    );
+    /* Eliminamos relaciones */
+    DELETE FROM adicionalesxproductosxpedidos
+      WHERE idproductoxpedido IN(
+      SELECT id from productosxpedidos
+    WHERE idPedido = v_idPedido);
 
-DELETE FROM productosxpedidos WHERE idPedido = v_idPedido;
-
-
-    DELETE FROM productosxpedidos WHERE idPedido = v_idPedido;
+     DELETE FROM productosxpedidos WHERE idPedido = v_idPedido;
 
     -- ===============================
     -- 4️⃣ Recorrer productos
@@ -137,6 +134,7 @@ DELETE FROM productosxpedidos WHERE idPedido = v_idPedido;
         SET v_subTotalProductos = v_subTotalProductos + (v_precioProducto * v_cantidadProducto * (1 - v_descuentoProducto / 100));
 
         -- Insertar producto en ProductosXPedidos
+
         INSERT INTO productosxpedidos (idProducto, idPedido, cantidad, createdAt, updatedAt)
         VALUES (
             JSON_UNQUOTE(JSON_EXTRACT(p_data, v_path)),
@@ -169,13 +167,6 @@ DELETE FROM productosxpedidos WHERE idPedido = v_idPedido;
             UPDATE adicionales
             SET stock = stock - v_cantidadAdicional
             WHERE id = JSON_UNQUOTE(JSON_EXTRACT(p_data, v_path));
-
-            DELETE FROM adicionalesxproductosxpedidos
-            WHERE idProductoXPedido IN(
-                SELECT id from productosxpedidos
-                WHERE idPedido = v_idPedido
-            );
-
 
             -- Insertar en AdicionalesXProductosXPedidos
             INSERT INTO adicionalesxproductosxpedidos (idProductoXPedido, idAdicional, cantidad, precio, createdAt, updatedAt)
