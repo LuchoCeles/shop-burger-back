@@ -111,7 +111,7 @@ BEGIN
             WHERE id = JSON_UNQUOTE(JSON_EXTRACT(p_data, v_path));
 
             -- Insertar en AdicionalesXProductosXPedidos
-            INSERT INTO AdicionalesXProductosXPedidos (idProductoXPedido, idAdicional, cantidad, precio, createdAt, updatedAt)
+            INSERT INTO adicionalesxproductosxpedidos (idProductoXPedido, idAdicional, cantidad, precio, createdAt, updatedAt)
             VALUES (
                 @v_idProdXPED,
                 JSON_UNQUOTE(JSON_EXTRACT(p_data, v_path)),
