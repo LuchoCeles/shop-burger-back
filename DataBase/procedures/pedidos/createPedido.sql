@@ -14,8 +14,10 @@ BEGIN
     DECLARE v_descuentoProducto DECIMAL(5,2);
     DECLARE v_subTotalProductos DECIMAL(10,2) DEFAULT 0;
     DECLARE v_stockActualProducto INT;
+    DECLARE v_estadoProducto TINYINT(1);
 
     DECLARE v_precioAdicional DECIMAL(10,2);
+    DECLARE v_estadoAdicional TINYINT(1);
     DECLARE v_cantidadAdicional INT;
     DECLARE v_subTotalAdicionales DECIMAL(10,2) DEFAULT 0;
     DECLARE v_maxCantidad INT;
@@ -26,7 +28,7 @@ BEGIN
 
     DECLARE v_i INT DEFAULT 0;
     DECLARE v_j INT DEFAULT 0;
-    DECLARE v_path VARCHAR(100); --where no deja usar concat directamente en json_extract, por eso esta variable
+    DECLARE v_path VARCHAR(100); /*where no deja usar concat directamente en json_extract, por eso esta variable*/
 
     -- Extraer datos del pedido
     SET v_telefono = JSON_UNQUOTE(JSON_EXTRACT(p_data, '$.cliente.telefono'));
@@ -50,9 +52,13 @@ BEGIN
         SET v_cantidadProducto = JSON_EXTRACT(p_data, CONCAT('$.productos[', v_i, '].cantidad'));
 
         -- Obtener precio y stock del producto
-        SELECT precio, descuento, stock INTO v_precioProducto, v_descuentoProducto, v_stockActualProducto
+        SELECT precio, descuento, stock, estado INTO v_precioProducto, v_descuentoProducto, v_stockActualProducto, v_estadoProducto
         FROM Productos
         WHERE id = JSON_UNQUOTE(JSON_EXTRACT(p_data, v_path));
+
+        IF v_estadoProducto <> 1 THEN
+            SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = "El producto no está disponible";
+        END IF;
 
         -- Verificar stock
         IF v_cantidadProducto > v_stockActualProducto THEN
@@ -86,9 +92,13 @@ BEGIN
             SET v_cantidadAdicional = JSON_EXTRACT(p_data, CONCAT('$.productos[', v_i, '].adicionales[', v_j, '].cantidad'));
 
             -- Obtener precio y stock del adicional
-            SELECT precio, maxCantidad, stock INTO v_precioAdicional, v_maxCantidad, v_stockActual
+            SELECT precio, maxCantidad, stock, estado INTO v_precioAdicional, v_maxCantidad, v_stockActual, v_estadoAdicional
             FROM Adicionales
             WHERE id = JSON_UNQUOTE(JSON_EXTRACT(p_data, v_path));
+
+            IF v_estadoAdicional <> 1 THEN
+                SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = "El adicional no está disponible";
+            END IF;
 
             -- Validar stock y maxCantidad
             IF v_cantidadAdicional > v_stockActual OR v_cantidadAdicional > v_maxCantidad THEN
