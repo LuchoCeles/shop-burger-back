@@ -11,6 +11,8 @@ node_modules/
 .cert.pem
 .key.pem
 
+.ngrok.yml
+
 # Caché del sistema o del IDE
 .DS_Store
 dist/
