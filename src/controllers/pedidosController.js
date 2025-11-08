@@ -43,9 +43,10 @@ class PedidosController {
         const mpResponse = await this.createOrderByMercadoPago(pedido.id);
         return res.status(201).json({
           message: 'Pedido creado exitosamente',
-          data: mpResponse.pedidoId,
-          preference: mpResponse.preference,
-          init_point: mpResponse.init_point
+          data: {
+            id: mpResponse.pedidoId,
+            init_point: mpResponse.init_point
+          }
         });
       }
 
@@ -75,15 +76,14 @@ class PedidosController {
             unit_price: Number(pedido.precioTotal),
           },
         ],
-        notification_url: "https://dc24e153f14d.ngrok-free.app/admin/pedido/webhooks/mercadopago",
+        notification_url: `${process.env.BASE_URL}/}/admin/pedido/webhooks/mercadopago`,
       };
 
       const mpResponse = await mercadoPagoService.create(body);
 
       return {
         pedidoId: pedido.id,
-        init_point: mpResponse.init_point,
-        preference: mpResponse,
+        init_point: mpResponse.init_point
       };
 
     } catch (error) {
@@ -107,13 +107,13 @@ class PedidosController {
       if (payment.type === "payment") {
         const data = await mercadoPagoService.getById(payment['data.id']);
         let id = Number(data.additional_info.items[0].id);
-        
+
         if (!id) {
           return;
         }
         if (data.status !== "approved") {
 
-          await this.updateOrderByMp(id,"Rechazado");
+          await this.updateOrderByMp(id, "Rechazado");
           io.emit('Pago rechazado', { message: 'Pago rechazado' });
           return res.status(200).json({
             message: 'Pago rechazado'
