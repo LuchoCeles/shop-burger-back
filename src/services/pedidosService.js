@@ -33,6 +33,18 @@ class PedidosService {
             as: "cliente",
             attributes: ["id", "telefono", "direccion"],
           },
+          {
+            model: Pago,
+            as: "pago",
+            attributes: ["id", "estado"],
+            include: [
+              {
+                model: MetodoDePago,
+                as: "metodoDePago",
+                attributes: ["id", "nombre"],f
+              }
+            ],
+          }
         ],
         order: [["id", "DESC"]],
         where: filtros.estado ? { estado: filtros.estado } : undefined,
@@ -89,6 +101,12 @@ class PedidosService {
             precioTotal: pedido.precioTotal,
             descripcion: pedido.descripcion,
             cliente: pedido.cliente,
+            Pago: pedido.pago
+              ? {
+                  id: pedido.pago.id,
+                  estado: pedido.pago.estado,
+                  metodoDePago: pedido.pago.metodoDePago,
+              }:null,
             productos,
           };
         })
