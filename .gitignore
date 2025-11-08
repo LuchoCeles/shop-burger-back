@@ -7,6 +7,10 @@ node_modules/
 # Archivos de logs
 *.log
 
+# Certificados SSL
+.cert.pem
+.key.pem
+
 # Caché del sistema o del IDE
 .DS_Store
 dist/

@@ -7,7 +7,7 @@ const handleUpload = require('../middlewares/multerMiddleware');
 
 const router = express.Router();
 
-router.get('/:soloActivos/', productosController.getProducts);
+router.get('/', productosController.getProducts);
 
 
 router.post('/', [
