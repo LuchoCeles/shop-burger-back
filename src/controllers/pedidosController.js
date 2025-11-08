@@ -75,7 +75,7 @@ class PedidosController {
             unit_price: Number(pedido.precioTotal),
           },
         ],
-        notification_url: `${process.env.BASE_URL}/}/admin/pedido/webhooks/mercadopago`,
+        notification_url: `${process.env.BASE_URL}/admin/pedido/webhooks/mercadopago`,
       };
 
       const mpResponse = await mercadoPagoService.create(body);
@@ -111,15 +111,15 @@ class PedidosController {
         if (!id) {
           return;
         }
-
-          await this.updateOrderByMp(id, "Rechazado");
+        if (data.status !== "approved") {
+          await this.cancelOrderByMp(id); // Cancela el pedido si el pago no fue aprobado
           io.emit('Pago rechazado', { message: 'Pago rechazado' });
           return res.status(200).json({
             message: "Pago rechazado y pedido cancelado",
           });
         }
 
-        await this.updateOrderByMp(id, "Pagado");
+        await this.updateOrderByMp(id, "Pagado"); 
         io.emit("Nuevo Pago", { message: "Pago exitoso" });
         return res.status(200).json({
           message: "Pago actualizado exitosamente",
@@ -139,6 +139,18 @@ class PedidosController {
     } catch (error) {
       throw new Error(
         `Error al actualizar pedido con Mercado Pago: ${error.message}`
+      );
+    }
+  }
+
+  async cancelOrderByMp(id) {
+    try {
+      const pedido = await pedidoService.cancel(id);
+      await PagoService.updateMp(id, "Rechazado");
+      return pedido;
+    } catch (error) {
+      throw new Error(
+        `Error al cancelar pedido con Mercado Pago: ${error.message}`
       );
     }
   }
