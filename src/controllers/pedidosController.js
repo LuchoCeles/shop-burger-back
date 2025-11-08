@@ -75,7 +75,7 @@ class PedidosController {
             unit_price: Number(pedido.precioTotal),
           },
         ],
-        notification_url: `${process.env.BASE_URL}/}/admin/pedido/webhooks/mercadopago`,
+        notification_url: `${process.env.BASE_URL}/admin/pedido/webhooks/mercadopago`,
       };
 
       const mpResponse = await mercadoPagoService.create(body);
@@ -112,6 +112,7 @@ class PedidosController {
           return;
         }
 
+        if (data.status !== "approved") {
           await this.updateOrderByMp(id, "Rechazado");
           io.emit('Pago rechazado', { message: 'Pago rechazado' });
           return res.status(200).json({
@@ -208,8 +209,8 @@ class PedidosController {
         ? 404
         : error.message.includes("inválido") ||
           error.message.includes("No se puede")
-        ? 400
-        : 500;
+          ? 400
+          : 500;
       return res.status(status).json({
         error: error.message,
       });
@@ -231,8 +232,8 @@ class PedidosController {
         ? 404
         : error.message.includes("ya está") ||
           error.message.includes("No se puede")
-        ? 400
-        : 500;
+          ? 400
+          : 500;
       return res.status(status).json({
         error: error.message,
       });
