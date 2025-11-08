@@ -8,6 +8,8 @@ BEGIN
     DECLARE v_telefono VARCHAR(40);
     DECLARE v_direccion VARCHAR(255);
     DECLARE v_descripcion TEXT;
+    DECLARE v_metodoDePago VARCHAR(100);
+
 
     DECLARE v_precioProducto DECIMAL(10,2);
     DECLARE v_cantidadProducto INT;
@@ -28,8 +30,8 @@ BEGIN
 
     DECLARE v_i INT DEFAULT 0;
     DECLARE v_j INT DEFAULT 0;
-    DECLARE v_path VARCHAR(100); /*where no deja usar concat directamente en json_extract, por eso esta variable*/
-
+    DECLARE v_path VARCHAR(100);
+    
     -- Extraer datos del pedido
     SET v_telefono = JSON_UNQUOTE(JSON_EXTRACT(p_data, '$.cliente.telefono'));
     SET v_direccion = JSON_UNQUOTE(JSON_EXTRACT(p_data, '$.cliente.direccion'));
@@ -129,6 +131,11 @@ BEGIN
 
         SET v_i = v_i + 1;
     END WHILE;
+
+    -- Insertar metodo de pago
+    SELECT id INTO v_metodoDePago FROM MetodosDePago WHERE nombre = JSON_UNQUOTE(JSON_EXTRACT(p_data, '$.metodoDePago'));
+    INSERT INTO Pagos (idPedido, idMetodoDePago, createdAt, updatedAt)
+    VALUES (v_idPedido, v_metodoDePago, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP());
 
     -- Actualizar precio total del pedido
     SET v_precioTotal = v_subTotalProductos + v_subTotalAdicionales;

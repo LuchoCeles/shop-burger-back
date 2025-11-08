@@ -100,9 +100,17 @@ class PedidosService {
     }
   }
 
-  async getById(id) {
-    const pedidoActual = await Pedido.findByPk(id);
-    return pedidoActual;
+  async getPrecioById(id) {
+    try {
+      const pedido = await Pedido.findOne({
+        where: { id },
+        attributes: ["id", "precioTotal"],
+      });
+
+      return pedido;
+    } catch (error) {
+      throw new Error(`Error al obtener el precio del pedido: ${error.message}`);
+    }
   }
 
   async updateStatus(id, nuevoEstado) {
