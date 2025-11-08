@@ -1,4 +1,4 @@
-const preference = require('../config/mercadoPago');
+const { preference, payment } = require('../config/mercadoPago');
 
 class MercadoPagoService {
   async create(body) {
@@ -13,7 +13,7 @@ class MercadoPagoService {
 
   async getById(id) {
     try {
-      const rsp = await preference.get({ id });
+      const rsp = await payment.get({ id });
       return rsp;
     } catch (error) {
       console.error("MercadoPago payment.findById error:", error);

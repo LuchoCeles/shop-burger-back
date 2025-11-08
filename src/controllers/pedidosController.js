@@ -1,6 +1,6 @@
 const pedidoService = require('../services/pedidosService');
-const MercadoPagoService = require('../services/mercadoPagoService');
 const mercadoPagoService = require('../services/mercadoPagoService');
+const PagoService = require('../services/pagosService');
 require("dotenv").config();
 
 class PedidosController {
@@ -71,18 +71,14 @@ class PedidosController {
             title: `Pedido #${pedido.id}`,
             quantity: 1,
             currency_id: "ARS",
+            id: pedido.id,
             unit_price: Number(pedido.precioTotal),
           },
         ],
-        back_urls: {
-          success: `${process.env.FRONTEND_URL}/checkout`,
-          failure: `${process.env.FRONTEND_URL}/checkout`,
-          pending: `${process.env.FRONTEND_URL}/checkout`,
-        },
-        notification_url: "https://487aec2ec0fc.ngrok-free.app/admin/pedido/webhooks/mercadopago",
+        notification_url: "https://dc24e153f14d.ngrok-free.app/admin/pedido/webhooks/mercadopago",
       };
 
-      const mpResponse = await MercadoPagoService.create(body);
+      const mpResponse = await mercadoPagoService.create(body);
 
       return {
         pedidoId: pedido.id,
@@ -108,18 +104,41 @@ class PedidosController {
   async webHooksMercadoPago(req, res) {
     try {
       const payment = req.query;
-
-      if(payment.type === "payment"){
+      if (payment.type === "payment") {
         const data = await mercadoPagoService.getById(payment['data.id']);
-        console.log(data);
-      }
+        let id = Number(data.additional_info.items[0].id);
+        
+        if (!id) {
+          return;
+        }
+        if (data.status !== "approved") {
 
-      res.status(200);
+          await this.updateOrderByMp(id,"Rechazado");
+          io.emit('Pago rechazado', { message: 'Pago rechazado' });
+          return res.status(200).json({
+            message: 'Pago rechazado'
+          });
+        }
+
+        await this.updateOrderByMp(id, "Pagado");
+        io.emit('Nuevo Pago', { message: 'Pago exitoso' });
+        return res.status(200).json({
+          message: 'Pago actualizado exitosamente'
+        });
+      }
     } catch (error) {
-      console.error('Error al procesar webhook');
       return res.status(500).json({
         message: error.message
       });
+    }
+  }
+
+  async updateOrderByMp(id, estado) {
+    try {
+      await PagoService.updateMp(id, estado);
+      return true;
+    } catch (error) {
+      throw new Error(`Error al actualizar pedido con Mercado Pago: ${error.message}`);
     }
   }
 
