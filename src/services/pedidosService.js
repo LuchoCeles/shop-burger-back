@@ -6,6 +6,7 @@ const {
   Pago,
   Adicionales,
   AdicionalesXProductosXPedidos,
+  MetodosDePago,
 } = require("../models");
 const { sequelize } = require("../config/db");
 
@@ -33,6 +34,18 @@ class PedidosService {
             as: "cliente",
             attributes: ["id", "telefono", "direccion"],
           },
+          {
+            model: Pago,
+            as: "pago",
+            attributes: ["id", "estado"],
+            include: [
+              {
+                model: MetodosDePago,
+                as: "metodosDePago",
+                attributes: ["id", "nombre"],
+              }
+            ],
+          }
         ],
         order: [["id", "DESC"]],
         where: filtros.estado ? { estado: filtros.estado } : undefined,
@@ -89,6 +102,12 @@ class PedidosService {
             precioTotal: pedido.precioTotal,
             descripcion: pedido.descripcion,
             cliente: pedido.cliente,
+            Pago: pedido.pago
+              ? {
+                  id: pedido.pago.id,
+                  estado: pedido.pago.estado,
+                  metodoDePago: pedido.pago.metodoDePago,
+              }:null,
             productos,
           };
         })
@@ -141,7 +160,16 @@ class PedidosService {
           {
             model: Producto,
             as: "productos",
-            through: { attributes: ["cantidad"] },
+            through: { attributes: ["cantidad", "id"] },
+            include: [{
+              model: Adicionales,
+              as: "adicionales",
+              through: {
+                model: "AdicionalesXProductosXPedidos",
+                as: "adicionalesXProductosXPedidos",
+                attributes: ["cantidad"]
+              },
+            }],
           },
         ],
       });
@@ -164,6 +192,16 @@ class PedidosService {
           where: { id: producto.id },
           transaction,
         });
+
+        if (producto.adicionales && producto.adicionales.length > 0) {
+          for (const adicional of producto.adicionales) {
+            await Adicionales.increment("stock", {
+              by: adicional.AdicionalesXProductosXPedidos.cantidad,
+              where: { id: adicional.id },
+              transaction,
+            });
+          }
+        }
       }
 
       await pedido.update({ estado: "cancelado" }, { transaction });
