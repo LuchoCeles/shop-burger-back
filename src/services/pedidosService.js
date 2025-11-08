@@ -164,7 +164,8 @@ class PedidosService {
               model: Adicionales,
               as: "adicionales",
               through: {
-                model as: "AdicionalesXProductosXPedidos",
+                model: "AdicionalesXProductosXPedidos",
+                as: "adicionalesXProductosXPedidos",
                 attributes: ["cantidad"]
               },
             }],
