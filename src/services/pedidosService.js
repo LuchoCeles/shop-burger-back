@@ -176,146 +176,55 @@ class PedidosService {
     }
   }
 
-  async updateOrder(id, datosActualizados) {
-    const transaction = await sequelize.transaction();
-
+  async updateOrder(idPedido, datosActualizados) {
     try {
-      const { cliente, producto, descripcion, estado } = datosActualizados;
-
-      const pedido = await Pedido.findByPk(id, { transaction });
-      if (!pedido) throw new Error(`Pedido no encontrado`);
-
-      if (pedido.estado === "entregado")
-        throw new Error(`No se puede modificar, pedido ya ENTREGADO`);
-
-      if (cliente) {
-        await Cliente.update(cliente, {
-          where: { id: pedido.idCliente },
-          transaction,
-        });
+      if (!idPedido) {
+        return { ok: false, message: "ID del pedido requerido" };
       }
+     
 
-      const productosPedido = await ProductosXPedido.findAll({
-        where: { idPedido: id },
-        include: [
-          {
-            model: Producto,
-            as: "producto",
-            attributes: ["id", "stock", "precio"],
-          },
-        ],
-        transaction,
-      });
-
-      for (const pxp of productosPedido) {
-        await Producto.increment("stock", {
-          by: pxp.cantidad,
-          where: { id: pxp.idProducto },
-          transaction,
-        });
-
-        const adicionales = await AdicionalesXProductosXPedidos.findAll({
-          where: { idProductoXPedido: pxp.id },
-          include: [
-            { model: Adicionales, as: "adicional", attributes: ["id"] },
-          ],
-          transaction,
-        });
-
-        for (const a of adicionales) {
-          await Adicionales.increment("stock", {
-            by: a.cantidad,
-            where: { id: a.idAdicional },
-            transaction,
-          });
-        }
-
-        await AdicionalesXProductosXPedidos.destroy({
-          where: { idProductoXPedido: pxp.id },
-          transaction,
-        });
-      }
-      await ProductosXPedido.destroy({
-        where: { idPedido: id },
-        transaction,
-      });
-
-      let total = 0;
-
-      for (const P of producto) {
-        const prod = await Producto.findByPk(P.id, {
-          transaction,
-          lock: transaction.LOCK.UPDATE,
-        });
-
-        if (!prod) throw new Error(`Producto no encontrado`);
-        if (prod.stock < P.cantidad)
-          throw new Error(`Stock insuficiente para: ${P.nombre}`);
-
-        await Producto.decrement("stock", {
-          by: P.cantidad,
-          where: { id: P.id },
-          transaction,
-        });
-
-        total += Number(prod.precio) * P.cantidad;
-
-        const prodPedido = await ProductosXPedido.create(
-          {
-            idProducto: P.id,
-            idPedido: pedido.id,
-            cantidad: P.cantidad,
-          },
-          { transaction }
-        );
-
-        if (P.adicional && Array.isArray(P.adicional)) {
-          for (const A of P.adicional) {
-            const adicional = await Adicionales.findByPk(A.id, {
-              transaction,
-              lock: transaction.LOCK.UPDATE,
-            });
-
-            if (!adicional) throw new Error(`no existe el adicional`);
-            if (adicional.stock < A.cantidad)
-              throw new Error(`Stock insuficiente para : ${A.nombre}`);
-
-            await Adicionales.decrement({
-              by: A.cantidad,
-              where: { id: A.id },
-              transaction,
-            });
-
-            await AdicionalesXProductosXPedidos.create(
-              {
-                idProductoXPedido: prodPedido.id,
-                idAdicional: A.id,
-                cantidad: A.cantidad,
-                precio: adicional.precio,
-              },
-              { transaction }
-            );
-
-            total += Number(adicional.precio) * A.cantidad;
-          }
-        }
-      }
-      await pedido.update(
+      // Mezclamos el ID dentro del JSON que se enviará al procedimiento
+      const data = {
+        ...datosActualizados,
+        idPedido,
+        productos:datosActualizados.producto,
+      };
+      delete data.producto;
+      console.log(JSON.stringify(data,null,2));
+        
+      // Ejecutamos el procedimiento con el JSON como parámetro
+      const [result] = await sequelize.query(
+        "CALL updatePedido(:datos)",
         {
-          descripcion: descripcion ?? pedido.descripcion,
-          estado: estado ?? pedido.estado,
-          precioTotal: total,
-        },
-        { transaction }
+          replacements: {
+            datos: JSON.stringify(data),
+          },
+        }
       );
 
-      await transaction.commit();
-      return { message: "Pedido actualizado correctamente" };
+      return {
+        ok: true,
+        message: "Pedido actualizado correctamente",
+        data: result,
+      };
     } catch (error) {
-      if (!transaction.finished) await transaction.rollback();
-      throw new Error(`Error al actualziar el pedido: ${error.message}`);
+
+      if (error.original?.sqlMessage) {
+        return {
+          ok: false,
+          message: error.original.sqlMessage,
+        };
+      }
+
+      return {
+        ok: false,
+        message: "Error interno al actualizar el pedido",
+        error: error.message,
+      };
     }
   }
+
 }
+
 
 module.exports = new PedidosService();

@@ -152,7 +152,7 @@ CREATE TABLE Pagos (
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT fk_pago_pedido FOREIGN KEY (idPedido) REFERENCES Pedidos(id),
-    CONSTRAINT fk_pago_datos FOREIGN KEY (idMetodoDePago) REFERENCES MetodosDePago(id)
+    CONSTRAINT fk_pago_datos FOREIGN KEY (idMetodoDePago) REFERENCES idMetodoDePago(id)
 );
 
 -- =======================

@@ -52,7 +52,7 @@ class AdicionalesController {
     }
   }
 
-  async delete(req, res, next) {
+  async delete(req, res) {
     try {
       const { id } = req.params;
       if (!id) {
@@ -62,13 +62,16 @@ class AdicionalesController {
         });
       }
 
-      await adicionalesService.delete(id);
+      const result = await adicionalesService.delete(id);
       res.json({
         success: true,
-        message: 'Adicional eliminado exitosamente'
+        message: result.message
       });
     } catch (error) {
-      next(error);
+      return res.status(400).json({
+        success: false,
+        message: error.message
+      });
     }
   }
 
