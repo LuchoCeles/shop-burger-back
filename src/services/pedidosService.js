@@ -141,7 +141,15 @@ class PedidosService {
           {
             model: Producto,
             as: "productos",
-            through: { attributes: ["cantidad"] },
+            through: { attributes: ["cantidad", "id"] },
+            include: [{
+              model: Adicionales,
+              as: "adicionales",
+              through: {
+                model as: "AdicionalesXProductosXPedidos",
+                attributes: ["cantidad"]
+              },
+            }],
           },
         ],
       });
@@ -164,6 +172,16 @@ class PedidosService {
           where: { id: producto.id },
           transaction,
         });
+
+        if (producto.adicionales && producto.adicionales.length > 0) {
+          for (const adicional of producto.adicionales) {
+            await Adicionales.increment("stock", {
+              by: adicional.AdicionalesXProductosXPedidos.cantidad,
+              where: { id: adicional.id },
+              transaction,
+            });
+          }
+        }
       }
 
       await pedido.update({ estado: "cancelado" }, { transaction });
