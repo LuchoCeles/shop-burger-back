@@ -6,6 +6,7 @@ const {
   Pago,
   Adicionales,
   AdicionalesXProductosXPedidos,
+  MetodosDePago,
 } = require("../models");
 const { sequelize } = require("../config/db");
 
@@ -39,9 +40,9 @@ class PedidosService {
             attributes: ["id", "estado"],
             include: [
               {
-                model: MetodoDePago,
-                as: "metodoDePago",
-                attributes: ["id", "nombre"],f
+                model: MetodosDePago,
+                as: "metodosDePago",
+                attributes: ["id", "nombre"],
               }
             ],
           }

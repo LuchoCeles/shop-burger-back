@@ -14,6 +14,7 @@ const Admin = require('./Admin');
 const Adicionales = require('./Adicionales');
 const AdicionalesXProducto = require('./AdicionalesXProducto');
 const AdicionalesXProductosXPedidos = require('./AdicionalesXProductosXPedidos');
+const MetodosDePago = require('./MetodosDePago');
 
 // Inicializar modelos
 const models = {
@@ -28,7 +29,8 @@ const models = {
   Local: Local(sequelize, DataTypes),
   Admin: Admin(sequelize, DataTypes),
   AdicionalesXProducto: AdicionalesXProducto(sequelize, DataTypes),
-  AdicionalesXProductosXPedidos: AdicionalesXProductosXPedidos(sequelize, DataTypes)
+  AdicionalesXProductosXPedidos: AdicionalesXProductosXPedidos(sequelize, DataTypes),
+  MetodosDePago: MetodosDePago(sequelize, DataTypes)
 };
 
 // Definir relaciones
