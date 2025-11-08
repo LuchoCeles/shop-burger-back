@@ -1,10 +1,11 @@
 const bcrypt = require("bcrypt");
 const { sequelize } = require("../config/db");
-const { Admin } = require("../models");
+const { Admin, DatosBancarios, sequelize: sq } = require("../models");
 
 
 class DatosBancariosService {
   async create(adminId, datosBancarios) {
+    const transaction = await sq.transaction();
     try {
       const adminData = await Admin.findByPk(adminId);
       const hashedPassword = await bcrypt.hash(datosBancarios.password, 12);
@@ -12,7 +13,7 @@ class DatosBancariosService {
       if (match) {
         throw new Error('La Contraseña no puede ser igual a la de su Cuenta');
       }
-      
+
       const datos = await sequelize.query("CALL createBanco(:cuit, :alias, :cbu, :apellido, :nombre, :password);",
         {
           replacements: {
@@ -23,13 +24,11 @@ class DatosBancariosService {
             nombre: datosBancarios.nombre,
             password: hashedPassword
           }
-        });
-
+        }, { transaction });
+      await transaction.commit();
       return datos[0];
     } catch (error) {
-      if (!transaction.finished) {
-        await transaction.rollback();
-      }
+      await transaction.rollback();
       throw new Error(`Error al cargar los datos: ${error.message}`);
     }
   }
@@ -62,6 +61,7 @@ class DatosBancariosService {
   }
 
   async updatePassword(id, password, newPassword) {
+    const transaction = await sq.transaction();
     try {
       if (password === newPassword) {
         throw new Error(`La nueva contraseña no puede ser igual a la anterior`);
@@ -70,16 +70,20 @@ class DatosBancariosService {
       const hashedPassword = await bcrypt.hash(newPassword, 12);
 
       await sequelize.query("CALL updatePassworBanco(:id, :password);", {
-        replacements: { id, hashedPassword }
-      });
+        replacements: { id, password: hashedPassword }
+      }, { transaction });
+
+      await transaction.commit();
 
       return;
     } catch (error) {
+      await transaction.rollback();
       throw new Error(`Error al actualizar la contraseña: ${error.message}`);
     }
   }
 
   async update(id, datosActualizados) {
+    const transaction = await sq.transaction();
     try {
       const datos = await sequelize.query("CALL updateDatosBancarios(:id, :cuit, :alias, :cbu, :apellido, :nombre);", {
         replacements: {
@@ -90,13 +94,33 @@ class DatosBancariosService {
           apellido: datosActualizados.apellido,
           nombre: datosActualizados.nombre
         }
-      });
+      }, { transaction });
+
+      await transaction.commit();
 
       return datos[0];
     } catch (error) {
+      await transaction.rollback();
       throw new Error(`Error al actualizar datos bancarios: ${error.message}`);
     }
   }
+
+  async updateMPState(id, mpEstado) {
+    const transaction = await sq.transaction();
+    try {
+      const datos = await sequelize.query("CALL updateMPState(:id, :mpEstado);", {
+        replacements: { id, mpEstado }
+      }, { transaction });
+
+      await transaction.commit();
+
+      return datos[0];
+    } catch (error) {
+      await transaction.rollback();
+      throw new Error(`Error al actualizar estado de MP: ${error.message}`);
+    }
+  }
+
 }
 
 module.exports = new DatosBancariosService();

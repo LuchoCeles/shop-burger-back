@@ -17,6 +17,7 @@ class DatosBancariosController {
           cbu: datos.cbu,
           apellido: datos.apellido,
           nombre: datos.nombre,
+          mpEstado: datos.mpEstado
         },
       });
     } catch (error) {
@@ -37,7 +38,8 @@ class DatosBancariosController {
           alias: datos.alias,
           cbu: datos.cbu,
           apellido: datos.apellido,
-          nombre: datos.nombre
+          nombre: datos.nombre,
+          mpEstado: datos.mpEstado
         },
       });
     } catch (error) {
@@ -68,7 +70,8 @@ class DatosBancariosController {
           alias: datos.alias,
           cbu: datos.cbu,
           apellido: datos.apellido,
-          nombre: datos.nombre
+          nombre: datos.nombre,
+          mpEstado: datos.mpEstado
         }
       });
     } catch (error) {
@@ -114,8 +117,9 @@ class DatosBancariosController {
           alias: datos.alias,
           cbu: datos.cbu,
           apellido: datos.apellido,
-          nombre: datos.nombre
-        },
+          nombre: datos.nombre,
+          mpEstado: datos.mpEstado
+        }
       });
     } catch (error) {
       res.status(403).json({
@@ -124,6 +128,34 @@ class DatosBancariosController {
       });
     }
   }
+
+  async updateMPState(req, res) {
+    try {
+      const { id } = req.params;
+      const { mpEstado } = req.body;
+
+      const datos = await datosBancariosService.updateMPState(id, mpEstado);
+      res.status(200).json({
+        success: true,
+        message: "Estado de Mercado Pago actualizado",
+        data: {
+          id: datos.id,
+          cuit: datos.cuit,
+          alias: datos.alias,
+          cbu: datos.cbu,
+          apellido: datos.apellido,
+          nombre: datos.nombre,
+          mpEstado: datos.mpEstado
+        }
+      });
+    } catch (error) {
+      res.status(403).json({
+        success: false,
+        message: error.message,
+      });
+    }
+  }
+
 }
 
 module.exports = new DatosBancariosController();

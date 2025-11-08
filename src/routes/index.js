@@ -17,5 +17,4 @@ router.use('/admin/banco', datosBancariosRoutes);
 router.use('/api/adicional', adicionalesRoutes);
 router.use('/admin/adicionalxproducto', adicionalesXProductosRoutes);
 
-
 module.exports = router;

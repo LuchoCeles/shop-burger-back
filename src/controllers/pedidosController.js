@@ -1,23 +1,13 @@
 const pedidoService = require('../services/pedidosService');
+const mercadoPagoService = require('../services/mercadoPagoService');
+const PagoService = require('../services/pagosService');
+require("dotenv").config();
 
 class PedidosController {
-
   async CreateOrder(req, res) {
     try {
       const io = req.app.get('io');
-      const { cliente, productos, descripcion } = req.body;
-
-      if (!cliente) {
-        return res.status(400).json({
-          error: 'El campo debe estar completo'
-        });
-      }
-
-      if (!productos || !Array.isArray(productos) || productos.length === 0) {
-        return res.status(400).json({
-          error: 'Debe incluir al menos un producto en el array productos'
-        });
-      }
+      const { cliente, productos, descripcion, metodoDePago } = req.body;
 
       for (const item of productos) {
         if (!item.id || !item.cantidad) {
@@ -32,9 +22,9 @@ class PedidosController {
           });
         }
 
-        if(item.adicionales && !Array.isArray(item.adicionales)){
+        if (item.adicionales && !Array.isArray(item.adicionales)) {
           return res.status(400).json({
-            success:false,
+            success: false,
             message: "Adicionales"
           });
         }
@@ -43,11 +33,22 @@ class PedidosController {
       const pedido = await pedidoService.Create({
         cliente,
         productos,
-        descripcion
+        descripcion,
+        metodoDePago
       });
 
-
       io.emit('nuevoPedido', { message: 'Nuevo pedido recibido' });
+
+      if (metodoDePago === 'Mercado Pago') {
+        const mpResponse = await this.createOrderByMercadoPago(pedido.id);
+        return res.status(201).json({
+          message: 'Pedido creado exitosamente',
+          data: mpResponse.pedidoId,
+          preference: mpResponse.preference,
+          init_point: mpResponse.init_point
+        });
+      }
+
       return res.status(201).json({
         message: 'Pedido creado exitosamente',
         data: pedido
@@ -58,6 +59,86 @@ class PedidosController {
       return res.status(500).json({
         error: error.message
       });
+    }
+  }
+
+  async createOrderByMercadoPago(id) {
+    try {
+      const pedido = await pedidoService.getPrecioById(id);
+      const body = {
+        items: [
+          {
+            title: `Pedido #${pedido.id}`,
+            quantity: 1,
+            currency_id: "ARS",
+            id: pedido.id,
+            unit_price: Number(pedido.precioTotal),
+          },
+        ],
+        notification_url: "https://dc24e153f14d.ngrok-free.app/admin/pedido/webhooks/mercadopago",
+      };
+
+      const mpResponse = await mercadoPagoService.create(body);
+
+      return {
+        pedidoId: pedido.id,
+        init_point: mpResponse.init_point,
+        preference: mpResponse,
+      };
+
+    } catch (error) {
+      throw new Error(`Error al crear pedido con Mercado Pago: ${error.message}`);
+    }
+  }
+
+  async getOrderById(id) {
+    try {
+      const pedido = await pedidoService.getById(id);
+      return pedido;
+    } catch (error) {
+      console.error('Error al obtener pedido:', error);
+      throw error;
+    }
+  }
+
+  async webHooksMercadoPago(req, res) {
+    try {
+      const payment = req.query;
+      if (payment.type === "payment") {
+        const data = await mercadoPagoService.getById(payment['data.id']);
+        let id = Number(data.additional_info.items[0].id);
+        
+        if (!id) {
+          return;
+        }
+        if (data.status !== "approved") {
+
+          await this.updateOrderByMp(id,"Rechazado");
+          io.emit('Pago rechazado', { message: 'Pago rechazado' });
+          return res.status(200).json({
+            message: 'Pago rechazado'
+          });
+        }
+
+        await this.updateOrderByMp(id, "Pagado");
+        io.emit('Nuevo Pago', { message: 'Pago exitoso' });
+        return res.status(200).json({
+          message: 'Pago actualizado exitosamente'
+        });
+      }
+    } catch (error) {
+      return res.status(500).json({
+        message: error.message
+      });
+    }
+  }
+
+  async updateOrderByMp(id, estado) {
+    try {
+      await PagoService.updateMp(id, estado);
+      return true;
+    } catch (error) {
+      throw new Error(`Error al actualizar pedido con Mercado Pago: ${error.message}`);
     }
   }
 
@@ -149,52 +230,52 @@ class PedidosController {
     }
   }
 
-  async updateOrder(req,res){
+  async updateOrder(req, res) {
     try {
       const io = req.app.get('io');
-      const {id} =  req.params;
-      const {cliente,producto,descripcion,estado} = req.body;
+      const { id } = req.params;
+      const { cliente, producto, descripcion, estado } = req.body;
 
-      if(!producto || !Array.isArray(producto)|| producto.length===0){
+      if (!producto || !Array.isArray(producto) || producto.length === 0) {
         return res.status(400).json({
-          success:false,
-          message:" Debe incluir al menos un producto"
+          success: false,
+          message: " Debe incluir al menos un producto"
         });
       }
 
-      for(const item of producto){
-        if(!item|| !item.cantidad){
+      for (const item of producto) {
+        if (!item || !item.cantidad) {
           return res.status(400).json({
-            success:false,
+            success: false,
             message: "Cada prducto debe tener id y cantidad"
           });
         }
-        if(item.cantidad<=0){
+        if (item.cantidad <= 0) {
           return res.status(400).json({
             message: "La cantidad debe ser mayor a 0"
           });
         }
 
-        if(item.adicionales && !Array.isArray(item.adicionales)){
+        if (item.adicionales && !Array.isArray(item.adicionales)) {
           return res.status(400).json({
             message: "Error al cargar adicionales"
           });
         }
       }
 
-      const result = await pedidoService.updateOrder(id,{
+      const result = await pedidoService.updateOrder(id, {
         cliente,
         producto,
         descripcion,
         estado
       });
 
-      io.emit("PedidoActualizado", {message: 'Pedido actualizado', pedidoId:id});
+      io.emit("PedidoActualizado", { message: 'Pedido actualizado', pedidoId: id });
 
       return res.status(200).json({
-        success:true,
-        message:'Pedidoa actualizado',
-        data:result
+        success: true,
+        message: 'Pedidoa actualizado',
+        data: result
       });
 
     } catch (error) {
