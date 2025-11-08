@@ -38,7 +38,7 @@ BEGIN
                                 ',"precio":', a.precio,
                                 ',"stock":', a.stock,
                                 ',"maxCantidad":', a.maxCantidad,
-                                ',"idAxp":', axp.id,
+                                ',"idAxP":', axp.id,
                                 '}'
                             ) SEPARATOR ','
                         ),
