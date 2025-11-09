@@ -1,6 +1,7 @@
 const pedidoService = require("../services/pedidosService");
 const mercadoPagoService = require("../services/mercadoPagoService");
 const PagoService = require("../services/pagosService");
+const e = require("cors");
 require("dotenv").config();
 
 class PedidosController {
@@ -65,6 +66,8 @@ class PedidosController {
   async createOrderByMercadoPago(id) {
     try {
       const pedido = await pedidoService.getPrecioById(id);
+      const now = new Date();
+      const expirationDate = new Date(now.getTime() + 1 * 60000); // 10 minutos después
       const body = {
         items: [
           {
@@ -75,6 +78,7 @@ class PedidosController {
             unit_price: Number(pedido.precioTotal),
           },
         ],
+        expiration_date: expirationDate.toISOString(),
         notification_url: `${process.env.BASE_URL}/admin/pedido/webhooks/mercadopago`,
       };
 
@@ -124,6 +128,11 @@ class PedidosController {
         return res.status(200).json({
           message: "Pago actualizado exitosamente",
         });
+      }
+      if (payment.topic === "merchant_order") {
+        const data = await mercadoPagoService.getById(payment["data.id"]);
+        
+
       }
     } catch (error) {
       return res.status(500).json({
