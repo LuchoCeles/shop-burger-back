@@ -43,11 +43,11 @@ class PedidosController {
       if (metodoDePago === "Mercado Pago") {
         const mpResponse = await this.createOrderByMercadoPago(pedido.id);
         return res.status(201).json({
-          message: 'Pedido creado exitosamente',
+          message: "Pedido creado exitosamente",
           data: {
             id: mpResponse.pedidoId,
-            init_point: mpResponse.init_point
-          }
+            init_point: mpResponse.init_point,
+          },
         });
       }
 
@@ -67,7 +67,10 @@ class PedidosController {
     try {
       const pedido = await pedidoService.getPrecioById(id);
       const now = new Date();
-      const expirationDate = new Date(now.getTime() + 1 * 60000); // 10 minutos después
+      const expirationDateFrom = now.toISOString();
+      const expirationDateTo = new Date(
+        now.getTime() + 1 * 60000
+      ).toISOString(); // 10 minutos después
       const body = {
         items: [
           {
@@ -78,7 +81,8 @@ class PedidosController {
             unit_price: Number(pedido.precioTotal),
           },
         ],
-        expiration_date: expirationDate.toISOString(),
+        expiration_date_from: expirationDateFrom,
+        expirationDateTo: expirationDateTo,
         notification_url: `${process.env.BASE_URL}/admin/pedido/webhooks/mercadopago`,
       };
 
@@ -86,7 +90,7 @@ class PedidosController {
 
       return {
         pedidoId: pedido.id,
-        init_point: mpResponse.init_point
+        init_point: mpResponse.init_point,
       };
     } catch (error) {
       throw new Error(
@@ -107,32 +111,55 @@ class PedidosController {
 
   async webHooksMercadoPago(req, res) {
     try {
+      const io = req.app.get("io");
       const payment = req.query;
+
       if (payment.type === "payment") {
         const data = await mercadoPagoService.getById(payment["data.id"]);
+
         let id = Number(data.additional_info.items[0].id);
 
         if (!id) {
           return;
         }
+
+        const preferenceId = data.preference_id;
+        const preference = await mercadoPagoService.getPreferenceById(preferenceId);
+
+        const expirationDate = new Date(preference.expiration_date_to);
+        const now = new Date();
+
+        if (now > expirationDate) {
+          await this.cancelOrderByMp(id);
+          io.emit("Pago rechazado", {
+            message: "Pago rechazado por expiración",
+          });
+          return res.status(200).json({
+            message: "Pago rechazado por expiración y pedido cancelado",
+          });
+        }
+
         if (data.status !== "approved") {
           await this.cancelOrderByMp(id); // Cancela el pedido si el pago no fue aprobado
-          io.emit('Pago rechazado', { message: 'Pago rechazado' });
+          io.emit("Pago rechazado", { message: "Pago rechazado" });
           return res.status(200).json({
             message: "Pago rechazado y pedido cancelado",
           });
         }
 
-        await this.updateOrderByMp(id, "Pagado"); 
+        await this.updateOrderByMp(id, "Pagado");
         io.emit("Nuevo Pago", { message: "Pago exitoso" });
         return res.status(200).json({
           message: "Pago actualizado exitosamente",
         });
-      }
-      if (payment.topic === "merchant_order") {
-        const data = await mercadoPagoService.getById(payment["data.id"]);
+      } else if (payment.type !== "payment") {
         
-
+        if (payment.topic === "merchant_order") {
+          return res.status(200).json({
+            message: "Notificación de merchant_order recibida",
+            data:payment,
+          });
+        }
       }
     } catch (error) {
       return res.status(500).json({

@@ -20,6 +20,17 @@ class MercadoPagoService {
       throw error;
     }
   }
+
+  async getPreferenceById(id) {
+    try {
+      const rsp = await preference.get({ id });
+      return rsp;
+    } catch (error) {
+      console.error("MercadoPago preference.get error:", error);
+      throw error;
+    }
+  }
 }
+
 
 module.exports = new MercadoPagoService();
