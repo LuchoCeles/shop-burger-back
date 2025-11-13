@@ -38,8 +38,8 @@ const startServer = async () => {
     });
 
     // ========== CRON JOB ==========.
-    // Se ejecutará cada 11 minutos para limpiar pedidos abandonados.
-    cron.schedule('*/1 * * * *', async () => {
+    // Se ejecutará cada 5 minutos para limpiar pedidos abandonados.
+    cron.schedule('*/5 * * * *', async () => {
   console.log(`[CRON JOB] Ejecutando tarea de limpieza de pagos de MP pendientes... (${new Date().toLocaleString()})`);
 
   try {

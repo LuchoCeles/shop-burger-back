@@ -81,7 +81,7 @@ class PedidosController {
       const pedido = await pedidoService.getPrecioById(id);
       const now = new Date();
       const expirationDateTo = new Date(
-        now.getTime() + 1 * 60000
+        now.getTime() + 10 * 60000
       ).toISOString(); // 10 minutos después
 
       const body = {
