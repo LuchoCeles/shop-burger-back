@@ -209,23 +209,18 @@ async cancel(id) {
 
       await pedido.update({ estado: "cancelado" }, { transaction });
 
-      // Si todo lo anterior funcionó, confirmamos la transacción.
       await transaction.commit();
 
     } catch (error) {
-      // Si algo falla ANTES del commit, deshacemos todo.
       await transaction.rollback();
-      // Y propagamos el error para que el controlador sepa que la cancelación falló.
       throw new Error(`Error durante la transacción de cancelación: ${error.message}`);
     }
 
     try {
-      console.log(`[SERVICIO] Transacción para cancelar el pedido ${id} completada. Buscando datos actualizados...`);
-      // Como la transacción tuvo éxito, ahora leemos los datos actualizados de forma segura.
+      // Con este try evitamos error con el commit
       const pedidoActualizado = await this.getById(id);
       return pedidoActualizado;
     } catch (readError) {
-      console.error(`[SERVICIO] El pedido ${id} FUE CANCELADO exitosamente, pero falló la re-lectura de datos.`, readError);
       // Devolvemos un objeto simple para indicar que la cancelación tuvo éxito aunque no pudimos devolver el objeto completo.
       return { id: id, estado: 'cancelado', errorAlReleer: true };
     }
@@ -295,11 +290,11 @@ async cancel(id) {
               },
               {
                 model: AdicionalesXProductosXPedidos,
-                as: "AxPxP", // 👈 este alias debe coincidir con el del modelo
+                as: "AxPxP",
                 include: [
                   {
                     model: Adicionales,
-                    as: "adicional", // 👈 este alias también debe coincidir con el de ese modelo
+                    as: "adicional",
                     attributes: ["id", "nombre", "precio"],
                   },
                 ],

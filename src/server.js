@@ -74,10 +74,7 @@ const startServer = async () => {
     for (const pago of pagosExpirados) {
       const pedidoId = pago.idPedido;
       console.log(`[CRON JOB] Cancelando pedido ID: ${pedidoId} (asociado al pago ID: ${pago.id})...`);
-      
-      // Llamamos al mismo servicio de cancelación que ya es robusto.
-      // Este servicio se encargará de cambiar el estado del pedido a 'cancelado',
-      // y también podemos hacer que cambie el estado del pago.
+   
       await pedidoService.cancel(pedidoId);
     }
 

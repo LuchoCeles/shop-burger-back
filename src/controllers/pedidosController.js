@@ -181,10 +181,6 @@ class PedidosController {
         }
       }
 
-      console.log(
-        `[WEBHOOK] Verificando estado del pago para el pedido ${orderId}: '${paymentData.status}'`
-      );
-
       if (paymentData.status === "approved") {
         await this.updateOrderByMp(orderId, "Pagado");
         io.emit("pagoExitoso", { message: "¡Pago exitoso!" });
@@ -201,8 +197,6 @@ class PedidosController {
           .json({ message: "Pago no aprobado, pedido cancelado." });
       }
     } catch (error) {
-      console.error("---------- [WEBHOOK] ¡ERROR INESPERADO! ----------");
-      console.error(error);
       return res.status(500).json({ message: error.message });
     }
   }
