@@ -16,8 +16,8 @@ class PedidosService {
       const pedido = await sequelize.query("CALL createPedido(:datos)", {
         replacements: {
           datos: JSON.stringify(datosPedido),
-        }
-      })
+        },
+      });
       return pedido[0];
     } catch (error) {
       throw new Error(`Error al crear pedido: ${error.message}`);
@@ -43,9 +43,9 @@ class PedidosService {
                 model: MetodosDePago,
                 as: "metodosDePago",
                 attributes: ["id", "nombre"],
-              }
+              },
             ],
-          }
+          },
         ],
         order: [["id", "DESC"]],
         where: filtros.estado ? { estado: filtros.estado } : undefined,
@@ -107,7 +107,8 @@ class PedidosService {
                   id: pedido.pago.id,
                   estado: pedido.pago.estado,
                   metodoDePago: pedido.pago.metodoDePago,
-              }:null,
+                }
+              : null,
             productos,
           };
         })
@@ -128,12 +129,15 @@ class PedidosService {
 
       return pedido;
     } catch (error) {
-      throw new Error(`Error al obtener el precio del pedido: ${error.message}`);
+      throw new Error(
+        `Error al obtener el precio del pedido: ${error.message}`
+      );
     }
   }
 
   async updateStatus(id, nuevoEstado) {
     try {
+      console.log("Actualizando estado del pedido:", id, "a", nuevoEstado);
       const pedido = await Pedido.findByPk(id);
 
       await pedido.update({ estado: nuevoEstado });
@@ -151,53 +155,52 @@ class PedidosService {
     }
   }
 
-  async cancel(id) {
+  // src/services/pedidoService.js
+
+async cancel(id) {
     const transaction = await sequelize.transaction();
 
     try {
       const pedido = await Pedido.findByPk(id, {
-        include: [
-          {
-            model: Producto,
-            as: "productos",
-            through: { attributes: ["cantidad", "id"] },
-            include: [{
-              model: Adicionales,
-              as: "adicionales",
-              through: {
-                model: "AdicionalesXProductosXPedidos",
-                as: "adicionalesXProductosXPedidos",
-                attributes: ["cantidad"]
-              },
-            }],
-          },
-        ],
+        include: [{
+          model: ProductosXPedido,
+          as: "productosxpedido",
+          include: [
+            { model: Producto, as: "producto" },
+            {
+              model: AdicionalesXProductosXPedidos,
+              as: "AxPxP",
+              include: [{
+                model: Adicionales,
+                as: "adicional"
+              }]
+            }
+          ]
+        }],
+        transaction
       });
 
-      if (!pedido) {
-        throw new Error("Pedido no encontrado");
-      }
-
+      if (!pedido) { throw new Error("Pedido no encontrado"); }
       if (pedido.estado === "cancelado") {
-        throw new Error("El pedido ya está cancelado");
+        await transaction.rollback();
+        console.log(`Intento de cancelar pedido ${id} que ya estaba cancelado.`);
+        return pedido;
       }
+      if (pedido.estado === "entregado") { throw new Error("No se puede cancelar un pedido entregado"); }
 
-      if (pedido.estado === "entregado") {
-        throw new Error("No se puede cancelar un pedido entregado");
-      }
-
-      for (const producto of pedido.productos) {
+      // Devolvemos el stock
+      for (const productoXPedido of pedido.productosxpedido) {
         await Producto.increment("stock", {
-          by: producto.ProductosXPedido.cantidad,
-          where: { id: producto.id },
+          by: productoXPedido.cantidad,
+          where: { id: productoXPedido.producto.id },
           transaction,
         });
 
-        if (producto.adicionales && producto.adicionales.length > 0) {
-          for (const adicional of producto.adicionales) {
+        if (productoXPedido.AxPxP && productoXPedido.AxPxP.length > 0) {
+          for (const adicionalX of productoXPedido.AxPxP) {
             await Adicionales.increment("stock", {
-              by: adicional.AdicionalesXProductosXPedidos.cantidad,
-              where: { id: adicional.id },
+              by: adicionalX.cantidad,
+              where: { id: adicionalX.adicional.id },
               transaction,
             });
           }
@@ -205,40 +208,50 @@ class PedidosService {
       }
 
       await pedido.update({ estado: "cancelado" }, { transaction });
+
+      // Si todo lo anterior funcionó, confirmamos la transacción.
       await transaction.commit();
 
-      return await this.obtenerPorId(id);
     } catch (error) {
+      // Si algo falla ANTES del commit, deshacemos todo.
       await transaction.rollback();
-      throw new Error(`Error al cancelar pedido: ${error.message}`);
+      // Y propagamos el error para que el controlador sepa que la cancelación falló.
+      throw new Error(`Error durante la transacción de cancelación: ${error.message}`);
     }
-  }
+
+    try {
+      console.log(`[SERVICIO] Transacción para cancelar el pedido ${id} completada. Buscando datos actualizados...`);
+      // Como la transacción tuvo éxito, ahora leemos los datos actualizados de forma segura.
+      const pedidoActualizado = await this.getById(id);
+      return pedidoActualizado;
+    } catch (readError) {
+      console.error(`[SERVICIO] El pedido ${id} FUE CANCELADO exitosamente, pero falló la re-lectura de datos.`, readError);
+      // Devolvemos un objeto simple para indicar que la cancelación tuvo éxito aunque no pudimos devolver el objeto completo.
+      return { id: id, estado: 'cancelado', errorAlReleer: true };
+    }
+}
 
   async updateOrder(idPedido, datosActualizados) {
     try {
       if (!idPedido) {
         return { ok: false, message: "ID del pedido requerido" };
       }
-     
 
       // Mezclamos el ID dentro del JSON que se enviará al procedimiento
       const data = {
         ...datosActualizados,
         idPedido,
-        productos:datosActualizados.producto,
+        productos: datosActualizados.producto,
       };
       delete data.producto;
-      console.log(JSON.stringify(data,null,2));
-        
+      console.log(JSON.stringify(data, null, 2));
+
       // Ejecutamos el procedimiento con el JSON como parámetro
-      const [result] = await sequelize.query(
-        "CALL updatePedido(:datos)",
-        {
-          replacements: {
-            datos: JSON.stringify(data),
-          },
-        }
-      );
+      const [result] = await sequelize.query("CALL updatePedido(:datos)", {
+        replacements: {
+          datos: JSON.stringify(data),
+        },
+      });
 
       return {
         ok: true,
@@ -246,7 +259,6 @@ class PedidosService {
         data: result,
       };
     } catch (error) {
-
       if (error.original?.sqlMessage) {
         return {
           ok: false,
@@ -261,8 +273,52 @@ class PedidosService {
       };
     }
   }
+  async getById(id) {
+    try {
+      const pedido = await Pedido.findOne({
+        where: { id },
+        attributes: ["id", "estado", "precioTotal", "descripcion"],
+        include: [
+          {
+            model: Cliente,
+            as: "cliente",
+            attributes: ["id", "telefono", "direccion"],
+          },
+          {
+            model: ProductosXPedido,
+            as: "productosxpedido",
+            include: [
+              {
+                model: Producto,
+                as: "producto",
+                attributes: ["id", "nombre", "precio"],
+              },
+              {
+                model: AdicionalesXProductosXPedidos,
+                as: "AxPxP", // 👈 este alias debe coincidir con el del modelo
+                include: [
+                  {
+                    model: Adicionales,
+                    as: "adicional", // 👈 este alias también debe coincidir con el de ese modelo
+                    attributes: ["id", "nombre", "precio"],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      });
 
+      if (!pedido) {
+        throw new Error("Pedido no encontrado");
+      }
+
+      return pedido;
+    } catch (error) {
+      console.error("Error en pedidoService.getById:", error);
+      throw error;
+    }
+  }
 }
-
 
 module.exports = new PedidosService();

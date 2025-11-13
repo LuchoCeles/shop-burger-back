@@ -21,15 +21,20 @@ class MercadoPagoService {
     }
   }
 
-  async getPreferenceById(id) {
+   async searchPreference(externalReference) {
     try {
-      const rsp = await preference.get({ id });
-      return rsp;
+      const rsp = await preference.search({
+        qs: {
+          external_reference: externalReference,
+        },
+      });
+      return rsp.elements && rsp.elements.length > 0 ? rsp.elements[0] : null;
     } catch (error) {
-      console.error("MercadoPago preference.get error:", error);
+      console.error("MercadoPago searchPreference error:", error);
       throw error;
     }
   }
+
 }
 
 

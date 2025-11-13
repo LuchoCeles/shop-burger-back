@@ -1,7 +1,7 @@
 const pedidoService = require("../services/pedidosService");
 const mercadoPagoService = require("../services/mercadoPagoService");
-const PagoService = require("../services/pagosService");
-const e = require("cors");
+const pagosService = require("../services/pagosService");
+const metodosDePagoService = require("../services/metodosDePagoService");
 require("dotenv").config();
 
 class PedidosController {
@@ -38,6 +38,19 @@ class PedidosController {
         metodoDePago,
       });
 
+      const idMetodoPago = await metodosDePagoService.getIdPorNombre(
+        metodoDePago
+      );
+      if (!idMetodoPago) {
+        throw new Error(`El método de pago '${metodoDePago}' no es válido.`);
+      }
+
+      await pagosService.create({
+        idPedido: pedido.id,
+        idMetodoDePago: idMetodoPago,
+        estado: "Pendiente",
+      });
+
       io.emit("nuevoPedido", { message: "Nuevo pedido recibido" });
 
       if (metodoDePago === "Mercado Pago") {
@@ -67,10 +80,10 @@ class PedidosController {
     try {
       const pedido = await pedidoService.getPrecioById(id);
       const now = new Date();
-      const expirationDateFrom = now.toISOString();
       const expirationDateTo = new Date(
         now.getTime() + 1 * 60000
       ).toISOString(); // 10 minutos después
+
       const body = {
         items: [
           {
@@ -81,9 +94,12 @@ class PedidosController {
             unit_price: Number(pedido.precioTotal),
           },
         ],
-        expiration_date_from: expirationDateFrom,
-        expirationDateTo: expirationDateTo,
+        external_reference: String(pedido.id),
+
         notification_url: `${process.env.BASE_URL}/admin/pedido/webhooks/mercadopago`,
+
+        expires: true,
+        expiration_date_to: expirationDateTo,
       };
 
       const mpResponse = await mercadoPagoService.create(body);
@@ -110,67 +126,89 @@ class PedidosController {
   }
 
   async webHooksMercadoPago(req, res) {
+    const io = req.app.get("io");
+
     try {
-      const io = req.app.get("io");
-      const payment = req.query;
+      const paymentId = req.query["data.id"] || req.query.id;
+      const type = req.query.type || req.query.topic;
 
-      if (payment.type === "payment") {
-        const data = await mercadoPagoService.getById(payment["data.id"]);
+      // Si la notificación no es sobre un pago o no tiene un ID, la ignoramos.
+      if (type !== "payment" || !paymentId) {
+        console.log("Notificación ignorada (no es un pago o no tiene ID).");
+        return res.sendStatus(200);
+      }
 
-        let id = Number(data.additional_info.items[0].id);
+      const paymentData = await mercadoPagoService.getById(paymentId);
 
-        if (!id) {
-          return;
-        }
+      // Si por alguna razón no se encuentran los datos del pago, no podemos continuar.
+      if (!paymentData) {
+        return res.sendStatus(200);
+      }
 
-        const preferenceId = data.preference_id;
-        const preference = await mercadoPagoService.getPreferenceById(preferenceId);
+      const orderId = Number(paymentData.external_reference);
 
+      if (!orderId) {
+        return res.status(200).send("Pago sin external_reference.");
+      }
+
+      const pedidoEnDB = await pedidoService.getById(orderId);
+      if (
+        !pedidoEnDB ||
+        pedidoEnDB.estado === "Pagado" ||
+        pedidoEnDB.estado === "cancelado"
+      ) {
+        return res
+          .status(200)
+          .json({ message: "Pedido no encontrado o ya procesado." });
+      }
+
+      const preference = await mercadoPagoService.searchPreference(
+        String(orderId)
+      );
+      
+      if (preference && preference.expiration_date_to) {
         const expirationDate = new Date(preference.expiration_date_to);
         const now = new Date();
 
         if (now > expirationDate) {
-          await this.cancelOrderByMp(id);
-          io.emit("Pago rechazado", {
-            message: "Pago rechazado por expiración",
+          await this.cancelOrderByMp(orderId);
+          io.emit("pagoExpirado", {
+            message: "El tiempo para pagar ha expirado.",
           });
-          return res.status(200).json({
-            message: "Pago rechazado por expiración y pedido cancelado",
-          });
-        }
-
-        if (data.status !== "approved") {
-          await this.cancelOrderByMp(id); // Cancela el pedido si el pago no fue aprobado
-          io.emit("Pago rechazado", { message: "Pago rechazado" });
-          return res.status(200).json({
-            message: "Pago rechazado y pedido cancelado",
-          });
-        }
-
-        await this.updateOrderByMp(id, "Pagado");
-        io.emit("Nuevo Pago", { message: "Pago exitoso" });
-        return res.status(200).json({
-          message: "Pago actualizado exitosamente",
-        });
-      } else if (payment.type !== "payment") {
-        
-        if (payment.topic === "merchant_order") {
-          return res.status(200).json({
-            message: "Notificación de merchant_order recibida",
-            data:payment,
-          });
+          return res
+            .status(200)
+            .json({ message: "Pedido cancelado por expiración." });
         }
       }
+
+      console.log(
+        `[WEBHOOK] Verificando estado del pago para el pedido ${orderId}: '${paymentData.status}'`
+      );
+
+      if (paymentData.status === "approved") {
+        await this.updateOrderByMp(orderId, "Pagado");
+        io.emit("pagoExitoso", { message: "¡Pago exitoso!" });
+        return res
+          .status(200)
+          .json({ message: "Pago actualizado exitosamente." });
+      } else {
+        await this.cancelOrderByMp(orderId);
+        io.emit("pagoRechazado", {
+          message: `Pago rechazado con estado: ${paymentData.status}`,
+        });
+        return res
+          .status(200)
+          .json({ message: "Pago no aprobado, pedido cancelado." });
+      }
     } catch (error) {
-      return res.status(500).json({
-        message: error.message,
-      });
+      console.error("---------- [WEBHOOK] ¡ERROR INESPERADO! ----------");
+      console.error(error);
+      return res.status(500).json({ message: error.message });
     }
   }
-
   async updateOrderByMp(id, estado) {
     try {
-      await PagoService.updateMp(id, estado);
+      await pagosService.updateMpEstado(id, estado);
       return true;
     } catch (error) {
       throw new Error(
@@ -182,6 +220,7 @@ class PedidosController {
   async cancelOrderByMp(id) {
     try {
       const pedido = await pedidoService.cancel(id);
+      console.log("Pedido cancelado :", id);
       await PagoService.updateMp(id, "Rechazado");
       return pedido;
     } catch (error) {
