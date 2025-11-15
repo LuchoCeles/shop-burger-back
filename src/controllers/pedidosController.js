@@ -1,7 +1,5 @@
 const pedidoService = require("../services/pedidosService");
 const mercadoPagoService = require("../services/mercadoPagoService");
-const pagosService = require("../services/pagosService");
-const metodosDePagoService = require("../services/metodosDePagoService");
 require("dotenv").config();
 
 class PedidosController {
@@ -47,8 +45,8 @@ class PedidosController {
       const pedido = await pedidoService.getPrecioById(id);
       const now = new Date();
       const expirationDateTo = new Date(
-        now.getTime() + 1 * 60000
-      ).toISOString(); // 10 minutos después
+        now.getTime() + process.env.MP_EXPIRY_MINUTES * 60000
+      ).toISOString();
 
       const body = {
         items: [
@@ -145,15 +143,9 @@ class PedidosController {
         data: pedido,
       });
     } catch (error) {
-      console.error("Error al actualizar estado:", error);
-      const status = error.message.includes("no encontrado")
-        ? 404
-        : error.message.includes("inválido") ||
-          error.message.includes("No se puede")
-          ? 400
-          : 500;
-      return res.status(status).json({
-        error: error.message,
+      return res.status(500).json({
+        suscess: false,
+        error: "Error al actualizar estado: " + error.message,
       });
     }
   }
@@ -168,15 +160,9 @@ class PedidosController {
         data: pedido,
       });
     } catch (error) {
-      console.error("Error al cancelar pedido:", error);
-      const status = error.message.includes("no encontrado")
-        ? 404
-        : error.message.includes("ya está") ||
-          error.message.includes("No se puede")
-          ? 400
-          : 500;
-      return res.status(status).json({
-        error: error.message,
+      return res.status(500).json({
+        suscess: false,
+        error: "Error al cancelar pedido: " + error.message,
       });
     }
   }

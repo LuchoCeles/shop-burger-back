@@ -104,10 +104,10 @@ class PedidosService {
             cliente: pedido.cliente,
             Pago: pedido.pago
               ? {
-                  id: pedido.pago.id,
-                  estado: pedido.pago.estado,
-                  metodoDePago: pedido.pago.metodoDePago,
-                }
+                id: pedido.pago.id,
+                estado: pedido.pago.estado,
+                metodoDePago: pedido.pago.metodoDePago,
+              }
               : null,
             productos,
           };
@@ -157,7 +157,7 @@ class PedidosService {
 
   // src/services/pedidoService.js
 
-async cancel(id) {
+  async cancel(id) {
     const transaction = await sequelize.transaction();
 
     try {
@@ -224,7 +224,7 @@ async cancel(id) {
       // Devolvemos un objeto simple para indicar que la cancelación tuvo éxito aunque no pudimos devolver el objeto completo.
       return { id: id, estado: 'cancelado', errorAlReleer: true };
     }
-}
+  }
 
   async updateOrder(idPedido, datosActualizados) {
     try {

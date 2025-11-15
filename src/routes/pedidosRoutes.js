@@ -32,7 +32,8 @@ router.patch('/:id/cancelar', authAdmin, [
 
 router.patch('/:id/update', [
   authAdmin,
-  param('id').isInt({ min: 1 }).withMessage('ID debe ser válido')
+  param('id').isInt({ min: 1 }).withMessage('ID debe ser válido'),
+  body('estado').optional().isIn(['entregado', 'cancelado']).withMessage('Estado inválido'),
 ], validateRequest, pedidosController.updateOrder);
 
 module.exports = router;

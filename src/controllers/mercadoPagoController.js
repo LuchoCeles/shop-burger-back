@@ -16,11 +16,6 @@ class MercadoPagoController {
         return rsp;
       }
 
-      if (webhook.topic === "merchant_order" || webhook.type === "merchant_order") {
-        const rsp = await this.merchantOrderUpdate(webhook.id);
-        return rsp;
-      }
-
     } catch (error) {
       return res.status(500).json({ message: error.message });
     }
@@ -64,20 +59,6 @@ class MercadoPagoController {
       return;
     } catch (error) {
       throw new Error(`Error procesando pago rechazado: ${error.message}`);
-    }
-  }
-
-  async merchantOrderUpdate(id) {
-    try {
-      const data = await mercadoPagoService.getMerchantOrder(id);
-
-      if (data.order_status === "expired") {
-        const id = Number(data.external_reference);
-        await this.cancelOrderByMp(id, "Expirado");
-        return res.sendStatus(200);
-      }
-    } catch (error) {
-      throw new Error(`Error al procesar webhook de merchant order: ${error.message}`);
     }
   }
 

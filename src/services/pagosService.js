@@ -2,7 +2,7 @@ const { sequelize } = require("../config/db");
 const { Pago } = require('../models');
 
 class PagosService {
-  async updateMp(id, estado) { // no se usa, busca mal debido a que busca por id de pago, y es por id de pedido
+  async updateMp(id, estado) {
     try {
       await sequelize.query("CALL updateMp(:id,:estado);", {
         replacements: { id, estado },
