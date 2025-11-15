@@ -10,45 +10,11 @@ class PedidosController {
       const io = req.app.get("io");
       const { cliente, productos, descripcion, metodoDePago } = req.body;
 
-      for (const item of productos) {
-        if (!item.id || !item.cantidad) {
-          return res.status(400).json({
-            error: "Cada producto debe tener id y cantidad",
-          });
-        }
-
-        if (item.cantidad <= 0) {
-          return res.status(400).json({
-            error: "La cantidad debe ser mayor a 0",
-          });
-        }
-
-        if (item.adicionales && !Array.isArray(item.adicionales)) {
-          return res.status(400).json({
-            success: false,
-            message: "Adicionales",
-          });
-        }
-      }
-
       const pedido = await pedidoService.Create({
         cliente,
         productos,
         descripcion,
         metodoDePago,
-      });
-
-      const idMetodoPago = await metodosDePagoService.getIdPorNombre(
-        metodoDePago
-      );
-      if (!idMetodoPago) {
-        throw new Error(`El método de pago '${metodoDePago}' no es válido.`);
-      }
-
-      await pagosService.create({
-        idPedido: pedido.id,
-        idMetodoDePago: idMetodoPago,
-        estado: "Pendiente",
       });
 
       io.emit("nuevoPedido", { message: "Nuevo pedido recibido" });
@@ -81,7 +47,7 @@ class PedidosController {
       const pedido = await pedidoService.getPrecioById(id);
       const now = new Date();
       const expirationDateTo = new Date(
-        now.getTime() + 10 * 60000
+        now.getTime() + 1 * 60000
       ).toISOString(); // 10 minutos después
 
       const body = {
@@ -96,7 +62,7 @@ class PedidosController {
         ],
         external_reference: String(pedido.id),
 
-        notification_url: `${process.env.BASE_URL}/admin/pedido/webhooks/mercadopago`,
+        notification_url: `${process.env.BASE_URL}/api/mercadopago/webhooks`,
 
         expires: true,
         expiration_date_to: expirationDateTo,
@@ -125,105 +91,6 @@ class PedidosController {
     }
   }
 
-  async webHooksMercadoPago(req, res) {
-    const io = req.app.get("io");
-
-    try {
-      const paymentId = req.query["data.id"] || req.query.id;
-      const type = req.query.type || req.query.topic;
-
-      // Si la notificación no es sobre un pago o no tiene un ID, la ignoramos.
-      if (type !== "payment" || !paymentId) {
-        console.log("Notificación ignorada (no es un pago o no tiene ID).");
-        return res.sendStatus(200);
-      }
-
-      const paymentData = await mercadoPagoService.getById(paymentId);
-
-      // Si por alguna razón no se encuentran los datos del pago, no podemos continuar.
-      if (!paymentData) {
-        return res.sendStatus(200);
-      }
-
-      const orderId = Number(paymentData.external_reference);
-
-      if (!orderId) {
-        return res.status(200).send("Pago sin external_reference.");
-      }
-
-      const pedidoEnDB = await pedidoService.getById(orderId);
-      if (
-        !pedidoEnDB ||
-        pedidoEnDB.estado === "Pagado" ||
-        pedidoEnDB.estado === "cancelado"
-      ) {
-        return res
-          .status(200)
-          .json({ message: "Pedido no encontrado o ya procesado." });
-      }
-
-      const preference = await mercadoPagoService.searchPreference(
-        String(orderId)
-      );
-      
-      if (preference && preference.expiration_date_to) {
-        const expirationDate = new Date(preference.expiration_date_to);
-        const now = new Date();
-
-        if (now > expirationDate) {
-          await this.cancelOrderByMp(orderId);
-          io.emit("pagoExpirado", {
-            message: "El tiempo para pagar ha expirado.",
-          });
-          return res
-            .status(200)
-            .json({ message: "Pedido cancelado por expiración." });
-        }
-      }
-
-      if (paymentData.status === "approved") {
-        await this.updateOrderByMp(orderId, "Pagado");
-        io.emit("pagoExitoso", { message: "¡Pago exitoso!" });
-        return res
-          .status(200)
-          .json({ message: "Pago actualizado exitosamente." });
-      } else {
-        await this.cancelOrderByMp(orderId);
-        io.emit("pagoRechazado", {
-          message: `Pago rechazado con estado: ${paymentData.status}`,
-        });
-        return res
-          .status(200)
-          .json({ message: "Pago no aprobado, pedido cancelado." });
-      }
-    } catch (error) {
-      return res.status(500).json({ message: error.message });
-    }
-  }
-  async updateOrderByMp(id, estado) {
-    try {
-      await pagosService.updateMpEstado(id, estado);
-      return true;
-    } catch (error) {
-      throw new Error(
-        `Error al actualizar pedido con Mercado Pago: ${error.message}`
-      );
-    }
-  }
-
-  async cancelOrderByMp(id) {
-    try {
-      const pedido = await pedidoService.cancel(id);
-      console.log("Pedido cancelado :", id);
-      await PagoService.updateMp(id, "Rechazado");
-      return pedido;
-    } catch (error) {
-      throw new Error(
-        `Error al cancelar pedido con Mercado Pago: ${error.message}`
-      );
-    }
-  }
-
   async getOrders(req, res) {
     try {
       const { estado, idCliente } = req.query;
@@ -249,12 +116,6 @@ class PedidosController {
   async updateStatus(req, res) {
     try {
       const { id, estado } = req.body;
-
-      const estadosValidos = ["pendiente", "entregado", "cancelado"];
-
-      if (!estadosValidos.includes(estado)) {
-        throw new Error("Estado inválido");
-      }
 
       const pedidoActual = await pedidoService.getById(id);
 
@@ -289,8 +150,8 @@ class PedidosController {
         ? 404
         : error.message.includes("inválido") ||
           error.message.includes("No se puede")
-        ? 400
-        : 500;
+          ? 400
+          : 500;
       return res.status(status).json({
         error: error.message,
       });
@@ -312,8 +173,8 @@ class PedidosController {
         ? 404
         : error.message.includes("ya está") ||
           error.message.includes("No se puede")
-        ? 400
-        : 500;
+          ? 400
+          : 500;
       return res.status(status).json({
         error: error.message,
       });

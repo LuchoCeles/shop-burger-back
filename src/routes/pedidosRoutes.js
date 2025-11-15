@@ -10,7 +10,7 @@ router.post('/', [
   body('cliente').notEmpty().withMessage('cliente es requerido'),
   body('descripcion').optional().isString().withMessage('descripcion debe ser una cadena'),
   body('productos').isArray({ min: 1 }).notEmpty().withMessage('productos debe ser un array con al menos un elemento'),
-  body('adicionales').isArray({ min: 1 }).optional().withMessage('adicionales debe ser un array con al menos un elemento'),
+  body('productos.adicionales').isArray({ min: 1 }).optional().withMessage('adicionales debe ser un array con al menos un elemento'),
   body('metodoDePago').notEmpty().isString().withMessage('metodoDePago es requerido')
 ], validateRequest, pedidosController.CreateOrder.bind(pedidosController));
 
@@ -34,7 +34,5 @@ router.patch('/:id/update', [
   authAdmin,
   param('id').isInt({ min: 1 }).withMessage('ID debe ser válido')
 ], validateRequest, pedidosController.updateOrder);
-
-router.post('/webhooks/mercadopago', pedidosController.webHooksMercadoPago.bind(pedidosController));
 
 module.exports = router;
