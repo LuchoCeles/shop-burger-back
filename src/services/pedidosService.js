@@ -6,6 +6,7 @@ const {
   Pago,
   Adicionales,
   AdicionalesXProductosXPedidos,
+  MetodosDePago,
 } = require("../models");
 const { sequelize } = require("../config/db");
 
@@ -15,8 +16,8 @@ class PedidosService {
       const pedido = await sequelize.query("CALL createPedido(:datos)", {
         replacements: {
           datos: JSON.stringify(datosPedido),
-        }
-      })
+        },
+      });
       return pedido[0];
     } catch (error) {
       throw new Error(`Error al crear pedido: ${error.message}`);
@@ -32,6 +33,18 @@ class PedidosService {
             model: Cliente,
             as: "cliente",
             attributes: ["id", "telefono", "direccion"],
+          },
+          {
+            model: Pago,
+            as: "pago",
+            attributes: ["id", "estado"],
+            include: [
+              {
+                model: MetodosDePago,
+                as: "metodosDePago",
+                attributes: ["id", "nombre"],
+              },
+            ],
           },
         ],
         order: [["id", "DESC"]],
@@ -89,6 +102,13 @@ class PedidosService {
             precioTotal: pedido.precioTotal,
             descripcion: pedido.descripcion,
             cliente: pedido.cliente,
+            Pago: pedido.pago
+              ? {
+                id: pedido.pago.id,
+                estado: pedido.pago.estado,
+                metodoDePago: pedido.pago.metodoDePago,
+              }
+              : null,
             productos,
           };
         })
@@ -109,12 +129,15 @@ class PedidosService {
 
       return pedido;
     } catch (error) {
-      throw new Error(`Error al obtener el precio del pedido: ${error.message}`);
+      throw new Error(
+        `Error al obtener el precio del pedido: ${error.message}`
+      );
     }
   }
 
   async updateStatus(id, nuevoEstado) {
     try {
+      console.log("Actualizando estado del pedido:", id, "a", nuevoEstado);
       const pedido = await Pedido.findByPk(id);
 
       await pedido.update({ estado: nuevoEstado });
@@ -131,48 +154,73 @@ class PedidosService {
       throw new Error(`Error al actualizar estado: ${error.message}`);
     }
   }
-
+  
   async cancel(id) {
     const transaction = await sequelize.transaction();
 
     try {
       const pedido = await Pedido.findByPk(id, {
-        include: [
-          {
-            model: Producto,
-            as: "productos",
-            through: { attributes: ["cantidad"] },
-          },
-        ],
+        include: [{
+          model: ProductosXPedido,
+          as: "productosxpedido",
+          include: [
+            { model: Producto, as: "producto" },
+            {
+              model: AdicionalesXProductosXPedidos,
+              as: "AxPxP",
+              include: [{
+                model: Adicionales,
+                as: "adicional"
+              }]
+            }
+          ]
+        }],
+        transaction
       });
 
-      if (!pedido) {
-        throw new Error("Pedido no encontrado");
-      }
-
+      if (!pedido) { throw new Error("Pedido no encontrado"); }
       if (pedido.estado === "cancelado") {
-        throw new Error("El pedido ya está cancelado");
+        await transaction.rollback();
+        console.log(`Intento de cancelar pedido ${id} que ya estaba cancelado.`);
+        return pedido;
       }
+      if (pedido.estado === "entregado") { throw new Error("No se puede cancelar un pedido entregado"); }
 
-      if (pedido.estado === "entregado") {
-        throw new Error("No se puede cancelar un pedido entregado");
-      }
-
-      for (const producto of pedido.productos) {
+      // Devolvemos el stock
+      for (const productoXPedido of pedido.productosxpedido) {
         await Producto.increment("stock", {
-          by: producto.ProductosXPedido.cantidad,
-          where: { id: producto.id },
+          by: productoXPedido.cantidad,
+          where: { id: productoXPedido.producto.id },
           transaction,
         });
+
+        if (productoXPedido.AxPxP && productoXPedido.AxPxP.length > 0) {
+          for (const adicionalX of productoXPedido.AxPxP) {
+            await Adicionales.increment("stock", {
+              by: adicionalX.cantidad,
+              where: { id: adicionalX.adicional.id },
+              transaction,
+            });
+          }
+        }
       }
 
       await pedido.update({ estado: "cancelado" }, { transaction });
+
       await transaction.commit();
 
-      return await this.obtenerPorId(id);
     } catch (error) {
       await transaction.rollback();
-      throw new Error(`Error al cancelar pedido: ${error.message}`);
+      throw new Error(`Error durante la transacción de cancelación: ${error.message}`);
+    }
+
+    try {
+      // Con este try evitamos error con el commit
+      const pedidoActualizado = await this.getById(id);
+      return pedidoActualizado;
+    } catch (readError) {
+      // Devolvemos un objeto simple para indicar que la cancelación tuvo éxito aunque no pudimos devolver el objeto completo.
+      return { id: id, estado: 'cancelado', errorAlReleer: true };
     }
   }
 
@@ -181,26 +229,22 @@ class PedidosService {
       if (!idPedido) {
         return { ok: false, message: "ID del pedido requerido" };
       }
-     
 
       // Mezclamos el ID dentro del JSON que se enviará al procedimiento
       const data = {
         ...datosActualizados,
         idPedido,
-        productos:datosActualizados.producto,
+        productos: datosActualizados.producto,
       };
       delete data.producto;
-      console.log(JSON.stringify(data,null,2));
-        
+      console.log(JSON.stringify(data, null, 2));
+
       // Ejecutamos el procedimiento con el JSON como parámetro
-      const [result] = await sequelize.query(
-        "CALL updatePedido(:datos)",
-        {
-          replacements: {
-            datos: JSON.stringify(data),
-          },
-        }
-      );
+      const [result] = await sequelize.query("CALL updatePedido(:datos)", {
+        replacements: {
+          datos: JSON.stringify(data),
+        },
+      });
 
       return {
         ok: true,
@@ -208,7 +252,6 @@ class PedidosService {
         data: result,
       };
     } catch (error) {
-
       if (error.original?.sqlMessage) {
         return {
           ok: false,
@@ -223,8 +266,52 @@ class PedidosService {
       };
     }
   }
+  async getById(id) {
+    try {
+      const pedido = await Pedido.findOne({
+        where: { id },
+        attributes: ["id", "estado", "precioTotal", "descripcion"],
+        include: [
+          {
+            model: Cliente,
+            as: "cliente",
+            attributes: ["id", "telefono", "direccion"],
+          },
+          {
+            model: ProductosXPedido,
+            as: "productosxpedido",
+            include: [
+              {
+                model: Producto,
+                as: "producto",
+                attributes: ["id", "nombre", "precio"],
+              },
+              {
+                model: AdicionalesXProductosXPedidos,
+                as: "AxPxP",
+                include: [
+                  {
+                    model: Adicionales,
+                    as: "adicional",
+                    attributes: ["id", "nombre", "precio"],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      });
 
+      if (!pedido) {
+        throw new Error("Pedido no encontrado");
+      }
+
+      return pedido;
+    } catch (error) {
+      console.error("Error en pedidoService.getById:", error);
+      throw error;
+    }
+  }
 }
-
 
 module.exports = new PedidosService();

@@ -3,10 +3,9 @@ const productosService = require("../services/productosService");
 class ProductosController {
   async getProducts(req, res, next) {
     try {
-      const { soloActivos } = req.params;
-      console.log('solo activo es un: ', soloActivos);
+      const { soloActivos } = req.query;
       // es para parsear el string a boolean
-      const soloActivosBool = soloActivos === "true";
+      const soloActivosBool = soloActivos === "true" ? true : false;
       const productos = await productosService.getProducts(soloActivosBool);
 
       res.json({
@@ -102,8 +101,8 @@ class ProductosController {
           estado: producto.estado,
         },
       });
-      
-      
+
+
 
     } catch (error) {
       res.status(500).json({

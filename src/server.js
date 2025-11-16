@@ -3,6 +3,7 @@ const app = require('./app');
 const { testConnection } = require('./config/db');
 const http = require('http');
 const { Server } = require('socket.io');
+const initializeCronJobs = require('./middlewares/cron');
 
 const PORT = process.env.PORT;
 const FRONTEND_URL = process.env.FRONTEND_URL;
@@ -29,6 +30,11 @@ const startServer = async () => {
       console.log('🟢 Cliente conectado:', socket.id);
       socket.on('disconnect', () => console.log('🔴 Cliente desconectado:', socket.id));
     });
+
+    // Iniciar trabajos cron
+    if (process.env.MERCADO_PAGO_ACCESS_TOKEN) {
+      initializeCronJobs();
+    }
 
     server.listen(PORT, () => {
       console.log(`🚀 Servidor corriendo en puerto ${PORT}`);
