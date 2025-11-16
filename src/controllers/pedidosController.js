@@ -15,7 +15,7 @@ class PedidosController {
         metodoDePago,
       });
 
-      io.emit("nuevoPedido", { message: "Nuevo pedido recibido" });
+      io.emit("Nuevo Pedido", { message: "Nuevo pedido recibido" });
 
       if (metodoDePago === "Mercado Pago") {
         const mpResponse = await this.createOrderByMercadoPago(pedido.id);
