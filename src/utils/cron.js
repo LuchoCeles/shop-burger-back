@@ -4,7 +4,7 @@ const metodosDePagoService = require('../services/metodosDePagoService');
 const pagosService = require('../services/pagosService');
 require('dotenv').config();
 
-const initializeCronJobs = () => {
+const initializeCronJobs = (io) => {
   cron.schedule('*/5 * * * *', async () => {
     try {
       console.log(`[CRON JOB] Limpieza de pagos pendientes... (${new Date().toLocaleString()})`);
@@ -32,8 +32,11 @@ const initializeCronJobs = () => {
           console.log(`[CRON JOB] Cancelando pedido ID ${pedidoId} por pago expirado...`);
 
           await pagosService.updateMp(pago.id, "Expirado");
-
           await pedidosService.cancel(pedidoId);
+          io.emit("pagoExpirado", {
+            pedidoId,
+            message: "Pago expirado automáticamente"
+          });
         })
       );
 

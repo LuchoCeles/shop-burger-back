@@ -1,6 +1,7 @@
 const pedidoService = require("../services/pedidosService");
 const mercadoPagoService = require("../services/mercadoPagoService");
 const pagosService = require("../services/pagosService");
+const { getSocketInstance } = require("../config/socket");
 
 class MercadoPagoController {
   async webHooksMercadoPago(req, res) {
@@ -23,18 +24,19 @@ class MercadoPagoController {
 
   async payment(paymentId) {
     try {
+      const io = getSocketInstance();
       const data = await mercadoPagoService.getById(paymentId);
       const id = Number(data.additional_info.items[0].id);
 
-      if (!id) return res.sendStatus(404);
+      if (!id) throw new Error("ID inválido");
 
       if (data.status === "approved") {
-        await this.paymentSuccess(id);
+        await this.paymentSuccess(id, io);
         return res.sendStatus(200);
       }
 
       if (data.status === "rejected") {
-        await this.paymentRejected(id);
+        await this.paymentRejected(id, io);
         return res.sendStatus(200);
       }
     } catch (error) {
@@ -42,20 +44,26 @@ class MercadoPagoController {
     }
   }
 
-  async paymentSuccess(id) {
+  async paymentSuccess(id, io) {
     try {
       await this.updateOrderByMp(id, "Pagado");
-      io.emit("Nuevo Pago", { message: "Pago exitoso" });
+      io.emit("pagoAprobado", {
+        id,
+        message: "Pago aprobado",
+      });
       return;
     } catch (error) {
       throw new Error(`Error procesando pago: ${error.message}`);
     }
   }
 
-  async paymentRejected(id) {
+  async paymentRejected(id, io) {
     try {
       await this.cancelOrderByMp(id, "Rechazado");
-      io.emit("Pago rechazado", { message: "Pago rechazado" });
+      io.emit("pagoRechazado", {
+        id,
+        message: "Pago rechazado",
+      });
       return;
     } catch (error) {
       throw new Error(`Error procesando pago rechazado: ${error.message}`);
