@@ -154,9 +154,7 @@ class PedidosService {
       throw new Error(`Error al actualizar estado: ${error.message}`);
     }
   }
-
-  // src/services/pedidoService.js
-
+  
   async cancel(id) {
     const transaction = await sequelize.transaction();
 

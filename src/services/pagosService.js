@@ -1,5 +1,6 @@
 const { sequelize } = require("../config/db");
 const { Pago } = require('../models');
+const { Op } = require('sequelize');
 
 class PagosService {
   async updateMp(id, estado) {
@@ -10,16 +11,6 @@ class PagosService {
       return true;
     } catch (error) {
       throw new Error("Error al actualizar el estado del pago");
-    }
-  }
-
-  async create(datosPagos) {
-    try {
-      const nuevoPago = await Pago.create(datosPagos);
-      return nuevoPago;
-    } catch (error) {
-      console.error("Error en PagoService.create:", error.message);
-      throw new Error("Error al crear el registro de pago.");
     }
   }
 

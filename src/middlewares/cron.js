@@ -5,7 +5,7 @@ const pagosService = require('../services/pagosService');
 require('dotenv').config();
 
 const initializeCronJobs = () => {
-  cron.schedule('*/5 * * * *', async () => {
+  cron.schedule('*/1 * * * *', async () => {
     try {
       console.log(`[CRON JOB] Limpieza de pagos pendientes... (${new Date().toLocaleString()})`);
 
