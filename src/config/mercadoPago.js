@@ -1,4 +1,4 @@
-const { MercadoPagoConfig, Preference, Payment } = require("mercadopago");
+const { MercadoPagoConfig, Preference, Payment, MerchantOrder } = require("mercadopago");
 require("dotenv").config();
 
 const client = new MercadoPagoConfig({
@@ -8,5 +8,6 @@ const client = new MercadoPagoConfig({
 
 const preference = new Preference(client);
 const payment = new Payment(client);
+const merchantOrder = new MerchantOrder(client);
 
-module.exports = { preference, payment }
+module.exports = { preference, payment, merchantOrder }

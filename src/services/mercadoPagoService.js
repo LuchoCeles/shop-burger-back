@@ -1,4 +1,5 @@
 const { preference, payment } = require('../config/mercadoPago');
+require('dotenv').config();
 
 class MercadoPagoService {
   async create(body) {
@@ -21,5 +22,6 @@ class MercadoPagoService {
     }
   }
 }
+
 
 module.exports = new MercadoPagoService();

@@ -1,6 +1,5 @@
 const pedidoService = require("../services/pedidosService");
 const mercadoPagoService = require("../services/mercadoPagoService");
-const PagoService = require("../services/pagosService");
 require("dotenv").config();
 
 class PedidosController {
@@ -8,27 +7,6 @@ class PedidosController {
     try {
       const io = req.app.get("io");
       const { cliente, productos, descripcion, metodoDePago } = req.body;
-
-      for (const item of productos) {
-        if (!item.id || !item.cantidad) {
-          return res.status(400).json({
-            error: "Cada producto debe tener id y cantidad",
-          });
-        }
-
-        if (item.cantidad <= 0) {
-          return res.status(400).json({
-            error: "La cantidad debe ser mayor a 0",
-          });
-        }
-
-        if (item.adicionales && !Array.isArray(item.adicionales)) {
-          return res.status(400).json({
-            success: false,
-            message: "Adicionales",
-          });
-        }
-      }
 
       const pedido = await pedidoService.Create({
         cliente,
@@ -42,11 +20,11 @@ class PedidosController {
       if (metodoDePago === "Mercado Pago") {
         const mpResponse = await this.createOrderByMercadoPago(pedido.id);
         return res.status(201).json({
-          message: 'Pedido creado exitosamente',
+          message: "Pedido creado exitosamente",
           data: {
             id: mpResponse.pedidoId,
-            init_point: mpResponse.init_point
-          }
+            init_point: mpResponse.init_point,
+          },
         });
       }
 
@@ -65,6 +43,11 @@ class PedidosController {
   async createOrderByMercadoPago(id) {
     try {
       const pedido = await pedidoService.getPrecioById(id);
+      const now = new Date();
+      const expirationDateTo = new Date(
+        now.getTime() + process.env.MP_EXPIRY_MINUTES * 60000
+      ).toISOString();
+
       const body = {
         items: [
           {
@@ -75,14 +58,19 @@ class PedidosController {
             unit_price: Number(pedido.precioTotal),
           },
         ],
-        notification_url: `${process.env.BASE_URL}/}/admin/pedido/webhooks/mercadopago`,
+        external_reference: String(pedido.id),
+
+        notification_url: `${process.env.BASE_URL}/api/mercadopago/webhooks`,
+
+        expires: true,
+        expiration_date_to: expirationDateTo,
       };
 
       const mpResponse = await mercadoPagoService.create(body);
 
       return {
         pedidoId: pedido.id,
-        init_point: mpResponse.init_point
+        init_point: mpResponse.init_point,
       };
     } catch (error) {
       throw new Error(
@@ -98,48 +86,6 @@ class PedidosController {
     } catch (error) {
       console.error("Error al obtener pedido:", error);
       throw error;
-    }
-  }
-
-  async webHooksMercadoPago(req, res) {
-    try {
-      const payment = req.query;
-      if (payment.type === "payment") {
-        const data = await mercadoPagoService.getById(payment["data.id"]);
-        let id = Number(data.additional_info.items[0].id);
-
-        if (!id) {
-          return;
-        }
-
-          await this.updateOrderByMp(id, "Rechazado");
-          io.emit('Pago rechazado', { message: 'Pago rechazado' });
-          return res.status(200).json({
-            message: "Pago rechazado y pedido cancelado",
-          });
-        }
-
-        await this.updateOrderByMp(id, "Pagado");
-        io.emit("Nuevo Pago", { message: "Pago exitoso" });
-        return res.status(200).json({
-          message: "Pago actualizado exitosamente",
-        });
-      }
-    } catch (error) {
-      return res.status(500).json({
-        message: error.message,
-      });
-    }
-  }
-
-  async updateOrderByMp(id, estado) {
-    try {
-      await PagoService.updateMp(id, estado);
-      return true;
-    } catch (error) {
-      throw new Error(
-        `Error al actualizar pedido con Mercado Pago: ${error.message}`
-      );
     }
   }
 
@@ -169,12 +115,6 @@ class PedidosController {
     try {
       const { id, estado } = req.body;
 
-      const estadosValidos = ["pendiente", "entregado", "cancelado"];
-
-      if (!estadosValidos.includes(estado)) {
-        throw new Error("Estado inválido");
-      }
-
       const pedidoActual = await pedidoService.getById(id);
 
       if (!pedidoActual) {
@@ -203,15 +143,9 @@ class PedidosController {
         data: pedido,
       });
     } catch (error) {
-      console.error("Error al actualizar estado:", error);
-      const status = error.message.includes("no encontrado")
-        ? 404
-        : error.message.includes("inválido") ||
-          error.message.includes("No se puede")
-        ? 400
-        : 500;
-      return res.status(status).json({
-        error: error.message,
+      return res.status(500).json({
+        suscess: false,
+        error: "Error al actualizar estado: " + error.message,
       });
     }
   }
@@ -226,15 +160,9 @@ class PedidosController {
         data: pedido,
       });
     } catch (error) {
-      console.error("Error al cancelar pedido:", error);
-      const status = error.message.includes("no encontrado")
-        ? 404
-        : error.message.includes("ya está") ||
-          error.message.includes("No se puede")
-        ? 400
-        : 500;
-      return res.status(status).json({
-        error: error.message,
+      return res.status(500).json({
+        suscess: false,
+        error: "Error al cancelar pedido: " + error.message,
       });
     }
   }

@@ -38,7 +38,7 @@ module.exports = (sequelize, DataTypes) => {
 
   DatosBancarios.associate = function(models) {
     DatosBancarios.hasMany(models.Pago, {
-      foreignKey: 'idDatosBancarios',
+      foreignKey: 'idMetodoDePago',
       as: 'pagos'
     });
   };
