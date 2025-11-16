@@ -3,7 +3,8 @@ const app = require('./app');
 const { testConnection } = require('./config/db');
 const http = require('http');
 const { Server } = require('socket.io');
-const initializeCronJobs = require('./middlewares/cron');
+const initializeCronJobs = require('./utils/cron');
+const { setSocketInstance } = require("./config/socket");
 
 const PORT = process.env.PORT;
 const FRONTEND_URL = process.env.FRONTEND_URL;
@@ -24,16 +25,23 @@ const startServer = async () => {
       transports: ['websocket', 'polling'],
     });
 
-    // Middleware para sockets
-    app.set('io', io);
+    setSocketInstance(io);
+
     io.on('connection', (socket) => {
       console.log('🟢 Cliente conectado:', socket.id);
-      socket.on('disconnect', () => console.log('🔴 Cliente desconectado:', socket.id));
+      socket.on('disconnect', (reason) => {
+        console.log('🔴 Cliente desconectado:', socket.id, reason);
+      });
+      // debug: escucha evento ping para verificar conexión desde front
+      socket.on('ping-server', (payload) => {
+        console.log('ping-server payload:', payload);
+        socket.emit('pong-server', { ok: true, now: Date.now() });
+      });
     });
 
     // Iniciar trabajos cron
     if (process.env.MERCADO_PAGO_ACCESS_TOKEN) {
-      initializeCronJobs();
+      initializeCronJobs(io);
     }
 
     server.listen(PORT, () => {

@@ -1,12 +1,13 @@
 const pedidoService = require("../services/pedidosService");
 const mercadoPagoService = require("../services/mercadoPagoService");
+const { getSocketInstance } = require("../config/socket");
 require("dotenv").config();
 
 class PedidosController {
   async CreateOrder(req, res) {
     try {
-      const io = req.app.get("io");
       const { cliente, productos, descripcion, metodoDePago } = req.body;
+      const io = getSocketInstance();
 
       const pedido = await pedidoService.Create({
         cliente,
@@ -15,7 +16,7 @@ class PedidosController {
         metodoDePago,
       });
 
-      io.emit("nuevoPedido", { message: "Nuevo pedido recibido" });
+      io.emit("nuevoPedido", { idPedido: pedido.id, message: "Nuevo pedido recibido" });
 
       if (metodoDePago === "Mercado Pago") {
         const mpResponse = await this.createOrderByMercadoPago(pedido.id);
@@ -27,11 +28,6 @@ class PedidosController {
           },
         });
       }
-
-      return res.status(201).json({
-        message: "Pedido creado exitosamente",
-        data: pedido,
-      });
     } catch (error) {
       console.error("Error al crear pedido:", error);
       return res.status(500).json({
