@@ -181,6 +181,43 @@ CREATE TABLE Admin (
     updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
+-- =======================
+-- TABLA: Horarios
+-- =======================
+CREATE TABLE Horario (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    horarioApertura TIME,
+    horarioCierre TIME,
+    estado TINYINT DEFAULT 0,
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- =======================
+-- TABLA: Dias
+-- =======================
+
+CREATE TABLE Dias (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    idHorario INT,
+    nombreDia VARCHAR(50),
+    estado TINYINT DEFAULT 0,
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_dia_horario FOREIGN KEY (idHorario) REFERENCES Horario(id)
+);
+-- =======================
+-- TABLA: Local
+-- =======================
+CREATE TABLE Local (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    idDia INT,
+    direccion VARCHAR(255),
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_local_dia FOREIGN KEY (idDia) REFERENCES Dias(id)
+);
+
 
 INSERT INTO `admin` (`id`, `nombre`, `password`, `createdAt`, `updatedAt`) VALUES (NULL, 'admin', '$2a$12$UxAIzdbWGJq9sctMi7942uTnYzRhMJg1VV65/L2VQdQ0w9vKhKana', current_timestamp(), current_timestamp());
 
@@ -190,3 +227,13 @@ INSERT INTO `DatosBancarios` (`cuit`, `alias`, `cbu`, `apellido`, `nombre`, `pas
 INSERT INTO `MetodosDePago` (`nombre`, `createdAt`, `updatedAt`) VALUES ('Efectivo', current_timestamp(), current_timestamp());
 INSERT INTO `MetodosDePago` (`nombre`, `createdAt`, `updatedAt`) VALUES ('Trasferencia', current_timestamp(), current_timestamp());
 INSERT INTO `MetodosDePago` (`nombre`, `createdAt`, `updatedAt`) VALUES ('Mercado Pago', current_timestamp(), current_timestamp());
+
+INSERT INTO Dias (idHorario, nombreDia, estado)
+VALUES
+  (NULL, 'Lunes', 0),
+  (NULL, 'Martes', 0),
+  (NULL, 'Miércoles', 0),
+  (NULL, 'Jueves', 0),
+  (NULL, 'Viernes', 0),
+  (NULL, 'Sábado', 0),
+  (NULL, 'Domingo', 0);
