@@ -21,7 +21,7 @@ router.get('/', pedidosController.getOrders);
 router.patch('/estado', authAdmin, [
   body('id').isInt({ min: 1 }).withMessage('ID debe ser válido'),
   body('estado').notEmpty().withMessage('estado es requerido')
-    .isIn(['pendiente', 'entregado', 'cancelado'])
+    .isIn(['pendiente', 'entregado', 'enviado','cancelado'])
     .withMessage('Estado inválido')
 ], validateRequest, pedidosController.updateStatus);
 
