@@ -72,6 +72,9 @@ CREATE TABLE Clientes (
     updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
+-- =======================
+-- TABLA: Envios
+-- =======================
 CREATE TABLE Envios (
     id INT AUTO_INCREMENT PRIMARY KEY,
     precio DECIMAL(10,2) DEFAULT 0,
