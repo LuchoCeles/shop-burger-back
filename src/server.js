@@ -25,7 +25,7 @@ const startServer = async () => {
       transports: ['websocket', 'polling'],
     });
 
-    setSocketInstance();
+    setSocketInstance(io);
 
     io.on('connection', (socket) => {
       console.log('🟢 Cliente conectado:', socket.id);
@@ -41,7 +41,7 @@ const startServer = async () => {
 
     // Iniciar trabajos cron
     if (process.env.MERCADO_PAGO_ACCESS_TOKEN) {
-      initializeCronJobs(io);
+      initializeCronJobs();
     }
 
     server.listen(PORT, () => {
