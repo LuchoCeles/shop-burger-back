@@ -72,18 +72,30 @@ CREATE TABLE Clientes (
     updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
+CREATE TABLE Envios (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    precio DECIMAL(10,2) DEFAULT 0,
+    estado VARCHAR(50) DEFAULT 'pendiente',
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+);
+
+
 -- =======================
 -- TABLA: Pedidos
 -- =======================
 CREATE TABLE Pedidos (
     id INT AUTO_INCREMENT PRIMARY KEY,
     idCliente INT,
+    idEnvio INT,
     precioTotal DECIMAL(10,2) DEFAULT 0,
     descripcion TEXT,
     estado VARCHAR(50) DEFAULT 'pendiente',
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    CONSTRAINT fk_pedido_cliente FOREIGN KEY (idCliente) REFERENCES Clientes(id)
+    CONSTRAINT fk_pedido_cliente FOREIGN KEY (idCliente) REFERENCES Clientes(id),
+    CONSTRAINT fk_pedido_envio FOREIGN KEY (idEnvio) REFERENCES Envios(id)
+
 );
 
 -- =======================
