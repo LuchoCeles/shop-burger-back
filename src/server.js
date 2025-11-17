@@ -25,7 +25,7 @@ const startServer = async () => {
       transports: ['websocket', 'polling'],
     });
 
-    setSocketInstance(io);
+    setSocketInstance();
 
     io.on('connection', (socket) => {
       console.log('🟢 Cliente conectado:', socket.id);

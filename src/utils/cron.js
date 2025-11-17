@@ -2,9 +2,11 @@ const cron = require('node-cron');
 const pedidosService = require('../services/pedidosService');
 const metodosDePagoService = require('../services/metodosDePagoService');
 const pagosService = require('../services/pagosService');
+const { getSocketInstance } = require('../config/socket');
 require('dotenv').config();
 
-const initializeCronJobs = (io) => {
+const initializeCronJobs = () => {
+  const io = getSocketInstance();
   cron.schedule('*/5 * * * *', async () => {
     try {
       console.log(`[CRON JOB] Limpieza de pagos pendientes... (${new Date().toLocaleString()})`);
