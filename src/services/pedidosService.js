@@ -100,9 +100,9 @@ class PedidosService {
                 precio: item.producto.precio,
                 cantidad: item.cantidad,
                 adicionales,
-                categoria: {
-                  id: item.producto.categoria.id,
-                  nombre: item.producto.categoria.nombre,
+                categoria :{
+                  id: item.producto.Categoria.id,
+                  nombre: item.producto.Categoria.nombre
                 },
               };
             })
