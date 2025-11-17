@@ -163,6 +163,13 @@ class PedidosService {
 
       await pedido.update({ estado: nuevoEstado });
 
+      if(nuevoEstado === "entregado"){
+        const pago = await Pago.findOne({where:{idPedido:id}});
+        if (pago){
+          await pago.update({estado:"pagado"});
+        }
+      }
+
       const rsp = await Pedido.findByPk(id, {
         include: [
           { model: Cliente, as: "cliente" },
