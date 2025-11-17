@@ -41,7 +41,7 @@ module.exports = (sequelize, DataTypes) => {
     });
     Pago.belongsTo(models.MetodosDePago, {
       foreignKey: 'idMetodoDePago',
-      as: 'metodosDePago',
+      as: 'MetodosDePago',
     });
   };
 

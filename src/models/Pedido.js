@@ -1,6 +1,6 @@
 module.exports = (sequelize, DataTypes) => {
   const Pedido = sequelize.define(
-    "Pedido",
+    "Pedido", 
     {
       id: {
         type: DataTypes.INTEGER,
@@ -50,12 +50,11 @@ module.exports = (sequelize, DataTypes) => {
       foreignKey: "idCliente",
       as: "cliente",
     });
-    Pedido.associate= (models)=>{
-        Pedido.belongsTo(models.Envio,{
-          foreignKey :"idEnvio",
-          as:"envio"
-        });
-    };
+
+    Pedido.belongsTo(models.Envio, {
+      foreignKey: "idEnvio",
+      as: "envio",
+    });
 
     Pedido.hasMany(models.ProductosXPedido, {
       foreignKey: "idPedido",

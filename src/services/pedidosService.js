@@ -8,6 +8,7 @@ const {
   AdicionalesXProductosXPedidos,
   MetodosDePago,
   Categoria,
+  Envio,
 } = require("../models");
 const { sequelize } = require("../config/db");
 
@@ -36,13 +37,18 @@ class PedidosService {
             attributes: ["id", "telefono", "direccion"],
           },
           {
+            model : Envio,
+            as :"envio",
+            attributes:["precio"]
+          },
+          {
             model: Pago,
             as: "pago",
             attributes: ["id", "estado"],
             include: [
               {
                 model: MetodosDePago,
-                as: "metodosDePago",
+                as: "MetodosDePago",
                 attributes: ["id", "nombre"],
               },
             ],
@@ -101,8 +107,8 @@ class PedidosService {
                 cantidad: item.cantidad,
                 adicionales,
                 categoria :{
-                  id: item.producto.Categoria.id,
-                  nombre: item.producto.Categoria.nombre
+                  id: item.producto.categoria.id,
+                  nombre: item.producto.categoria.nombre
                 },
               };
             })
@@ -114,11 +120,14 @@ class PedidosService {
             precioTotal: pedido.precioTotal,
             descripcion: pedido.descripcion,
             cliente: pedido.cliente,
+            envio: pedido.envio? {
+              precio: pedido.envio.precio
+            } : null ,
             Pago: pedido.pago
               ? {
                   id: pedido.pago.id,
                   estado: pedido.pago.estado,
-                  metodoDePago: pedido.pago.metodoDePago,
+                  metodoDePago: pedido.pago.MetodosDePago.nombre ,
                 }
               : null,
             productos,

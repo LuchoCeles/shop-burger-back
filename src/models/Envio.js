@@ -20,7 +20,7 @@ module.exports = (sequelize, DataTypes) => {
 
   Envio.associate = (models) =>{
     Envio.hasMany(models.Pedido,{
-        foreingnKey: "idEnvio",
+        foreignKey: "idEnvio",
         as:"pedidos"
     });
   };
