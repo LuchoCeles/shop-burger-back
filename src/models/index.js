@@ -16,6 +16,9 @@ const AdicionalesXProducto = require('./AdicionalesXProducto');
 const AdicionalesXProductosXPedidos = require('./AdicionalesXProductosXPedidos');
 const MetodosDePago = require('./MetodosDePago');
 const Envio = require('./Envio');
+const Horario = require('./Horario');
+const Dias = require("./Dias");
+
 
 // Inicializar modelos
 const models = {
@@ -32,7 +35,9 @@ const models = {
   AdicionalesXProducto: AdicionalesXProducto(sequelize, DataTypes),
   AdicionalesXProductosXPedidos: AdicionalesXProductosXPedidos(sequelize, DataTypes),
   MetodosDePago: MetodosDePago(sequelize, DataTypes),
-  Envio: Envio(sequelize, DataTypes)
+  Envio: Envio(sequelize, DataTypes),
+  Horario: Horario(sequelize, DataTypes),
+  Dias: Dias(sequelize, DataTypes)
 };
 
 // Definir relaciones

@@ -7,7 +7,15 @@ module.exports = (sequelize, DataTypes) => {
         primaryKey: true,
         autoIncrement: true,
       },
-      horarioApertuda: {
+      idLocal: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: {
+        model: 'Local',
+        key: 'id'
+      }
+    },
+      horarioApertura: {
         type: DataTypes.TIME,
         allowNull: false,
       },
@@ -21,10 +29,21 @@ module.exports = (sequelize, DataTypes) => {
       },
     },
     {
-      tableName: "Horario",
+      tableName: "horario",
       timestamps: true,
     }
   );
+
+
+  Horario.associate = function(models) {
+  Horario.belongsTo(models.Local, { foreignKey: 'idLocal' });
+  Horario.belongsToMany(models.Dias, {
+    through: 'horarioDias', 
+    foreignKey: 'idHorario',
+    otherKey: 'idDia',
+    as: 'dias'
+  });
+};
 
   return Horario;
 };

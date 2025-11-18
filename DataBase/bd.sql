@@ -182,41 +182,52 @@ CREATE TABLE Admin (
 );
 
 -- =======================
--- TABLA: Horarios
--- =======================
-CREATE TABLE Horario (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    horarioApertura TIME,
-    horarioCierre TIME,
-    estado TINYINT DEFAULT 0,
-    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
-
--- =======================
 -- TABLA: Dias
 -- =======================
 
 CREATE TABLE Dias (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    idHorario INT,
-    nombreDia VARCHAR(50),
-    estado TINYINT DEFAULT 0,
+    nombreDia VARCHAR(20) NOT NULL,
+    estado TINYINT(1) DEFAULT 1
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    CONSTRAINT fk_dia_horario FOREIGN KEY (idHorario) REFERENCES Horario(id)
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
+
 -- =======================
 -- TABLA: Local
 -- =======================
 CREATE TABLE Local (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    idDia INT,
-    direccion VARCHAR(255),
+    direccion VARCHAR(255) NOT NULL,
+    estado TINYINT(1) DEFAULT 1,
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- =======================
+-- TABLA: Horarios
+-- =======================
+CREATE TABLE horario (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    idLocal INT ,
+    horarioApertura TIME NOT NULL,
+    horarioCierre TIME NOT NULL,
+    estado TINYINT(1) DEFAULT 1,
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    CONSTRAINT fk_local_dia FOREIGN KEY (idDia) REFERENCES Dias(id)
+    CONSTRAINT fk_horario_local FOREIGN KEY (idLocal) REFERENCES Local(id)
 );
+
+CREATE TABLE horario_dias (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    idHorario INT,
+    idDia INT,
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_HD_horario FOREIGN KEY (idHorario) REFERENCES Horario(id),
+    CONSTRAINT fk_HD_dia FOREIGN KEY (idDia) REFERENCES Dias(id)
+);
+
 
 
 INSERT INTO `admin` (`id`, `nombre`, `password`, `createdAt`, `updatedAt`) VALUES (NULL, 'admin', '$2a$12$UxAIzdbWGJq9sctMi7942uTnYzRhMJg1VV65/L2VQdQ0w9vKhKana', current_timestamp(), current_timestamp());
