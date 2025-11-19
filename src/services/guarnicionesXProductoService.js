@@ -1,4 +1,4 @@
-const { Guarniciones, Producto, GuarnicionesXProducto } = require("../models");
+const {GuarnicionesXProducto } = require("../models");
 
 class GuarnicionesXProductoService {
  

@@ -3,16 +3,43 @@ const cloudinaryService = require("./cloudinaryService");
 const { sequelize } = require("../config/db");
 
 class ProductosService {
-  async getProducts(soloActivos = true) {
+ async getProducts(soloActivos = true) {
     const whereClause = soloActivos ? 1 : 0;
     const productos = await sequelize.query("CALL getProducts(:estado)", {
       replacements: { estado: whereClause },
     });
+  
+    const productosParseados = productos.map((p) => {
+      const parseJsonField = (field) => {
+        if (field && typeof field === 'string') {
+          try {
+            return JSON.parse(field);
+          } catch (e) {
+            console.error('Error al parsear campo JSON de primer nivel:', e);
+            return [];
+          }
+        }
+        return [];
+      };
+      const adicionales = parseJsonField(p.adicionales);
+      let guarniciones = parseJsonField(p.guarniciones);
 
-    const productosParseados = productos.map((p) => ({
-      ...p,
-      adicionales: JSON.parse(p.adicionales),
-    }));
+      if (Array.isArray(guarniciones)) {
+        guarniciones = guarniciones.map(guarnicion => {
+          const parsedTam = parseJsonField(guarnicion.tam); 
+          return {
+            ...guarnicion,
+            tam: parsedTam 
+          };
+        });
+      }
+    
+      return {
+        ...p,
+        adicionales: adicionales,
+        guarniciones: guarniciones
+      };
+    });
 
     return productosParseados;
   }
