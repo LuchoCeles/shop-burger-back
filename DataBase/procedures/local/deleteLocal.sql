@@ -1,9 +1,0 @@
-
-DROP PROCEDURE IF EXISTS deleteLocal;
-
-DELIMITER //
-CREATE PROCEDURE deleteLocal(IN p_id INT)
-BEGIN
-    DELETE FROM Local WHERE id = p_id;
-END //
-DELIMITER ;
