@@ -12,6 +12,7 @@ class ProductosService {
     const productosParseados = productos.map((p) => ({
       ...p,
       adicionales: JSON.parse(p.adicionales),
+      categoria: JSON.parse(p.categoria),
     }));
 
     return productosParseados;
