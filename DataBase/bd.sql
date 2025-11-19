@@ -29,18 +29,15 @@ CREATE TABLE Productos (
     url_imagen VARCHAR(500),
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    CONSTRAINT fk_producto_categoria FOREIGN KEY (idCategoria) REFERENCES Categorias(id),
-    CONSTRAINT fk_producto_gXp FOREIGN KEY (idGuarnicionesXProducto) REFERENCES GuarnicionesXProducto(id)
-);
+    CONSTRAINT fk_producto_categoria FOREIGN KEY (idCategoria) REFERENCES Categorias(id)
+    );
 -- =======================
 -- TABLA: Guarnicion
 -- =======================
-    CREATE TABLE Guarnicion (
+    CREATE TABLE Guarniciones (
         id INT AUTO_INCREMENT PRIMARY KEY,
         idTama INT,
         nombre VARCHAR(150),
-        precio DECIMAL(10,2),
-        stock INT DEFAULT 0,
         createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
         CONSTRAINT fk_guarnicion_tam FOREIGN KEY (idTama) REFERENCES Tam(id)
@@ -61,10 +58,15 @@ CREATE TABLE Productos (
 -- =======================
 CREATE TABLE GuarnicionesXProducto (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    idGuarnicion INT,
+    idProducto INT ,  
+    idGuarnicion INT , 
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    CONSTRAINT fk_gXp_guarnicion FOREIGN KEY (idGuarnicion) REFERENCES guarnicion(id)
+    
+    CONSTRAINT fk_gxp_producto FOREIGN KEY (idProducto) REFERENCES Productos(id),
+    CONSTRAINT fk_gxp_guarnicion FOREIGN KEY (idGuarnicion) REFERENCES Guarniciones(id),
+
+    UNIQUE KEY uq_producto_guarnicion (idProducto, idGuarnicion)
 );
 
 
@@ -263,18 +265,6 @@ CREATE TABLE horarioDias (
     CONSTRAINT fk_HD_horario FOREIGN KEY (idHorario) REFERENCES Horario(id),
     CONSTRAINT fk_HD_dia FOREIGN KEY (idDia) REFERENCES Dias(id)
 );
-
--- ==========ALTER TABLE PRODUCTOS ==========
-ALTER TABLE Productos
-ADD COLUMN idGuarnicionesXProducto INT NULL DEFAULT NULL AFTER idCategoria;
-
-ALTER TABLE Productos
-    ADD CONSTRAINT fk_producto_gXp 
-    FOREIGN KEY (idGuarnicionesXProducto) REFERENCES GuarnicionesXProducto(id)
-    ON DELETE SET NULL 
-ON UPDATE CASCADE;
-
---==========================================
 
 
 INSERT INTO `admin` (`id`, `nombre`, `password`, `createdAt`, `updatedAt`) VALUES (NULL, 'admin', '$2a$12$UxAIzdbWGJq9sctMi7942uTnYzRhMJg1VV65/L2VQdQ0w9vKhKana', current_timestamp(), current_timestamp());
