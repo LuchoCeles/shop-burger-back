@@ -1,3 +1,4 @@
+
 module.exports = (sequelize, DataTypes) => {
   const Guarniciones = sequelize.define('Guarniciones', {
         id: {
@@ -19,8 +20,10 @@ module.exports = (sequelize, DataTypes) => {
   });
 
   Guarniciones.associate = function(models) {
-    Guarniciones.belongsTo(models.Tam, {
-      foreignKey: 'idTama',
+    Guarniciones.belongsToMany(models.Tam, {
+      through : models.TamXGuarnicion,
+      foreignKey: 'idGuarnicion',
+      otherKey: 'idTam',
       as: 'tam',
     });
 

@@ -1,4 +1,4 @@
-const { Guarniciones, Tam } = require("../models");
+const { Guarniciones, Tam, TamXGuarnicion } = require("../models");
 
 class GuarnicionesService {
   async getAll() {
@@ -10,8 +10,12 @@ class GuarnicionesService {
             model: Tam,
             as : "tam",
             attributes : ["id","nombre","estado"],
+            through :{
+              attributes:[]
+            }
           },
         ],
+        where: [guarnicion.id],
         order: [["id", "DESC"]],
       });
       return guarniciones;
@@ -20,39 +24,53 @@ class GuarnicionesService {
     }
   }
 
-  async createGuarnicion(data) {
+ async createGuarnicion(data) {
     try {
-      const guarnicion = await Guarniciones.create(data);
-      return guarnicion;
+      const { nombre, tamId } = data;
+
+      const nuevaGuarnicion = await Guarniciones.create({ nombre });
+
+      const asociacionesParaCrear = tamId.map(tamId => {
+        return {
+          idGuarnicion: nuevaGuarnicion.id,
+          idTam: tamId,
+        };
+      });
+
+      await TamXGuarnicion.bulkCreate(asociacionesParaCrear);
+
+      const guarnicionCompleta = await Guarniciones.findByPk(nuevaGuarnicion.id, {
+        include: {
+          model: Tam,
+          as: 'tam',
+          through: { attributes: [] }
+        }
+      });
+      
+      return guarnicionCompleta;
+
     } catch (error) {
-      throw new Error(`ERROR al crear guarnicion ${error.message}`);
+      throw new Error(`ERROR al crear guarnicion: ${error.message}`);
     }
   }
-
   async update(id, data) {
     try {
       const guarnicion = await Guarniciones.findByPk(id);
-
-      if (!guarnicion) {
-        throw new Error(`No se encontro la GUARNICION`);
-      }
-
       await guarnicion.update(data);
-
       return guarnicion;
     } catch (error) {
       throw new Error(`Error al mosificar guarnicion ${error.message}`);
     }
   }
 
-  async delete(id) {
+  async updateEstado(id) {
     try {
       const guarnicion = await Guarniciones.findByPk(id);
-      if (!guarnicion) {
-        throw new Error(`Guarncion no encontrada`);
-      }
-      await guarnicion.destroy();
-      return;
+      guarnicion.estado = guarnicion.estado === 1 ? 0 : 1;
+
+      await guarnicion.save();
+
+      return guarnicion;
     } catch (error) {
       throw new Error(`Error al eliminar guarnicion ${error.message}`);
     }

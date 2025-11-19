@@ -31,17 +31,14 @@ CREATE TABLE Productos (
     updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT fk_producto_categoria FOREIGN KEY (idCategoria) REFERENCES Categorias(id)
     );
--- =======================
--- TABLA: Guarnicion
--- =======================
-    CREATE TABLE Guarniciones (
+
+    CREATE TABLE Guarniciones(
         id INT AUTO_INCREMENT PRIMARY KEY,
-        idTama INT,
-        nombre VARCHAR(150),
+        nombre VARCHAR(25) NOT NULL,
         createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        CONSTRAINT fk_guarnicion_tam FOREIGN KEY (idTama) REFERENCES Tam(id)
     );
+
 -- =======================
 -- TABLA: Tam
 -- =======================
@@ -51,6 +48,22 @@ CREATE TABLE Productos (
         estado TINYINT DEFAULT 0,
         createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    );
+
+-- =======================
+-- TABLA: TamXGuarnicion
+-- =======================
+    CREATE TABLE TamXGuarnicion (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        idTam INT ,  
+        idGuarnicion INT , 
+        createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        
+        CONSTRAINT fk_txg_tam FOREIGN KEY (idTam) REFERENCES Tam(id),
+        CONSTRAINT fk_txg_guar FOREIGN KEY (idGuarnicion) REFERENCES Guarniciones(id),
+
+        UNIQUE KEY uq_guar_tam (idGuarnicion, idTam)
     );
 
 -- =======================

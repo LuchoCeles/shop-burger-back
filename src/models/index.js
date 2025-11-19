@@ -20,8 +20,9 @@ const Horario = require('./Horario');
 const Dias = require("./Dias");
 const HorarioDias = require('./horarioDias');
 const Guarniciones = require('./Guarniciones');
-const GuarnicionesXProducto = require('./GuarnicionesXProducto');
 const Tam = require('./Tam');
+const TamXGuarnicion = require('./TamXGuarnicion');
+const GuarnicionesXProducto = require('./GuarnicionesXProducto');
 
 
 
@@ -45,8 +46,9 @@ const models = {
   Dias: Dias(sequelize, DataTypes),
   HorarioDias: HorarioDias(sequelize, DataTypes),
   Guarniciones: Guarniciones(sequelize, DataTypes),
-  GuarnicionesXProducto: GuarnicionesXProducto(sequelize, DataTypes),
-  Tam: Tam(sequelize, DataTypes)
+  Tam: Tam(sequelize, DataTypes),
+  TamXGuarnicion: TamXGuarnicion(sequelize, DataTypes),
+  GuarnicionesXProducto: GuarnicionesXProducto(sequelize, DataTypes)
 };
 
 // Definir relaciones
