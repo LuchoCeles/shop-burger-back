@@ -19,7 +19,6 @@ CREATE TABLE Categorias (
 CREATE TABLE Productos (
     id INT AUTO_INCREMENT PRIMARY KEY,
     idCategoria INT,
-    idGuarnicionesXProducto INT,
     nombre VARCHAR(150) NOT NULL,
     descripcion TEXT,
     stock INT DEFAULT 0,
@@ -54,7 +53,7 @@ CREATE TABLE Productos (
         nombre VARCHAR(25),
         estado TINYINT DEFAULT 0,
         createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
     );
 
 -- =======================
@@ -65,7 +64,7 @@ CREATE TABLE GuarnicionesXProducto (
     idGuarnicion INT,
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    CONSTRAINT fk_gXp_guarnicion FOREIGN KEY (idGuarnicion) REFERENCES guarnicion(id),
+    CONSTRAINT fk_gXp_guarnicion FOREIGN KEY (idGuarnicion) REFERENCES guarnicion(id)
 );
 
 
@@ -265,6 +264,17 @@ CREATE TABLE horarioDias (
     CONSTRAINT fk_HD_dia FOREIGN KEY (idDia) REFERENCES Dias(id)
 );
 
+-- ==========ALTER TABLE PRODUCTOS ==========
+ALTER TABLE Productos
+ADD COLUMN idGuarnicionesXProducto INT NULL DEFAULT NULL AFTER idCategoria;
+
+ALTER TABLE Productos
+    ADD CONSTRAINT fk_producto_gXp 
+    FOREIGN KEY (idGuarnicionesXProducto) REFERENCES GuarnicionesXProducto(id)
+    ON DELETE SET NULL 
+ON UPDATE CASCADE;
+
+--==========================================
 
 
 INSERT INTO `admin` (`id`, `nombre`, `password`, `createdAt`, `updatedAt`) VALUES (NULL, 'admin', '$2a$12$UxAIzdbWGJq9sctMi7942uTnYzRhMJg1VV65/L2VQdQ0w9vKhKana', current_timestamp(), current_timestamp());
@@ -285,3 +295,10 @@ VALUES
   (NULL, 'Viernes', 0),
   (NULL, 'Sábado', 0),
   (NULL, 'Domingo', 0);
+
+
+INSERT INTO Tam (nombre,estado)
+VALUES
+("Chico",0),
+("Mediano",0),
+("Grande",0);
