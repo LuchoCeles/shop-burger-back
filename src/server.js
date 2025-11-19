@@ -41,7 +41,7 @@ const startServer = async () => {
 
     // Iniciar trabajos cron
     if (process.env.MERCADO_PAGO_ACCESS_TOKEN) {
-      initializeCronJobs(io);
+      initializeCronJobs();
     }
 
     server.listen(PORT, () => {

@@ -2,10 +2,12 @@ const cron = require('node-cron');
 const pedidosService = require('../services/pedidosService');
 const metodosDePagoService = require('../services/metodosDePagoService');
 const pagosService = require('../services/pagosService');
+const { getSocketInstance } = require('../config/socket');
 require('dotenv').config();
 
-const initializeCronJobs = (io) => {
-  cron.schedule('*/5 * * * *', async () => {
+const initializeCronJobs = () => {
+  const io = getSocketInstance();
+  cron.schedule('*/1 * * * *', async () => {
     try {
       console.log(`[CRON JOB] Limpieza de pagos pendientes... (${new Date().toLocaleString()})`);
 
@@ -27,7 +29,7 @@ const initializeCronJobs = (io) => {
         pagosExpirados.map(async (pago) => {
           const pedidoId = pago.idPedido;
           const pedido = await pedidosService.getById(pedidoId);
-          if (!pedido || pedido.estado !== "Pendiente") return;
+          if (!pedido || pedido.estado !== "pendiente") return;
 
           console.log(`[CRON JOB] Cancelando pedido ID ${pedidoId} por pago expirado...`);
 
