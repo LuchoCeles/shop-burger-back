@@ -11,6 +11,7 @@ const horariosRoute = require('./horariosRoutes');
 const localRoute = require('./localRoutes');
 const horarioDiasRoutes = require('./horarioDiasRoutes');
 const guarnicionRoutes = require('./guarnicionesRoutes');
+const guarnicionesXProductoRoutes = require('./guarnicionesXProductoRoutes');
 
 const router = express.Router();
 
@@ -26,5 +27,6 @@ router.use('/api/horarios',horariosRoute);
 router.use('/api/local',localRoute);
 router.use('/api/horarioDias',horarioDiasRoutes);
 router.use('/api/guarniciones',guarnicionRoutes);
+router.use('/api/guarnicionesxproducto',guarnicionesXProductoRoutes);
 
 module.exports = router;
