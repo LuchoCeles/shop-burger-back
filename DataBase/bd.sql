@@ -218,7 +218,7 @@ CREATE TABLE horario (
     CONSTRAINT fk_horario_local FOREIGN KEY (idLocal) REFERENCES Local(id)
 );
 
-CREATE TABLE horario_dias (
+CREATE TABLE horarioDias (
     id INT AUTO_INCREMENT PRIMARY KEY,
     idHorario INT,
     idDia INT,
