@@ -19,6 +19,7 @@ CREATE TABLE Categorias (
 CREATE TABLE Productos (
     id INT AUTO_INCREMENT PRIMARY KEY,
     idCategoria INT,
+    idGuarnicionesXProducto INT,
     nombre VARCHAR(150) NOT NULL,
     descripcion TEXT,
     stock INT DEFAULT 0,
@@ -29,8 +30,44 @@ CREATE TABLE Productos (
     url_imagen VARCHAR(500),
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    CONSTRAINT fk_producto_categoria FOREIGN KEY (idCategoria) REFERENCES Categorias(id)
+    CONSTRAINT fk_producto_categoria FOREIGN KEY (idCategoria) REFERENCES Categorias(id),
+    CONSTRAINT fk_producto_gXp FOREIGN KEY (idGuarnicionesXProducto) REFERENCES GuarnicionesXProducto(id)
 );
+-- =======================
+-- TABLA: Guarnicion
+-- =======================
+    CREATE TABLE Guarnicion (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        idTama INT,
+        nombre VARCHAR(150),
+        precio DECIMAL(10,2),
+        stock INT DEFAULT 0,
+        createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        CONSTRAINT fk_guarnicion_tam FOREIGN KEY (idTama) REFERENCES Tam(id)
+    );
+-- =======================
+-- TABLA: Tam
+-- =======================
+    CREATE TABLE Tam (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        nombre VARCHAR(25),
+        estado TINYINT DEFAULT 0,
+        createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    );
+
+-- =======================
+-- TABLA: GuarnicionesXProducto
+-- =======================
+CREATE TABLE GuarnicionesXProducto (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    idGuarnicion INT,
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_gXp_guarnicion FOREIGN KEY (idGuarnicion) REFERENCES guarnicion(id),
+);
+
 
 -- =======================
 -- TABLA: Adicionales
