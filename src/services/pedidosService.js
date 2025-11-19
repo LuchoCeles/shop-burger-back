@@ -127,7 +127,7 @@ class PedidosService {
               ? {
                   id: pedido.pago.id,
                   estado: pedido.pago.estado,
-                  metodoDePago: pedido.pago.MetodosDePago.nombre ,
+                  metodoDePago: pedido.pago.MetodosDePago.nombre,
                 }
               : null,
             productos,
