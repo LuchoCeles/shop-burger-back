@@ -7,6 +7,8 @@ const {
   Adicionales,
   AdicionalesXProductosXPedidos,
   MetodosDePago,
+  Categoria,
+  Envio,
 } = require("../models");
 const { sequelize } = require("../config/db");
 
@@ -35,13 +37,18 @@ class PedidosService {
             attributes: ["id", "telefono", "direccion"],
           },
           {
+            model : Envio,
+            as :"envio",
+            attributes:["precio"]
+          },
+          {
             model: Pago,
             as: "pago",
             attributes: ["id", "estado"],
             include: [
               {
                 model: MetodosDePago,
-                as: "metodosDePago",
+                as: "MetodosDePago",
                 attributes: ["id", "nombre"],
               },
             ],
@@ -60,6 +67,13 @@ class PedidosService {
                 model: Producto,
                 as: "producto",
                 attributes: ["id", "nombre", "precio"],
+                include: [
+                  {
+                    model: Categoria,
+                    as: "categoria",
+                    attributes: ["id", "nombre"],
+                  },
+                ],
               },
             ],
           });
@@ -92,6 +106,10 @@ class PedidosService {
                 precio: item.producto.precio,
                 cantidad: item.cantidad,
                 adicionales,
+                categoria :{
+                  id: item.producto.categoria.id,
+                  nombre: item.producto.categoria.nombre
+                },
               };
             })
           );
@@ -102,12 +120,15 @@ class PedidosService {
             precioTotal: pedido.precioTotal,
             descripcion: pedido.descripcion,
             cliente: pedido.cliente,
+            envio: pedido.envio? {
+              precio: pedido.envio.precio
+            } : null ,
             Pago: pedido.pago
               ? {
-                id: pedido.pago.id,
-                estado: pedido.pago.estado,
-                metodoDePago: pedido.pago.metodoDePago,
-              }
+                  id: pedido.pago.id,
+                  estado: pedido.pago.estado,
+                  metodoDePago: pedido.pago.MetodosDePago.nombre,
+                }
               : null,
             productos,
           };
@@ -142,6 +163,13 @@ class PedidosService {
 
       await pedido.update({ estado: nuevoEstado });
 
+      if(nuevoEstado === "entregado"){
+        const pago = await Pago.findOne({where:{idPedido:id}});
+        if (pago){
+          await pago.update({estado:"pagado"});
+        }
+      }
+
       const rsp = await Pedido.findByPk(id, {
         include: [
           { model: Cliente, as: "cliente" },
@@ -154,37 +182,47 @@ class PedidosService {
       throw new Error(`Error al actualizar estado: ${error.message}`);
     }
   }
-  
+
   async cancel(id) {
     const transaction = await sequelize.transaction();
 
     try {
       const pedido = await Pedido.findByPk(id, {
-        include: [{
-          model: ProductosXPedido,
-          as: "productosxpedido",
-          include: [
-            { model: Producto, as: "producto" },
-            {
-              model: AdicionalesXProductosXPedidos,
-              as: "AxPxP",
-              include: [{
-                model: Adicionales,
-                as: "adicional"
-              }]
-            }
-          ]
-        }],
-        transaction
+        include: [
+          {
+            model: ProductosXPedido,
+            as: "productosxpedido",
+            include: [
+              { model: Producto, as: "producto" },
+              {
+                model: AdicionalesXProductosXPedidos,
+                as: "AxPxP",
+                include: [
+                  {
+                    model: Adicionales,
+                    as: "adicional",
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+        transaction,
       });
 
-      if (!pedido) { throw new Error("Pedido no encontrado"); }
+      if (!pedido) {
+        throw new Error("Pedido no encontrado");
+      }
       if (pedido.estado === "cancelado") {
         await transaction.rollback();
-        console.log(`Intento de cancelar pedido ${id} que ya estaba cancelado.`);
+        console.log(
+          `Intento de cancelar pedido ${id} que ya estaba cancelado.`
+        );
         return pedido;
       }
-      if (pedido.estado === "entregado") { throw new Error("No se puede cancelar un pedido entregado"); }
+      if (pedido.estado === "entregado") {
+        throw new Error("No se puede cancelar un pedido entregado");
+      }
 
       // Devolvemos el stock
       for (const productoXPedido of pedido.productosxpedido) {
@@ -208,10 +246,11 @@ class PedidosService {
       await pedido.update({ estado: "cancelado" }, { transaction });
 
       await transaction.commit();
-
     } catch (error) {
       await transaction.rollback();
-      throw new Error(`Error durante la transacción de cancelación: ${error.message}`);
+      throw new Error(
+        `Error durante la transacción de cancelación: ${error.message}`
+      );
     }
 
     try {
@@ -220,7 +259,7 @@ class PedidosService {
       return pedidoActualizado;
     } catch (readError) {
       // Devolvemos un objeto simple para indicar que la cancelación tuvo éxito aunque no pudimos devolver el objeto completo.
-      return { id: id, estado: 'cancelado', errorAlReleer: true };
+      return { id: id, estado: "cancelado", errorAlReleer: true };
     }
   }
 

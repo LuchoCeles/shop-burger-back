@@ -1,13 +1,13 @@
 module.exports = (sequelize, DataTypes) => {
-  const Local = sequelize.define(
-    "Local",
+  const Dias = sequelize.define(
+    "Dias",
     {
       id: {
         type: DataTypes.INTEGER,
         primaryKey: true,
         autoIncrement: true,
       },
-      direccion: {
+      nombreDia: {
         type: DataTypes.STRING,
         allowNull: false,
       },
@@ -17,17 +17,19 @@ module.exports = (sequelize, DataTypes) => {
       },
     },
     {
-      tableName: "Local",
+      tableName: "dias",
       timestamps: true,
     }
   );
 
-  Local.associate = function (models) {
-    Local.hasMany(models.Horario, {
-      foreignKey: "idLocal",
-      as: "horarios", 
-    });
-  };
+Dias.associate = function(models) {
+  Dias.belongsToMany(models.Horario, {
+    through: 'horarioDias',
+    foreignKey: 'idDia',
+    otherKey: 'idHorario',
+    as: 'horarios'
+  });
+};
 
-  return Local;
+  return Dias;
 };

@@ -19,6 +19,7 @@ CREATE TABLE Categorias (
 CREATE TABLE Productos (
     id INT AUTO_INCREMENT PRIMARY KEY,
     idCategoria INT,
+    idGuarnicionesXProducto INT,
     nombre VARCHAR(150) NOT NULL,
     descripcion TEXT,
     stock INT DEFAULT 0,
@@ -29,8 +30,44 @@ CREATE TABLE Productos (
     url_imagen VARCHAR(500),
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    CONSTRAINT fk_producto_categoria FOREIGN KEY (idCategoria) REFERENCES Categorias(id)
+    CONSTRAINT fk_producto_categoria FOREIGN KEY (idCategoria) REFERENCES Categorias(id),
+    CONSTRAINT fk_producto_gXp FOREIGN KEY (idGuarnicionesXProducto) REFERENCES GuarnicionesXProducto(id)
 );
+-- =======================
+-- TABLA: Guarnicion
+-- =======================
+    CREATE TABLE Guarnicion (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        idTama INT,
+        nombre VARCHAR(150),
+        precio DECIMAL(10,2),
+        stock INT DEFAULT 0,
+        createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        CONSTRAINT fk_guarnicion_tam FOREIGN KEY (idTama) REFERENCES Tam(id)
+    );
+-- =======================
+-- TABLA: Tam
+-- =======================
+    CREATE TABLE Tam (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        nombre VARCHAR(25),
+        estado TINYINT DEFAULT 0,
+        createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    );
+
+-- =======================
+-- TABLA: GuarnicionesXProducto
+-- =======================
+CREATE TABLE GuarnicionesXProducto (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    idGuarnicion INT,
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_gXp_guarnicion FOREIGN KEY (idGuarnicion) REFERENCES guarnicion(id),
+);
+
 
 -- =======================
 -- TABLA: Adicionales
@@ -73,17 +110,32 @@ CREATE TABLE Clientes (
 );
 
 -- =======================
+-- TABLA: Envios
+-- =======================
+CREATE TABLE Envios (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    precio DECIMAL(10,2) NOT NULL,
+    estado TINYINT DEFAULT 0 NOT NULL,
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+);
+
+
+-- =======================
 -- TABLA: Pedidos
 -- =======================
 CREATE TABLE Pedidos (
     id INT AUTO_INCREMENT PRIMARY KEY,
     idCliente INT,
+    idEnvio INT,
     precioTotal DECIMAL(10,2) DEFAULT 0,
     descripcion TEXT,
     estado VARCHAR(50) DEFAULT 'pendiente',
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    CONSTRAINT fk_pedido_cliente FOREIGN KEY (idCliente) REFERENCES Clientes(id)
+    CONSTRAINT fk_pedido_cliente FOREIGN KEY (idCliente) REFERENCES Clientes(id),
+    CONSTRAINT fk_pedido_envio FOREIGN KEY (idEnvio) REFERENCES Envios(id)
+
 );
 
 -- =======================
@@ -166,6 +218,54 @@ CREATE TABLE Admin (
     updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
+-- =======================
+-- TABLA: Dias
+-- =======================
+
+CREATE TABLE Dias (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nombreDia VARCHAR(20) NOT NULL,
+    estado TINYINT(1) DEFAULT 1
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- =======================
+-- TABLA: Local
+-- =======================
+CREATE TABLE Local (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    direccion VARCHAR(255) NOT NULL,
+    estado TINYINT(1) DEFAULT 1,
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- =======================
+-- TABLA: Horarios
+-- =======================
+CREATE TABLE horario (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    idLocal INT ,
+    horarioApertura TIME NOT NULL,
+    horarioCierre TIME NOT NULL,
+    estado TINYINT(1) DEFAULT 1,
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_horario_local FOREIGN KEY (idLocal) REFERENCES Local(id)
+);
+
+CREATE TABLE horarioDias (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    idHorario INT,
+    idDia INT,
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_HD_horario FOREIGN KEY (idHorario) REFERENCES Horario(id),
+    CONSTRAINT fk_HD_dia FOREIGN KEY (idDia) REFERENCES Dias(id)
+);
+
+
 
 INSERT INTO `admin` (`id`, `nombre`, `password`, `createdAt`, `updatedAt`) VALUES (NULL, 'admin', '$2a$12$UxAIzdbWGJq9sctMi7942uTnYzRhMJg1VV65/L2VQdQ0w9vKhKana', current_timestamp(), current_timestamp());
 
@@ -175,3 +275,13 @@ INSERT INTO `DatosBancarios` (`cuit`, `alias`, `cbu`, `apellido`, `nombre`, `pas
 INSERT INTO `MetodosDePago` (`nombre`, `createdAt`, `updatedAt`) VALUES ('Efectivo', current_timestamp(), current_timestamp());
 INSERT INTO `MetodosDePago` (`nombre`, `createdAt`, `updatedAt`) VALUES ('Trasferencia', current_timestamp(), current_timestamp());
 INSERT INTO `MetodosDePago` (`nombre`, `createdAt`, `updatedAt`) VALUES ('Mercado Pago', current_timestamp(), current_timestamp());
+
+INSERT INTO Dias (idHorario, nombreDia, estado)
+VALUES
+  (NULL, 'Lunes', 0),
+  (NULL, 'Martes', 0),
+  (NULL, 'Miércoles', 0),
+  (NULL, 'Jueves', 0),
+  (NULL, 'Viernes', 0),
+  (NULL, 'Sábado', 0),
+  (NULL, 'Domingo', 0);
