@@ -31,6 +31,9 @@ BEGIN
     DECLARE v_i INT DEFAULT 0;
     DECLARE v_j INT DEFAULT 0;
     DECLARE v_path VARCHAR(100);
+
+    DECLARE v_idEnvio INT DEFAULT NULL;
+    DECLARE v_precioEnvio DECIMAL (10,2) DEFAULT 0;
     
     -- Extraer datos del pedido
     SET v_telefono = JSON_UNQUOTE(JSON_EXTRACT(p_data, '$.cliente.telefono'));
@@ -46,6 +49,18 @@ BEGIN
     INSERT INTO Pedidos (idCliente, precioTotal, descripcion, createdAt, updatedAt)
     VALUES (v_idCliente, 0, v_descripcion, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP());
     SET v_idPedido = LAST_INSERT_ID();
+
+    -- Obtener envio
+    SELECT id, precio  INTO v_idEnvio, v_precioEnvio 
+    FROM envios
+    WHERE estado = 1
+    LIMIT 1;
+
+    IF v_idEnvio IS NOT NULL THEN
+        UPDATE Pedidos
+        SET idEnvio = v_idEnvio
+        WHERE id = v_idPedido;
+    END IF;
 
     -- Loop sobre productos
     SET v_i = 0;
@@ -138,7 +153,7 @@ BEGIN
     VALUES (v_idPedido, v_metodoDePago, CURRENT_TIMESTAMP(), CURRENT_TIMESTAMP());
 
     -- Actualizar precio total del pedido
-    SET v_precioTotal = v_subTotalProductos + v_subTotalAdicionales;
+    SET v_precioTotal = v_subTotalProductos + v_subTotalAdicionales + v_precioEnvio;
     UPDATE Pedidos SET precioTotal = v_precioTotal WHERE id = v_idPedido;
 
     -- Retornar ID del pedido

@@ -23,5 +23,4 @@ class MercadoPagoService {
   }
 }
 
-
 module.exports = new MercadoPagoService();

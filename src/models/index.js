@@ -15,6 +15,12 @@ const Adicionales = require('./Adicionales');
 const AdicionalesXProducto = require('./AdicionalesXProducto');
 const AdicionalesXProductosXPedidos = require('./AdicionalesXProductosXPedidos');
 const MetodosDePago = require('./MetodosDePago');
+const Envio = require('./Envio');
+const Horario = require('./Horario');
+const Dias = require("./Dias");
+const HorarioDias = require('./horarioDias');
+
+
 
 // Inicializar modelos
 const models = {
@@ -30,7 +36,11 @@ const models = {
   Admin: Admin(sequelize, DataTypes),
   AdicionalesXProducto: AdicionalesXProducto(sequelize, DataTypes),
   AdicionalesXProductosXPedidos: AdicionalesXProductosXPedidos(sequelize, DataTypes),
-  MetodosDePago: MetodosDePago(sequelize, DataTypes)
+  MetodosDePago: MetodosDePago(sequelize, DataTypes),
+  Envio: Envio(sequelize, DataTypes),
+  Horario: Horario(sequelize, DataTypes),
+  Dias: Dias(sequelize, DataTypes),
+  HorarioDias: HorarioDias(sequelize, DataTypes)
 };
 
 // Definir relaciones
