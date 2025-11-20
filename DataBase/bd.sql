@@ -7,7 +7,7 @@ USE shopdb;
 -- =======================
 CREATE TABLE Categorias (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    nombre VARCHAR(100) NOT NULL,
+    nombre VARCHAR(30) NOT NULL,
     estado TINYINT DEFAULT 1,
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
@@ -20,14 +20,14 @@ CREATE TABLE Productos (
     id INT AUTO_INCREMENT PRIMARY KEY,
     idCategoria INT,
     idGuarnicionesXProducto INT,
-    nombre VARCHAR(150) NOT NULL,
-    descripcion TEXT,
+    nombre VARCHAR(50) NOT NULL,
+    descripcion VARCHAR(255),
     stock INT DEFAULT 0,
-    precio DECIMAL(10,2) NOT NULL,
-    descuento DECIMAL(5,2) DEFAULT 0,
+    precio DECIMAL(10,0) NOT NULL,
+    descuento INT DEFAULT 0,
     estado TINYINT DEFAULT 1,
     isPromocion BOOLEAN DEFAULT 0,
-    url_imagen VARCHAR(500),
+    url_imagen VARCHAR(255),
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT fk_producto_categoria FOREIGN KEY (idCategoria) REFERENCES Categorias(id),
@@ -39,8 +39,8 @@ CREATE TABLE Productos (
     CREATE TABLE Guarnicion (
         id INT AUTO_INCREMENT PRIMARY KEY,
         idTama INT,
-        nombre VARCHAR(150),
-        precio DECIMAL(10,2),
+        nombre VARCHAR(50),
+        precio DECIMAL(10,0),
         stock INT DEFAULT 0,
         createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -74,9 +74,9 @@ CREATE TABLE GuarnicionesXProducto (
 -- =======================
 CREATE TABLE Adicionales (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    nombre VARCHAR(150) NOT NULL,
+    nombre VARCHAR(25) NOT NULL,
     stock INT DEFAULT 0,
-    precio DECIMAL(10,2) NOT NULL,
+    precio DECIMAL(10,0) NOT NULL,
     maxCantidad INT DEFAULT 1,
     estado TINYINT DEFAULT 1,
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -103,8 +103,8 @@ CREATE TABLE AdicionalesXProductos (
 -- =======================
 CREATE TABLE Clientes (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    direccion VARCHAR(255) NOT NULL,
-    telefono VARCHAR(40) NOT NULL,
+    direccion VARCHAR(60) NOT NULL,
+    telefono VARCHAR(20) NULL,
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
@@ -114,7 +114,7 @@ CREATE TABLE Clientes (
 -- =======================
 CREATE TABLE Envios (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    precio DECIMAL(10,2) NOT NULL,
+    precio DECIMAL(10,0) NOT NULL,
     estado TINYINT DEFAULT 0 NOT NULL,
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -128,14 +128,13 @@ CREATE TABLE Pedidos (
     id INT AUTO_INCREMENT PRIMARY KEY,
     idCliente INT,
     idEnvio INT,
-    precioTotal DECIMAL(10,2) DEFAULT 0,
+    precioTotal DECIMAL(10,0) DEFAULT 0,
     descripcion TEXT,
-    estado VARCHAR(50) DEFAULT 'pendiente',
+    estado VARCHAR(30) DEFAULT 'pendiente',
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT fk_pedido_cliente FOREIGN KEY (idCliente) REFERENCES Clientes(id),
     CONSTRAINT fk_pedido_envio FOREIGN KEY (idEnvio) REFERENCES Envios(id)
-
 );
 
 -- =======================
@@ -160,7 +159,7 @@ CREATE TABLE AdicionalesXProductosXPedidos (
     idProductoXPedido INT,
     idAdicional INT,
     cantidad INT DEFAULT 1,
-    precio DECIMAL(10,2) DEFAULT 0,
+    precio DECIMAL(10,0) DEFAULT 0,
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT fk_axpxp_producto_pedido FOREIGN KEY (idProductoXPedido) REFERENCES ProductosXPedidos(id),
@@ -172,11 +171,11 @@ CREATE TABLE AdicionalesXProductosXPedidos (
 CREATE TABLE DatosBancarios (
     id INT AUTO_INCREMENT PRIMARY KEY,
     cuit VARCHAR(20) NOT NULL,
-    alias VARCHAR(100) NOT NULL,
+    alias VARCHAR(50) NOT NULL,
     cbu VARCHAR(50) NOT NULL,
-    apellido VARCHAR(100) NOT NULL,
-    nombre VARCHAR(100) NOT NULL,
-    password VARCHAR(255) NOT NULL,
+    apellido VARCHAR(50) NOT NULL,
+    nombre VARCHAR(50) NOT NULL,
+    password VARCHAR(70) NOT NULL,
     mpEstado TINYINT DEFAULT 0 NOT NULL,
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
@@ -188,7 +187,7 @@ CREATE TABLE DatosBancarios (
 -- =======================
 CREATE TABLE MetodosDePago (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    nombre VARCHAR(100) NOT NULL,
+    nombre VARCHAR(30) NOT NULL,
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
@@ -212,8 +211,8 @@ CREATE TABLE Pagos (
 -- =======================
 CREATE TABLE Admin (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    nombre VARCHAR(100) NOT NULL,
-    password VARCHAR(255) NOT NULL,
+    nombre VARCHAR(40) NOT NULL,
+    password VARCHAR(70) NOT NULL,
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
@@ -224,7 +223,7 @@ CREATE TABLE Admin (
 
 CREATE TABLE Dias (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    nombreDia VARCHAR(20) NOT NULL,
+    nombreDia VARCHAR(10) NOT NULL,
     estado TINYINT(1) DEFAULT 1
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
@@ -235,7 +234,7 @@ CREATE TABLE Dias (
 -- =======================
 CREATE TABLE Local (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    direccion VARCHAR(255) NOT NULL,
+    direccion VARCHAR(60) NOT NULL,
     estado TINYINT(1) DEFAULT 1,
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
