@@ -56,22 +56,7 @@ BEGIN
                         GROUP_CONCAT(
                             JSON_OBJECT(
                                 'id', G.id,
-                                'nombre', G.nombre,
-                                'tam', ( 
-                                    SELECT
-                                        CONCAT('[',
-                                            GROUP_CONCAT(
-                                                JSON_OBJECT(
-                                                    'id', T.id,
-                                                    'nombre', T.nombre,
-                                                    'estado', T.estado
-                                                )
-                                            SEPARATOR ','),
-                                        ']')
-                                    FROM TamXGuarnicion AS TXG
-                                    INNER JOIN Tam AS T ON TXG.idTam = T.id
-                                    WHERE TXG.idGuarnicion = G.id AND T.estado = 1
-                                )
+                                'nombre', G.nombre
                             )
                         SEPARATOR ','),
                     ']')
