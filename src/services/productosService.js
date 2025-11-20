@@ -1,4 +1,4 @@
-const { Producto, Categoria, Adicionales } = require("../models");
+const { Producto, Categoria } = require("../models");
 const cloudinaryService = require("./cloudinaryService");
 const { sequelize } = require("../config/db");
 

@@ -15,10 +15,6 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.TEXT,
         allowNull: true,
       },
-      precio: {
-        type: DataTypes.DECIMAL(10, 0),
-        allowNull: false,
-      },
       descuento: {
         type: DataTypes.INTEGER,
         defaultValue: 0,
@@ -99,6 +95,12 @@ module.exports = (sequelize, DataTypes) => {
       foreignKey: 'idProducto',
       otherKey: 'idGuarnicion',
       as: 'guarniciones',
+    });
+    Producto.belongsToMany(models.Tam, {
+      through: models.ProductosXTam,
+      foreignKey: "idProducto",
+      otherKey: "idTam",
+      as: "tamanos",
     });
 
   };

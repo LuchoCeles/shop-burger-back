@@ -22,6 +22,13 @@ module.exports = (sequelize, DataTypes) => {
       timestamps: true,
     }
   );
+
+  Tam.associate = function (models) {
+    Tam.hasMany(models.ProductosXTam, {
+      foreignKey: "idTam",
+      as: "productosXTam",
+    });
+  };
   
   return Tam;
 };

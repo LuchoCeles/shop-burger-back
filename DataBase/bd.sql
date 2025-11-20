@@ -76,6 +76,7 @@ CREATE TABLE ProductosXTam (
     idProducto INT,
     idTam INT,
     precio DECIMAL(10,0) NOT NULL,
+    estado TINYINT DEFAULT 1,
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT fk_pxt_producto FOREIGN KEY (idProducto) REFERENCES Productos(id),
