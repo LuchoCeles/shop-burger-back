@@ -20,13 +20,7 @@ module.exports = (sequelize, DataTypes) => {
   });
 
   Guarniciones.associate = function(models) {
-    Guarniciones.belongsToMany(models.Tam, {
-      through : models.TamXGuarnicion,
-      foreignKey: 'idGuarnicion',
-      otherKey: 'idTam',
-      as: 'tam',
-    });
-
+    
     Guarniciones.belongsToMany(models.Producto, {
       through: 'GuarnicionesXProducto', 
       foreignKey: 'idGuarnicion',
