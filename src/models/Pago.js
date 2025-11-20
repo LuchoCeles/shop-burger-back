@@ -8,8 +8,8 @@ module.exports = (sequelize, DataTypes) => {
         autoIncrement: true,
       },
       estado: {
-        type: DataTypes.ENUM('pendiente', 'aprobado', 'rechazado'),
-        defaultValue: 'pendiente',
+        type: DataTypes.STRING(50),
+        defaultValue: 'Pendiente',
       },
       idPedido: {
         type: DataTypes.INTEGER,
