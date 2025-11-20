@@ -1,14 +1,14 @@
-const { Producto, Categoria } = require("../models");
+const { Producto, Categoria, ProductosXTam } = require("../models");
 const cloudinaryService = require("./cloudinaryService");
 const { sequelize } = require("../config/db");
 
 class ProductosService {
- async getProducts(soloActivos = true) {
+  async getProducts(soloActivos = true) {
     const whereClause = soloActivos ? 1 : 0;
     const productos = await sequelize.query("CALL getProducts(:estado)", {
       replacements: { estado: whereClause },
     });
-  
+
     const productosParseados = productos.map((p) => {
       const parseJsonField = (field) => {
         if (field && typeof field === 'string') {
@@ -31,7 +31,7 @@ class ProductosService {
           };
         });
       }
-    
+
       return {
         ...p,
         adicionales: adicionales,
@@ -62,7 +62,7 @@ class ProductosService {
     return producto;
   }
 
-  async createProduct(productoData, imageBuffer) {
+  async createProduct(productoData, productXtamData, imageBuffer) {
     let imageUrl = null;
 
     if (imageBuffer) {
@@ -77,6 +77,11 @@ class ProductosService {
     const producto = await Producto.create({
       ...productoData,
       url_imagen: imageUrl,
+    });
+    await ProductosXTam.create({
+      idProducto: producto.id,
+      idTam: productXtamData.idTam,
+      precio: productXtamData.precio,
     });
 
     return await this.getProductById(producto.id);

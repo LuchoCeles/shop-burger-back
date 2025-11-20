@@ -10,13 +10,15 @@ const router = express.Router();
 router.get('/', productosController.getProducts);
 
 
-router.post('/', [
-  authAdmin,handleUpload,
+router.post('/', authAdmin, handleUpload, [
+  body('idCategoria').notEmpty().isInt({ min: 1 }).toInt().withMessage('La categoría es obligatoria y debe ser un ID válido'),
+  body('idTam').notEmpty().isInt({ min: 1 }).toInt().withMessage('El tamaño es obligatorio y debe ser un ID válido'),
   body('nombre').notEmpty().withMessage('El nombre es obligatorio'),
   body('descripcion').notEmpty().withMessage('La descripción es obligatoria'),
-  body('precio').notEmpty().isDecimal({ min: 0 }).withMessage('El precio es obligatorio y debe ser un número positivo'),
-  body('stock').notEmpty().isInt({ min: 0 }).withMessage('El stock es obligatorio y debe ser un entero positivo'),
-  body('idCategoria').notEmpty().isInt({ min: 1 }).withMessage('La categoría es obligatoria y debe ser un ID válido'),
+  body('precio').notEmpty().isDecimal({ min: 0 }).toFloat().withMessage('El precio es obligatorio y debe ser un número positivo'),
+  body('stock').notEmpty().isInt({ min: 0 }).toInt().withMessage('El stock es obligatorio y debe ser un entero positivo'),
+  body('descuento').optional().isDecimal({ min: 0 }).toInt().withMessage('El descuento debe ser un número positivo'),
+  body('isPromocion').optional().isBoolean().withMessage('isPromocion debe ser un valor booleano')
 ], validateRequest, productosController.createProduct);
 
 router.patch('/:id', authAdmin, handleUpload, [

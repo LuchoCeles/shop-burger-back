@@ -1,7 +1,7 @@
 const productosService = require("../services/productosService");
 
 class ProductosController {
-  async getProducts(req, res, next) {
+  async getProducts(req, res) {
     try {
       const { soloActivos } = req.query;
       // es para parsear el string a boolean
@@ -13,11 +13,14 @@ class ProductosController {
         data: productos
       });
     } catch (error) {
-      next(error);
+      res.status(500).json({
+        success: false,
+        message: error.message,
+      });
     }
   }
 
-  async getProductoByCategoria(req, res, next) {
+  async getProductoByCategoria(req, res) {
     try {
       const { idCategoria } = req.params;
       const productos = await productosService.getProductoByCategoria(
@@ -28,11 +31,14 @@ class ProductosController {
         data: productos
       });
     } catch (error) {
-      next(error);
+      res.status(500).json({
+        success: false,
+        message: error.message,
+      });
     }
   }
 
-  async getProductById(req, res, next) {
+  async getProductById(req, res) {
     try {
       const { id } = req.params;
       const producto = await productosService.getProductById(id);
@@ -42,32 +48,30 @@ class ProductosController {
         data: producto,
       });
     } catch (error) {
-      next(error);
+      res.status(500).json({
+        success: false,
+        message: error.message,
+      });
     }
   }
 
-  async createProduct(req, res, next) {
+  async createProduct(req, res) {
     try {
       const productoData = req.body;
 
       const imageBuffer = req.file ? req.file.buffer : null;
 
-      if (productoData.precio)
-        productoData.precio = parseFloat(productoData.precio);
-      if (productoData.descuento)
-        productoData.descuento = parseFloat(productoData.descuento);
-      if (productoData.stock) productoData.stock = parseInt(productoData.stock);
-      if (productoData.idCategoria)
-        productoData.idCategoria = parseInt(productoData.idCategoria);
+      productoData.isPromocion = productoData.isPromocion === "true" ? true : false;
 
-      if (productoData.isPromocion) {
-        productoData.isPromocion = productoData.isPromocion === "true";
+      const productXtamData = {
+        idTam: productoData.idTam,
+        precio: productoData.precio
       }
 
-      const producto = await productosService.createProduct(
-        productoData,
-        imageBuffer
-      );
+      delete productoData.precio;
+      delete productoData.idTam;
+
+      const producto = await productosService.createProduct(productoData, productXtamData, imageBuffer);
 
       res.status(201).json({
         success: true,
@@ -75,7 +79,10 @@ class ProductosController {
         data: producto,
       });
     } catch (error) {
-      next(error);
+      res.status(500).json({
+        success: false,
+        message: error.message,
+      });
     }
   }
 
@@ -102,8 +109,6 @@ class ProductosController {
         },
       });
 
-
-
     } catch (error) {
       res.status(500).json({
         success: false,
@@ -112,7 +117,7 @@ class ProductosController {
     }
   }
 
-  async updateProduct(req, res, next) {
+  async updateProduct(req, res) {
     try {
       const { id } = req.params;
       const updateData = req.body;
@@ -140,11 +145,14 @@ class ProductosController {
         data: producto,
       });
     } catch (error) {
-      next(error);
+      res.status(500).json({
+        success: false,
+        message: error.message,
+      });
     }
   }
 
-  async deleteProduct(req, res, next) {
+  async deleteProduct(req, res) {
     try {
       const { id } = req.params;
       await productosService.deleteProduct(id);
@@ -154,7 +162,10 @@ class ProductosController {
         message: "Producto eliminado exitosamente",
       });
     } catch (error) {
-      next(error);
+      res.status(500).json({
+        success: false,
+        message: error.message,
+      });
     }
   }
 }
