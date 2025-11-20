@@ -6,12 +6,12 @@ module.exports = (sequelize, DataTypes) => {
       autoIncrement: true
     },
     precio: {
-      type: DataTypes.DECIMAL(10, 2),
+      type: DataTypes.DECIMAL(10, 0),
       allowNull: false
     },
     estado: {
       type: DataTypes.TINYINT,
-      defaultValue: 1
+      defaultValue: 0
     }
   }, {
     tableName: 'envios',
