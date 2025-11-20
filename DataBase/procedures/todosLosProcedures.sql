@@ -221,6 +221,17 @@ END$$
 DELIMITER ;
 
 DELIMITER $$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `deleteHorario`(IN p_id INT)
+BEGIN
+/*Desactiva horario y elimina relación con días.*/
+    UPDATE horario SET estado = 0 WHERE id = p_id;
+    DELETE FROM horario_dias WHERE idHorario = p_id;
+
+    SELECT 'Horario eliminado' AS mensaje;
+END$$
+DELIMITER ;
+
+DELIMITER $$
 CREATE DEFINER=`root`@`localhost` PROCEDURE `getAllCategories`()
 BEGIN
     SELECT id, nombre, estado
@@ -234,6 +245,81 @@ BEGIN
     SELECT id, cuit, alias, cbu, apellido, nombre, mpEstado
       FROM DatosBancarios
     LIMIT 1;
+END$$
+DELIMITER ;
+
+DELIMITER $$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `getHorario`()
+BEGIN
+    SELECT * FROM Horario ORDER BY id DESC;
+END$$
+DELIMITER ;
+
+DELIMITER $$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `getLocalDetails`(IN p_idLocal INT)
+BEGIN
+    -- Validación de existencia (se queda igual)
+    IF (SELECT COUNT(*) FROM Local WHERE id = p_idLocal) = 0 THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'El local con el ID especificado no existe.';
+    END IF;
+
+    -- Construimos y devolvemos UN ÚNICO resultado.
+    SELECT 
+        JSON_OBJECT(
+            'id', L.id,
+            'direccion', L.direccion,
+            'estado', L.estado,
+            'horarios', (
+                -- Subconsulta para construir el array de horarios MANUALMENTE
+                SELECT
+                    -- 1. CONCAT para añadir los corchetes de apertura y cierre del array: '[' y ']'
+                    CONCAT('[',
+                        -- 2. GROUP_CONCAT para unir todos los objetos de horario en un solo string, separados por comas
+                        GROUP_CONCAT(
+                            -- 3. JSON_OBJECT para crear cada objeto de horario individual
+                            JSON_OBJECT(
+                                'idHorario', H.id,
+                                'horarioApertura', H.horarioApertura,
+                                'horarioCierre', H.horarioCierre,
+                                'estado', H.estado,
+                                'dias', (
+                                    -- Subconsulta para los días (se queda igual)
+                                    SELECT GROUP_CONCAT(D.nombreDia ORDER BY D.id SEPARATOR ', ')
+                                    FROM horarioDias AS HD
+                                    JOIN Dias AS D ON HD.idDia = D.id
+                                    WHERE HD.idHorario = H.id AND D.estado = 1
+                                )
+                            )
+                        SEPARATOR ','), -- El separador entre objetos
+                    ']')
+                FROM horario AS H
+                WHERE H.idLocal = L.id AND H.estado = 1
+            )
+        ) AS localData
+    FROM 
+        Local AS L
+    WHERE 
+        L.id = p_idLocal;
+END$$
+DELIMITER ;
+
+DELIMITER $$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `getLocales`()
+BEGIN
+    SELECT 
+        l.id AS idLocal,
+        l.direccion,
+        d.id AS idDia,
+        d.nombreDia,
+        h.horarioApertura,
+        h.horarioCierre
+    FROM local AS l
+    INNER JOIN horario AS h ON h.idLocal = l.id
+    INNER JOIN dias AS d ON d.id = h.idDia
+    WHERE d.estado = 1
+      AND h.estado = 1
+    ORDER BY l.id ASC, d.id ASC, h.horarioApertura ASC;
 END$$
 DELIMITER ;
 
@@ -387,6 +473,37 @@ BEGIN
     WHERE id = p_id;
 
     SELECT * FROM DatosBancarios WHERE id = p_id;
+END$$
+DELIMITER ;
+
+DELIMITER $$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `updateHorario`(IN p_data JSON)
+BEGIN
+    DECLARE v_id INT;
+    DECLARE v_horarioApertura TIME;
+    DECLARE v_horarioCierre TIME;
+    DECLARE v_estado TINYINT;
+
+    -- Extraemos los valores del JSON
+    SET v_id = JSON_UNQUOTE(JSON_EXTRACT(p_data, '$.id'));
+    SET v_horarioApertura = JSON_UNQUOTE(JSON_EXTRACT(p_data, '$.horarioApertura'));
+    SET v_horarioCierre = JSON_UNQUOTE(JSON_EXTRACT(p_data, '$.horarioCierre'));
+    SET v_estado = JSON_UNQUOTE(JSON_EXTRACT(p_data, '$.estado'));
+
+    -- Realizamos la actualización en un solo paso atómico
+
+    IF v_id = 0 THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'El horario no existe o no se realizaron cambios';
+    END IF;
+    
+    UPDATE Horario
+    SET
+        horarioApertura = v_horarioApertura,
+        horarioCierre = v_horarioCierre,
+        -- Usamos IFNULL/COALESCE aquí. Si v_estado es NULL, mantiene el valor existente.
+        estado = COALESCE(v_estado, estado)
+    WHERE id = v_id;
 END$$
 DELIMITER ;
 
