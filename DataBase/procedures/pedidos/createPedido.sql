@@ -31,6 +31,7 @@ BEGIN
     DECLARE v_i INT DEFAULT 0;
     DECLARE v_j INT DEFAULT 0;
     DECLARE v_path VARCHAR(100);
+    DECLARE v_path2 VARCHAR(100);
 
     DECLARE v_idEnvio INT DEFAULT NULL;
     DECLARE v_precioEnvio DECIMAL (10,2) DEFAULT 0;
@@ -66,22 +67,30 @@ BEGIN
     SET v_i = 0;
     WHILE v_i < JSON_LENGTH(JSON_EXTRACT(p_data, '$.productos')) DO
         SET v_path = CONCAT('$.productos[', v_i, '].id');
+        SET v_path2 = CONCAT('$.tam[', v_i, '].id');
         SET v_cantidadProducto = JSON_EXTRACT(p_data, CONCAT('$.productos[', v_i, '].cantidad'));
+        
+        -- obtenemos precio del producto
+        SELECT precio INTO v_precioProducto 
+        FROM productosxtam
+        WHERE idProducto = v_path AND idTam = v_path2;
 
-        -- Obtener precio y stock del producto
-        SELECT precio, descuento, stock, estado INTO v_precioProducto, v_descuentoProducto, v_stockActualProducto, v_estadoProducto
+        -- stock del producto
+        SELECT descuento, stock, estado INTO v_descuentoProducto, v_stockActualProducto, v_estadoProducto
         FROM Productos
         WHERE id = JSON_UNQUOTE(JSON_EXTRACT(p_data, v_path));
+
+          -- Verificar stock
+        IF v_cantidadProducto > v_stockActualProducto THEN
+            SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = "Stock insuficiente para el producto";
+        END IF;
+
 
         IF v_estadoProducto <> 1 THEN
             SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = "El producto no está disponible";
         END IF;
 
-        -- Verificar stock
-        IF v_cantidadProducto > v_stockActualProducto THEN
-            SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = "Stock insuficiente para el producto";
-        END IF;
-
+      
         -- Actualizar stock del producto
         UPDATE Productos
         SET stock = stock - v_cantidadProducto

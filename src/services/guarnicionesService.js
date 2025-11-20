@@ -5,16 +5,6 @@ class GuarnicionesService {
     try {
       const guarniciones = await Guarniciones.findAll({
         attributes: ["id", "nombre", "estado"],
-        include: [
-          {
-            model: Tam,
-            as : "tam",
-            attributes : ["id","nombre","estado"],
-            through :{
-              attributes:[]
-            }
-          },
-        ],
         order: [["id", "DESC"]],
       });
       return guarniciones;
@@ -25,28 +15,9 @@ class GuarnicionesService {
 
  async createGuarnicion(data) {
     try {
-      const { nombre, tamId } = data;
-
-      const nuevaGuarnicion = await Guarniciones.create({ nombre });
-
-      const asociacionesParaCrear = tamId.map(tamId => {
-        return {
-          idGuarnicion: nuevaGuarnicion.id,
-          idTam: tamId,
-        };
-      });
-
-      await TamXGuarnicion.bulkCreate(asociacionesParaCrear);
-
-      const guarnicionCompleta = await Guarniciones.findByPk(nuevaGuarnicion.id, {
-        include: {
-          model: Tam,
-          as: 'tam',
-          through: { attributes: [] }
-        }
-      });
-      
-      return guarnicionCompleta;
+      const datos= data;
+      const nuevaGuarnicion = await Guarniciones.create(datos);
+      return nuevaGuarnicion;
 
     } catch (error) {
       throw new Error(`ERROR al crear guarnicion: ${error.message}`);
