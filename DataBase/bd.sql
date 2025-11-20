@@ -130,7 +130,7 @@ CREATE TABLE Pedidos (
     idEnvio INT,
     precioTotal DECIMAL(10,0) DEFAULT 0,
     descripcion TEXT,
-    estado VARCHAR(30) DEFAULT 'pendiente',
+    estado VARCHAR(30) DEFAULT 'Pendiente',
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT fk_pedido_cliente FOREIGN KEY (idCliente) REFERENCES Clientes(id),

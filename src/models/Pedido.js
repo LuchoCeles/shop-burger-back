@@ -8,11 +8,11 @@ module.exports = (sequelize, DataTypes) => {
         autoIncrement: true,
       },
       estado: {
-        type: DataTypes.ENUM("pendiente", "entregado", "cancelado"),
-        defaultValue: "pendiente",
+        type: DataTypes.STRING(30),
+        defaultValue: "Pendiente",
       },
       precioTotal: {
-        type: DataTypes.DECIMAL(10, 2),
+        type: DataTypes.DECIMAL(10, 0),
         allowNull: false,
       },
       descripcion: {

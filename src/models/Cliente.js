@@ -6,11 +6,11 @@ module.exports = (sequelize, DataTypes) => {
       autoIncrement: true
     },
     telefono: {
-      type: DataTypes.STRING(40),
+      type: DataTypes.STRING(20),
       allowNull: false
     },
     direccion: {
-      type: DataTypes.TEXT,
+      type: DataTypes.STRING(60),
       allowNull: true
     }
   }, {
