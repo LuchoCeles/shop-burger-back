@@ -30,22 +30,16 @@ CREATE TABLE Productos (
     url_imagen VARCHAR(255),
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    CONSTRAINT fk_producto_categoria FOREIGN KEY (idCategoria) REFERENCES Categorias(id),
-    CONSTRAINT fk_producto_gXp FOREIGN KEY (idGuarnicionesXProducto) REFERENCES GuarnicionesXProducto(id)
-);
--- =======================
--- TABLA: Guarnicion
--- =======================
-    CREATE TABLE Guarnicion (
+    CONSTRAINT fk_producto_categoria FOREIGN KEY (idCategoria) REFERENCES Categorias(id)
+    );
+
+    CREATE TABLE Guarniciones(
         id INT AUTO_INCREMENT PRIMARY KEY,
-        idTama INT,
-        nombre VARCHAR(50),
-        precio DECIMAL(10,0),
-        stock INT DEFAULT 0,
+        nombre VARCHAR(25) NOT NULL,
         createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        CONSTRAINT fk_guarnicion_tam FOREIGN KEY (idTama) REFERENCES Tam(id)
     );
+
 -- =======================
 -- TABLA: Tam
 -- =======================
@@ -54,7 +48,23 @@ CREATE TABLE Productos (
         nombre VARCHAR(25),
         estado TINYINT DEFAULT 0,
         createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    );
+
+-- =======================
+-- TABLA: TamXGuarnicion
+-- =======================
+    CREATE TABLE TamXGuarnicion (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        idTam INT ,  
+        idGuarnicion INT , 
+        createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        
+        CONSTRAINT fk_txg_tam FOREIGN KEY (idTam) REFERENCES Tam(id),
+        CONSTRAINT fk_txg_guar FOREIGN KEY (idGuarnicion) REFERENCES Guarniciones(id),
+
+        UNIQUE KEY uq_guar_tam (idGuarnicion, idTam)
     );
 
 -- =======================
@@ -62,10 +72,15 @@ CREATE TABLE Productos (
 -- =======================
 CREATE TABLE GuarnicionesXProducto (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    idGuarnicion INT,
+    idProducto INT ,  
+    idGuarnicion INT , 
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    CONSTRAINT fk_gXp_guarnicion FOREIGN KEY (idGuarnicion) REFERENCES guarnicion(id),
+    
+    CONSTRAINT fk_gxp_producto FOREIGN KEY (idProducto) REFERENCES Productos(id),
+    CONSTRAINT fk_gxp_guarnicion FOREIGN KEY (idGuarnicion) REFERENCES Guarniciones(id),
+
+    UNIQUE KEY uq_producto_guarnicion (idProducto, idGuarnicion)
 );
 
 
@@ -265,7 +280,6 @@ CREATE TABLE horarioDias (
 );
 
 
-
 INSERT INTO `admin` (`id`, `nombre`, `password`, `createdAt`, `updatedAt`) VALUES (NULL, 'admin', '$2a$12$UxAIzdbWGJq9sctMi7942uTnYzRhMJg1VV65/L2VQdQ0w9vKhKana', current_timestamp(), current_timestamp());
 
 INSERT INTO `DatosBancarios` (`cuit`, `alias`, `cbu`, `apellido`, `nombre`, `password`, `createdAt`, `updatedAt`) 
@@ -284,3 +298,10 @@ VALUES
   (NULL, 'Viernes', 0),
   (NULL, 'Sábado', 0),
   (NULL, 'Domingo', 0);
+
+
+INSERT INTO Tam (nombre,estado)
+VALUES
+("Chico",0),
+("Mediano",0),
+("Grande",0);

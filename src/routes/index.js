@@ -10,6 +10,9 @@ const mercadoPagoRoutes = require('./mercadoPagoRoutes');
 const horariosRoute = require('./horariosRoutes');
 const localRoute = require('./localRoutes');
 const horarioDiasRoutes = require('./horarioDiasRoutes');
+const guarnicionRoutes = require('./guarnicionesRoutes');
+const guarnicionesXProductoRoutes = require('./guarnicionesXProductoRoutes');
+const tamRoutes = require('./tamRoutes');
 
 const router = express.Router();
 
@@ -24,5 +27,8 @@ router.use('/api/mercadopago', mercadoPagoRoutes);
 router.use('/api/horarios',horariosRoute);
 router.use('/api/local',localRoute);
 router.use('/api/horarioDias',horarioDiasRoutes);
+router.use('/api/guarniciones',guarnicionRoutes);
+router.use('/api/guarnicionesxproducto',guarnicionesXProductoRoutes);
+router.use('/api/tam',tamRoutes);
 
 module.exports = router;
