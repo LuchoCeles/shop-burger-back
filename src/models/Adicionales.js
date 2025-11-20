@@ -6,7 +6,7 @@ module.exports = (sequelize, DataTypes) => {
       autoIncrement: true
     },
     nombre: {
-      type: DataTypes.STRING(150),
+      type: DataTypes.STRING(25),
       allowNull: false
     },
     stock: {
@@ -14,7 +14,7 @@ module.exports = (sequelize, DataTypes) => {
       defaultValue: 0
     },
     precio: {
-      type: DataTypes.DECIMAL(10, 2),
+      type: DataTypes.DECIMAL(10, 0),
       allowNull: false
     },
     maxCantidad: {

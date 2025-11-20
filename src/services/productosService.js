@@ -36,8 +36,9 @@ class ProductosService {
     
       return {
         ...p,
-        adicionales: adicionales,
-        guarniciones: guarniciones
+        adicionales: JSON.parse(adicionales),
+        guarniciones: guarniciones,
+        categoria: JSON.parse(p.categoria),
       };
     });
 

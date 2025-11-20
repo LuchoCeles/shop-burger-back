@@ -19,11 +19,13 @@ BEGIN
         ROUND(p.precio - (p.precio * (p.descuento / 100)), 2) AS precioFinal,
 
         (
-            SELECT c.nombre 
-            FROM categorias c 
-            WHERE c.id = p.idCategoria AND c.estado = 1
-            LIMIT 1
-        ) AS categoria,
+            SELECT JSON_OBJECT(
+                'nombre', c.nombre,
+                'estado', c.estado
+            )
+        FROM categorias c 
+            WHERE c.id = p.idCategoria
+        LIMIT 1 ) AS categoria,
      
         IFNULL(
             (
