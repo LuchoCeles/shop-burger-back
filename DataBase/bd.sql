@@ -45,10 +45,25 @@ CREATE TABLE Productos (
     CREATE TABLE Tam (
         id INT AUTO_INCREMENT PRIMARY KEY,
         nombre VARCHAR(25),
-        precio DECIMAL(10,2) NOT NULL,
         estado TINYINT DEFAULT 0,
         createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    );
+
+-- =======================
+-- TABLA: TamXGuarnicion
+-- =======================
+    CREATE TABLE TamXGuarnicion (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        idTam INT ,  
+        idGuarnicion INT , 
+        createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        
+        CONSTRAINT fk_txg_tam FOREIGN KEY (idTam) REFERENCES Tam(id),
+        CONSTRAINT fk_txg_guar FOREIGN KEY (idGuarnicion) REFERENCES Guarniciones(id),
+
+        UNIQUE KEY uq_guar_tam (idGuarnicion, idTam)
     );
 
 -- =======================

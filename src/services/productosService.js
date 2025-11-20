@@ -26,8 +26,10 @@ class ProductosService {
 
       if (Array.isArray(guarniciones)) {
         guarniciones = guarniciones.map(guarnicion => {
+          const parsedTam = parseJsonField(guarnicion.tam); 
           return {
-            ...guarnicion
+            ...guarnicion,
+            tam: parsedTam 
           };
         });
       }
