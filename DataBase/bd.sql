@@ -14,16 +14,25 @@ CREATE TABLE Categorias (
 );
 
 -- =======================
+-- TABLA: Guarniciones
+-- =======================
+CREATE TABLE Guarniciones(
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(25) NOT NULL,
+    stock INT DEFAULT 0,
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- =======================
 -- TABLA: Productos
 -- =======================
 CREATE TABLE Productos (
     id INT AUTO_INCREMENT PRIMARY KEY,
     idCategoria INT,
-    idGuarnicionesXProducto INT,
     nombre VARCHAR(50) NOT NULL,
     descripcion VARCHAR(255),
     stock INT DEFAULT 0,
-    precio DECIMAL(10,0) NOT NULL,
     descuento INT DEFAULT 0,
     estado TINYINT DEFAULT 1,
     isPromocion BOOLEAN DEFAULT 0,
@@ -31,58 +40,48 @@ CREATE TABLE Productos (
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT fk_producto_categoria FOREIGN KEY (idCategoria) REFERENCES Categorias(id)
-    );
-
-    CREATE TABLE Guarniciones(
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        nombre VARCHAR(25) NOT NULL,
-        createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    );
-
--- =======================
--- TABLA: Tam
--- =======================
-    CREATE TABLE Tam (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        nombre VARCHAR(25),
-        estado TINYINT DEFAULT 0,
-        createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-    );
-
--- =======================
--- TABLA: TamXGuarnicion
--- =======================
-    CREATE TABLE TamXGuarnicion (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        idTam INT ,  
-        idGuarnicion INT , 
-        createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-        
-        CONSTRAINT fk_txg_tam FOREIGN KEY (idTam) REFERENCES Tam(id),
-        CONSTRAINT fk_txg_guar FOREIGN KEY (idGuarnicion) REFERENCES Guarniciones(id),
-
-        UNIQUE KEY uq_guar_tam (idGuarnicion, idTam)
-    );
+);
 
 -- =======================
 -- TABLA: GuarnicionesXProducto
 -- =======================
 CREATE TABLE GuarnicionesXProducto (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    idProducto INT ,  
-    idGuarnicion INT , 
+    idProducto INT,  
+    idGuarnicion INT, 
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    
     CONSTRAINT fk_gxp_producto FOREIGN KEY (idProducto) REFERENCES Productos(id),
     CONSTRAINT fk_gxp_guarnicion FOREIGN KEY (idGuarnicion) REFERENCES Guarniciones(id),
-
     UNIQUE KEY uq_producto_guarnicion (idProducto, idGuarnicion)
 );
 
+-- =======================
+-- TABLA: Tam
+-- =======================
+CREATE TABLE Tam (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    nombre VARCHAR(25),
+    estado TINYINT DEFAULT 1,
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+
+-- =======================
+-- TABLA: Productos x Tam
+-- =======================
+CREATE TABLE ProductosXTam (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    idProducto INT,
+    idTam INT,
+    precio DECIMAL(10,0) NOT NULL,
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_pxt_producto FOREIGN KEY (idProducto) REFERENCES Productos(id),
+    CONSTRAINT fk_pxt_tam FOREIGN KEY (idTam) REFERENCES Tam(id),
+    UNIQUE KEY uq_producto_tam (idProducto, idTam)
+);
 
 -- =======================
 -- TABLA: Adicionales
@@ -132,7 +131,7 @@ CREATE TABLE Envios (
     precio DECIMAL(10,0) NOT NULL,
     estado TINYINT DEFAULT 0 NOT NULL,
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
 
@@ -239,7 +238,7 @@ CREATE TABLE Admin (
 CREATE TABLE Dias (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nombreDia VARCHAR(10) NOT NULL,
-    estado TINYINT(1) DEFAULT 1
+    estado TINYINT(1) DEFAULT 1,
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
@@ -289,19 +288,18 @@ INSERT INTO `MetodosDePago` (`nombre`, `createdAt`, `updatedAt`) VALUES ('Efecti
 INSERT INTO `MetodosDePago` (`nombre`, `createdAt`, `updatedAt`) VALUES ('Trasferencia', current_timestamp(), current_timestamp());
 INSERT INTO `MetodosDePago` (`nombre`, `createdAt`, `updatedAt`) VALUES ('Mercado Pago', current_timestamp(), current_timestamp());
 
-INSERT INTO Dias (idHorario, nombreDia, estado)
+INSERT INTO Dias (nombreDia)
 VALUES
-  (NULL, 'Lunes', 0),
-  (NULL, 'Martes', 0),
-  (NULL, 'Miércoles', 0),
-  (NULL, 'Jueves', 0),
-  (NULL, 'Viernes', 0),
-  (NULL, 'Sábado', 0),
-  (NULL, 'Domingo', 0);
+  ('Lunes'),
+  ('Martes'),
+  ('Miércoles'),
+  ('Jueves'),
+  ('Viernes'),
+  ('Sábado'),
+  ('Domingo');
 
 
-INSERT INTO Tam (nombre,estado)
+INSERT INTO Tam (nombre)
 VALUES
-("Chico",0),
-("Mediano",0),
-("Grande",0);
+('Simple'),
+('Doble');

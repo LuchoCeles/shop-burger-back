@@ -36,7 +36,7 @@ class ProductosService {
     
       return {
         ...p,
-        adicionales: JSON.parse(adicionales),
+        adicionales: adicionales,
         guarniciones: guarniciones,
         categoria: JSON.parse(p.categoria),
       };
