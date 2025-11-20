@@ -22,14 +22,6 @@ module.exports = (sequelize, DataTypes) => {
       timestamps: true,
     }
   );
-
-  Tam.associate = function (models) {
-    Tam.belongsToMany(models.Guarniciones, {
-      through: models.TamXGuarnicion,
-      foreignKey: "idTam",
-      otherKey: "idGuarnicion",
-      as: "guarniciones",
-    });
-  };
+  
   return Tam;
 };

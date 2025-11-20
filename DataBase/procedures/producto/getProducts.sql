@@ -9,24 +9,17 @@ BEGIN
         p.id,
         p.nombre,
         p.descripcion,
-        p.precio,
         p.url_imagen,
         p.stock,
         p.idCategoria,
         p.descuento,
         p.isPromocion,
         p.estado,
-        ROUND(p.precio - (p.precio * (p.descuento / 100)), 2) AS precioFinal,
-
         (
-            SELECT JSON_OBJECT(
-                'nombre', c.nombre,
-                'estado', c.estado
-            )
-        FROM categorias c 
-            WHERE c.id = p.idCategoria
-        LIMIT 1 ) AS categoria,
-     
+            SELECT JSON_OBJECT('nombre', c.nombre,'estado', c.estado) FROM categorias c 
+                WHERE c.id = p.idCategoria
+            LIMIT 1 
+        ) AS categoria,
         IFNULL(
             (
                 SELECT 
@@ -44,13 +37,11 @@ BEGIN
                         ']'
                     )
                 FROM adicionalesxproductos axp
-                INNER JOIN adicionales a ON axp.idAdicional = a.id
+                    INNER JOIN adicionales a ON axp.idAdicional = a.id
                 WHERE axp.idProducto = p.id AND a.estado = 1
             ),
             '[]'
         ) AS adicionales,
-
-  
         IFNULL(
             (
                 SELECT 
@@ -58,22 +49,7 @@ BEGIN
                         GROUP_CONCAT(
                             JSON_OBJECT(
                                 'id', G.id,
-                                'nombre', G.nombre,
-                                'tam', ( 
-                                    SELECT
-                                        CONCAT('[',
-                                            GROUP_CONCAT(
-                                                JSON_OBJECT(
-                                                    'id', T.id,
-                                                    'nombre', T.nombre,
-                                                    'estado', T.estado
-                                                )
-                                            SEPARATOR ','),
-                                        ']')
-                                    FROM TamXGuarnicion AS TXG
-                                    INNER JOIN Tam AS T ON TXG.idTam = T.id
-                                    WHERE TXG.idGuarnicion = G.id AND T.estado = 1
-                                )
+                                'nombre', G.nombre
                             )
                         SEPARATOR ','),
                     ']')
@@ -82,7 +58,26 @@ BEGIN
                 WHERE GXP.idProducto = p.id
             ),
             '[]' 
-        ) AS guarniciones
+        ) AS guarniciones,
+        IFNULL(
+            (
+                SELECT 
+                    CONCAT('[',
+                        GROUP_CONCAT(
+                            JSON_OBJECT(
+                                'id', T.id,
+                                'nombre', T.nombre,
+                                'precio', PXT.precio,
+                                'precioFinal', ROUND(PXT.precio - (PXT.precio * (p.descuento / 100)), 2)
+                            )
+                        SEPARATOR ','),
+                    ']')
+                FROM ProductosXTam AS PXT
+                INNER JOIN Tam AS T ON PXT.idTam = T.id
+                WHERE PXT.idProducto = p.id
+            ),
+            '[]' 
+        ) AS tam
 
     FROM productos p
     WHERE (p_estado = 0 OR p.estado = 1);
