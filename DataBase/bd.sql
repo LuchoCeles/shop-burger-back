@@ -20,6 +20,7 @@ CREATE TABLE Guarniciones(
     id INT AUTO_INCREMENT PRIMARY KEY,
     nombre VARCHAR(25) NOT NULL,
     stock INT DEFAULT 0,
+    estado TINYINT DEFAULT 1,
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
@@ -43,28 +44,16 @@ CREATE TABLE Productos (
 );
 
 -- =======================
--- TABLA: GuarnicionesXProducto
--- =======================
-CREATE TABLE GuarnicionesXProducto (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    idProducto INT,  
-    idGuarnicion INT, 
-    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    CONSTRAINT fk_gxp_producto FOREIGN KEY (idProducto) REFERENCES Productos(id),
-    CONSTRAINT fk_gxp_guarnicion FOREIGN KEY (idGuarnicion) REFERENCES Guarniciones(id),
-    UNIQUE KEY uq_producto_guarnicion (idProducto, idGuarnicion)
-);
-
--- =======================
 -- TABLA: Tam
 -- =======================
 CREATE TABLE Tam (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nombre VARCHAR(25),
+    idCategoria INT,
     estado TINYINT DEFAULT 1,
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_tam_categoria FOREIGN KEY (idCategoria) REFERENCES Categorias(id)
 );
 
 
@@ -83,6 +72,21 @@ CREATE TABLE ProductosXTam (
     CONSTRAINT fk_pxt_tam FOREIGN KEY (idTam) REFERENCES Tam(id),
     UNIQUE KEY uq_producto_tam (idProducto, idTam)
 );
+
+-- =======================
+-- TABLA: GuarnicionesXProducto
+-- =======================
+CREATE TABLE GuarnicionesXProducto (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    idProducto INT,  
+    idGuarnicion INT, 
+    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    CONSTRAINT fk_gxp_producto FOREIGN KEY (idProducto) REFERENCES Productos(id),
+    CONSTRAINT fk_gxp_guarnicion FOREIGN KEY (idGuarnicion) REFERENCES Guarniciones(id),
+    UNIQUE KEY uq_producto_guarnicion (idProducto, idGuarnicion)
+);
+
 
 -- =======================
 -- TABLA: Adicionales

@@ -1,20 +1,10 @@
-const { Guarniciones, Tam, TamXGuarnicion } = require("../models");
+const { Guarniciones, Tam } = require("../models");
 
 class GuarnicionesService {
   async getAll() {
     try {
       const guarniciones = await Guarniciones.findAll({
-        attributes: ["id", "nombre", "estado"],
-        include: [
-          {
-            model: Tam,
-            as : "tam",
-            attributes : ["id","nombre","estado"],
-            through :{
-              attributes:[]
-            }
-          },
-        ],
+        attributes: ["id", "nombre", "stock", "estado"],
         order: [["id", "DESC"]],
       });
       return guarniciones;
@@ -23,31 +13,13 @@ class GuarnicionesService {
     }
   }
 
- async createGuarnicion(data) {
+  async createGuarnicion(data) {
     try {
-      const { nombre, tamId } = data;
-
-      const nuevaGuarnicion = await Guarniciones.create({ nombre });
-
-      const asociacionesParaCrear = tamId.map(tamId => {
-        return {
-          idGuarnicion: nuevaGuarnicion.id,
-          idTam: tamId,
-        };
+      const nuevaGuarnicion = await Guarniciones.create({
+        nombre: data.nombre,
+        stock: data.stock
       });
-
-      await TamXGuarnicion.bulkCreate(asociacionesParaCrear);
-
-      const guarnicionCompleta = await Guarniciones.findByPk(nuevaGuarnicion.id, {
-        include: {
-          model: Tam,
-          as: 'tam',
-          through: { attributes: [] }
-        }
-      });
-      
-      return guarnicionCompleta;
-
+      return nuevaGuarnicion;
     } catch (error) {
       throw new Error(`ERROR al crear guarnicion: ${error.message}`);
     }
@@ -57,10 +29,10 @@ class GuarnicionesService {
       const { nombre, tamId } = data;
 
       const guarnicion = await Guarniciones.findByPk(id);
-   
+
       guarnicion.nombre = nombre;
       await guarnicion.save();
-      
+
       if (tamId && Array.isArray(tamId)) {
         await guarnicion.setTam(tamId);
       }

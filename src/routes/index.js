@@ -27,7 +27,7 @@ router.use('/api/mercadopago', mercadoPagoRoutes);
 router.use('/api/horarios',horariosRoute);
 router.use('/api/local',localRoute);
 router.use('/api/horarioDias',horarioDiasRoutes);
-router.use('/api/guarniciones',guarnicionRoutes);
+router.use('/api/guarnicion',guarnicionRoutes);
 router.use('/api/guarnicionesxproducto',guarnicionesXProductoRoutes);
 router.use('/api/tam',tamRoutes);
 
