@@ -19,14 +19,6 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.INTEGER,
         defaultValue: 0,
       },
-      precioFinal: {
-        type: DataTypes.VIRTUAL,
-        get() {
-          const descuento = this.getDataValue("descuento") || 0;
-          const precio = parseFloat(this.getDataValue("precio"));
-          return precio * (1 - descuento / 100);
-        },
-      },
       stock: {
         type: DataTypes.INTEGER,
         defaultValue: 0,
@@ -49,12 +41,6 @@ module.exports = (sequelize, DataTypes) => {
         references: {
           model: "categorias",
           key: "id",
-        },
-      },
-      nombrecategoria: {
-        type: DataTypes.VIRTUAL,
-        get() {
-          return this.categoria ? this.categoria.nombre : null;
         },
       },
     },

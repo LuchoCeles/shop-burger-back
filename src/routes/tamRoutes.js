@@ -14,5 +14,9 @@ router.post('/', authAdmin, validateRequest, [
 
 router.patch('/:id/estado', authAdmin, TamController.update);
 
+router.patch('/:id', authAdmin, TamController.updateCategoria);
+
+router.delete('/:id', authAdmin, TamController.delete);
+
 
 module.exports = router;

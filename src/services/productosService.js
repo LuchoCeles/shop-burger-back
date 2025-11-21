@@ -23,20 +23,14 @@ class ProductosService {
       };
       const adicionales = parseJsonField(p.adicionales);
       let guarniciones = parseJsonField(p.guarniciones);
-
-      if (Array.isArray(guarniciones)) {
-        guarniciones = guarniciones.map(guarnicion => {
-          return {
-            ...guarnicion,
-          };
-        });
-      }
+      let tam = parseJsonField(p.tam);
 
       return {
         ...p,
         adicionales: adicionales,
         guarniciones: guarniciones,
         categoria: JSON.parse(p.categoria),
+        tam:tam,
       };
     });
 
@@ -83,7 +77,7 @@ class ProductosService {
       idTam: productXtamData.idTam,
       precio: productXtamData.precio,
     });
-
+    
     return await this.getProductById(producto.id);
   }
 
