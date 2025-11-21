@@ -1,56 +1,63 @@
-// src/controllers/GuarnicionesController.js
-
 const guarnicionesService = require("../services/guarnicionesService");
 
 class GuarnicionesController {
 
-  getAll = async (req, res, next) => { 
+  getAll = async (req, res) => {
     try {
       const guarniciones = await guarnicionesService.getAll();
-      
+
       return res.status(200).json({
         success: true,
         data: guarniciones,
       });
     } catch (error) {
-      next(error);
+      res.status(500).json({
+        success: false,
+        message: error.message,
+      });
     }
   }
 
-  create = async (req, res, next) => {
+  create = async (req, res) => {
     try {
       const data = req.body;
       const guarnicion = await guarnicionesService.createGuarnicion(data);
-      
+
       return res.status(201).json({
         success: true,
         message: "Guarnicion creada correctamente",
         data: guarnicion,
       });
     } catch (error) {
-      next(error);
+      res.status(500).json({
+        success: false,
+        message: error.message,
+      });
     }
   }
 
-  update = async (req, res, next) => {
+  update = async (req, res) => {
     try {
       const { id } = req.params;
       const data = req.body;
 
       const guarnicion = await guarnicionesService.update(id, data);
-      
-     
+
+
       return res.status(200).json({
         success: true,
         message: "Guarnicion actualizada correctamente",
         data: guarnicion,
       });
     } catch (error) {
-      next(error);
+      res.status(500).json({
+        success: false,
+        message: error.message,
+      });
     }
   }
 
-  updateEstado = async (req, res, next) => {
+  updateEstado = async (req, res) => {
     try {
       const { id } = req.params;
 
@@ -61,7 +68,10 @@ class GuarnicionesController {
         message: "Guarnicion dada de baja",
       });
     } catch (error) {
-      next(error);
+      res.status(500).json({
+        success: false,
+        message: error.message,
+      });
     }
   }
 }
