@@ -50,8 +50,43 @@ router.post('/', authAdmin, handleUpload, [
 ], validateRequest, productosController.createProduct);
 
 router.patch('/:id', authAdmin, handleUpload, [
-  body('precio').optional().isDecimal({ min: 0 }),
-  body('stock').optional().isInt({ min: 0 })
+ 
+  param('id').isInt({ min: 1 }).withMessage('El ID del producto debe ser un número válido.'),
+  
+  body('nombre').optional().trim().notEmpty().withMessage('El nombre no puede estar vacío.'),
+  body('descripcion').optional().trim(),
+  body('stock').optional({ checkFalsy: true }).isNumeric().withMessage('El stock debe ser un número.'),
+  body('idCategoria').optional().isNumeric().withMessage('idCategoria debe ser un número.'),
+  body('descuento').optional({ checkFalsy: true }).isNumeric().withMessage('El descuento debe ser un número.'),
+  body('isPromocion').optional().isIn(['true', 'false']).toBoolean(),
+  body('tam')
+    .optional()
+    .custom((value, { req }) => {
+      let tamArray;
+      try {
+        tamArray = JSON.parse(value);
+      } catch (e) {
+        throw new Error("El campo 'tam' debe ser un array de objetos en formato JSON válido.");
+      }
+
+      if (!Array.isArray(tamArray)) {
+        throw new Error("El campo 'tam' debe ser un array.");
+      }
+
+      for (const item of tamArray) {
+        if (item.idTam === undefined || isNaN(parseInt(item.idTam))) {
+          throw new Error("Cada objeto en 'tam' debe tener un 'idTam' numérico y válido.");
+        }
+        if (item.precio === undefined || isNaN(parseFloat(item.precio)) || item.precio < 0) {
+          throw new Error("Cada objeto en 'tam' debe tener un 'precio' numérico y positivo.");
+        }
+      }
+
+      // Sanitización: Reemplazamos el string con el array parseado
+      req.body.tam = tamArray;
+      return true;
+    }),
+
 ], validateRequest, productosController.updateProduct);
 
 router.delete('/:id', authAdmin, productosController.deleteProduct);
