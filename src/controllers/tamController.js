@@ -1,3 +1,4 @@
+const { Result } = require("express-validator");
 const tamService = require("../services/tamService");
 
 class TamController {
@@ -15,7 +16,7 @@ class TamController {
         }
     }
 
-    create = async (req, res, next) => {
+    create = async (req, res) => {
         try {
             const data = req.body;
             const tam = await tamService.create(data);
@@ -25,7 +26,10 @@ class TamController {
                 data: tam
             });
         } catch (error) {
-            next(error);
+            return res.status(500).json({
+                success: false,
+                message: error.message
+            });
         }
     }
 
@@ -42,6 +46,40 @@ class TamController {
             });
         } catch (error) {
             next(error);
+        }
+    }
+
+    updateCategoria = async (req,res) =>{
+        try {
+            const {id} = req.params;
+            const data = req.body;
+            const tam = await tamService.updateCategoria(id,data);
+            return res.status(200).json({
+                success:true,
+                message: "Tamaño actualizado correctamente",
+                data:tam
+            });
+        } catch (error) {
+         return res.status(500).json({
+            success: false,
+            message: "Error al actualizar tamaño",
+         });   
+        }
+    }
+
+    delete = async (req,res) =>{
+        try {
+            const {id}  =req.params;
+            const tam = await tamService.delete(id);
+            return res.status(200).json({
+                success:true,
+                message: Result.message,
+            });
+        } catch (error) {
+            return res.status(500).json({
+                success:false,
+                message:"Error al eliminar tamaño",
+            });
         }
     }
  }

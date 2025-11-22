@@ -8,6 +8,11 @@ module.exports = (sequelize, DataTypes) => {
         primaryKey: true,
         autoIncrement: true,
       },
+      idCategoria: {
+        type: DataTypes.INTEGER,
+        allowNull: true,
+        references: { model: "Categoria", key: "id" },
+      },
       nombre: {
         type: DataTypes.STRING(200),
         allowNull: false,
@@ -28,6 +33,12 @@ module.exports = (sequelize, DataTypes) => {
       foreignKey: "idTam",
       as: "productosXTam",
     });
+    
+    Tam.belongsTo(models.Categoria,{
+      foreignKey : "idCategoria",
+      as: 'categorias'
+    });
+
   };
   
   return Tam;

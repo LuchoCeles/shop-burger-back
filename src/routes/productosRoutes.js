@@ -11,14 +11,42 @@ router.get('/', productosController.getProducts);
 
 
 router.post('/', authAdmin, handleUpload, [
-  body('idCategoria').notEmpty().isInt({ min: 1 }).toInt().withMessage('La categoría es obligatoria y debe ser un ID válido'),
-  body('idTam').notEmpty().isInt({ min: 1 }).toInt().withMessage('El tamaño es obligatorio y debe ser un ID válido'),
-  body('nombre').notEmpty().withMessage('El nombre es obligatorio'),
-  body('descripcion').notEmpty().withMessage('La descripción es obligatoria'),
-  body('precio').notEmpty().isDecimal({ min: 0 }).toFloat().withMessage('El precio es obligatorio y debe ser un número positivo'),
-  body('stock').notEmpty().isInt({ min: 0 }).toInt().withMessage('El stock es obligatorio y debe ser un entero positivo'),
-  body('descuento').optional().isDecimal({ min: 0 }).toInt().withMessage('El descuento debe ser un número positivo'),
-  body('isPromocion').optional().isBoolean().withMessage('isPromocion debe ser un valor booleano')
+  body('nombre').trim().notEmpty().withMessage('El nombre es obligatorio'),
+  body('descripcion').optional({ checkFalsy: true }).trim(), // checkFalsy permite strings vacíos
+  
+  // Para campos numéricos, primero verificamos si es un string que parece número
+  body('stock').optional({ checkFalsy: true }).isNumeric().withMessage('El stock debe ser un número'),
+  body('idCategoria').notEmpty().withMessage('La categoría es obligatoria').isNumeric().withMessage('idCategoria debe ser un número'),
+  body('descuento').optional({ checkFalsy: true }).isNumeric().withMessage('El descuento debe ser un número'),
+
+  body('isPromocion').optional().isIn(['true', 'false']).withMessage('isPromocion debe ser "true" o "false"').toBoolean(), 
+
+  body('tam')
+    .trim()
+    .notEmpty().withMessage("Debe proporcionar al menos un tamaño y precio.")
+    .custom((value, { req }) => {
+      let tamArray;
+      try {
+        tamArray = JSON.parse(value);
+      } catch (e) {
+        throw new Error("El campo 'tam' debe ser un array de objetos en formato JSON válido.");
+      }
+      if (!Array.isArray(tamArray) || tamArray.length === 0) {
+        throw new Error("El campo 'tam' debe contener al menos un objeto de tamaño y precio.");
+      }
+      for (const item of tamArray) {
+        if (item.idTam === undefined || isNaN(parseInt(item.idTam))) {
+          throw new Error("Cada objeto en 'tam' debe tener un 'idTam' numérico y válido.");
+        }
+        if (item.precio === undefined || isNaN(parseFloat(item.precio)) || item.precio < 0) {
+          throw new Error("Cada objeto en 'tam' debe tener un 'precio' numérico y positivo.");
+        }
+      }
+      // Sanitización: Modificamos req.body para el controlador
+      req.body.tam = tamArray;
+      return true;
+    }),
+    
 ], validateRequest, productosController.createProduct);
 
 router.patch('/:id', authAdmin, handleUpload, [

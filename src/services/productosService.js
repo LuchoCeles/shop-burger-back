@@ -1,6 +1,7 @@
 const { Producto, Categoria, ProductosXTam } = require("../models");
 const cloudinaryService = require("./cloudinaryService");
 const { sequelize } = require("../config/db");
+const models = require("../models");
 
 class ProductosService {
   async getProducts(soloActivos = true) {
@@ -11,11 +12,11 @@ class ProductosService {
 
     const productosParseados = productos.map((p) => {
       const parseJsonField = (field) => {
-        if (field && typeof field === 'string') {
+        if (field && typeof field === "string") {
           try {
             return JSON.parse(field);
           } catch (e) {
-            console.error('Error al parsear campo JSON de primer nivel:', e);
+            console.error("Error al parsear campo JSON de primer nivel:", e);
             return [];
           }
         }
@@ -23,20 +24,14 @@ class ProductosService {
       };
       const adicionales = parseJsonField(p.adicionales);
       let guarniciones = parseJsonField(p.guarniciones);
-
-      if (Array.isArray(guarniciones)) {
-        guarniciones = guarniciones.map(guarnicion => {
-          return {
-            ...guarnicion,
-          };
-        });
-      }
+      let tam = parseJsonField(p.tam);
 
       return {
         ...p,
         adicionales: adicionales,
         guarniciones: guarniciones,
         categoria: JSON.parse(p.categoria),
+        tam: tam,
       };
     });
 
@@ -52,7 +47,13 @@ class ProductosService {
           as: "categoria",
           attributes: ["id", "nombre"],
         },
-      ],
+        {
+          model :Tam,
+          as: 'tam',
+          attributes : ['id','nombre'],
+          through : {attributes: ['precio']}
+        },
+      ]
     });
 
     if (!producto) {
@@ -62,29 +63,31 @@ class ProductosService {
     return producto;
   }
 
-  async createProduct(productoData, productXtamData, imageBuffer) {
+  async createProduct(productoData, tamData, imageBuffer) {
     let imageUrl = null;
 
     if (imageBuffer) {
       try {
         const uploadResult = await cloudinaryService.uploadImage(imageBuffer);
         imageUrl = uploadResult.secure_url;
-      } catch (error) {
-        throw new Error("Error al subir la imagen: " + error.message);
+      } catch (uploadError) {
+        throw new Error("Error al subir la imagen: " + uploadError.message);
       }
     }
 
-    const producto = await Producto.create({
+    const dataForProcedure = {
       ...productoData,
       url_imagen: imageUrl,
-    });
-    await ProductosXTam.create({
-      idProducto: producto.id,
-      idTam: productXtamData.idTam,
-      precio: productXtamData.precio,
+      tam: tamData, 
+    };
+
+    const [result] = await sequelize.query("CALL createProducts(:data);", {
+      replacements: { data: JSON.stringify(dataForProcedure) },
     });
 
-    return await this.getProductById(producto.id);
+    const newProductId = result[0].id;
+
+    return await this.getProductById(newProductId);
   }
 
   async updateState(id, nuevoEstado) {

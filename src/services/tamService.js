@@ -1,4 +1,4 @@
-const { Tam } = require("../models");
+const { Tam,  Categoria } = require("../models");
 
 class TamService {
   async create(data) {
@@ -13,6 +13,14 @@ class TamService {
   async get() {
     try {
       const tams = await Tam.findAll({
+        attributes: ["id", "nombre", "estado"],
+        include: [
+          {
+            model: Categoria,
+            as: "categorias",
+            attributes: ["id", "nombre", "estado"],
+          },
+        ],
         order: [["id", "ASC"]],
       });
       return tams;
@@ -20,6 +28,16 @@ class TamService {
       throw new Error(
         `Error al obtener los tamaños de guarnicion ${error.message}`
       );
+    }
+  }
+
+  async updateCategoria(id, data) {
+    try {
+      const tam = await Tam.findByPk(id);
+      await tam.update(data);
+      return tam;
+    } catch (error) {
+      throw new Error(`Error al actualizar categoria ${error.message}`);
     }
   }
 
@@ -33,6 +51,16 @@ class TamService {
       return tam;
     } catch (error) {
       throw new Error(`Error al actualizar datos de "combo" ${error.message}`);
+    }
+  }
+
+  async delete(id) {
+    try {
+      const tam = await Tam.findByPk(id);
+      await tam.destroy();
+      return { message: "Tamaño eliminado correctamente" };
+    } catch (error) {
+      throw new Error(`Error al eliminar datos de "combo" ${error.message}`);
     }
   }
 }
