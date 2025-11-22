@@ -55,34 +55,39 @@ class ProductosController {
     }
   }
 
-  async createProduct(req, res) {
+  createProduct = async (req, res, next) => {
     try {
-      const productoData = req.body;
-
       const imageBuffer = req.file ? req.file.buffer : null;
+      const body = req.body;
 
-      productoData.isPromocion = productoData.isPromocion === "true" ? true : false;
-
-      const productXtamData = {
-        idTam: productoData.idTam,
-        precio: productoData.precio
+      let tamData = [];
+      if (body.tam) {
+        try {
+          tamData = JSON.parse(body.tam);
+        } catch (e) {
+          return res.status(400).json({ success: false, message: "El formato del array 'tam' es inválido." });
+        }
       }
 
-      delete productoData.precio;
-      delete productoData.idTam;
+      const productoData = {
+        nombre: body.nombre,
+        descripcion: body.descripcion,
+        stock: body.stock,
+        idCategoria: body.idCategoria,
+        descuento: body.descuento,
+        isPromocion: body.isPromocion === 'true',
+      };
+      
+      const productoCreado = await productosService.createProduct(productoData, tamData, imageBuffer);
 
-      const producto = await productosService.createProduct(productoData, productXtamData, imageBuffer);
-
-      res.status(201).json({
+      return res.status(201).json({
         success: true,
         message: "Producto creado exitosamente",
-        data: producto,
+        data: productoCreado,
       });
+
     } catch (error) {
-      res.status(500).json({
-        success: false,
-        message: error.message,
-      });
+      next(error); 
     }
   }
 
