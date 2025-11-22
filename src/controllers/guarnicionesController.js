@@ -61,11 +61,13 @@ class GuarnicionesController {
     try {
       const { id } = req.params;
 
-      await guarnicionesService.updateEstado(id);
+      const guarnicion = await guarnicionesService.updateEstado(id);
 
       return res.status(200).json({
         success: true,
         message: "Guarnicion dada de baja",
+        data:guarnicion,
+
       });
     } catch (error) {
       res.status(500).json({
