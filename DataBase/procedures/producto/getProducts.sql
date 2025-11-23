@@ -49,7 +49,8 @@ BEGIN
                         GROUP_CONCAT(
                             JSON_OBJECT(
                                 'id', G.id,
-                                'nombre', G.nombre
+                                'nombre', G.nombre,
+                                'idGxP', GXP.id
                             )
                         SEPARATOR ','),
                     ']')
@@ -65,7 +66,8 @@ BEGIN
                     CONCAT('[',
                         GROUP_CONCAT(
                             JSON_OBJECT(
-                                'id', T.id,
+                                'id',T.id,
+                                'idPxT', PXT.id,
                                 'nombre', T.nombre,
                                 'precio', PXT.precio,
                                 'precioFinal', ROUND(PXT.precio - (PXT.precio * (p.descuento / 100)), 2)
