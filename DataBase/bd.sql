@@ -163,11 +163,13 @@ CREATE TABLE ProductosXPedidos (
     id INT AUTO_INCREMENT PRIMARY KEY,
     idProducto INT,
     idPedido INT,
+    idGuarnicion INT,
     cantidad INT DEFAULT 1,
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     CONSTRAINT fk_pxp_producto FOREIGN KEY (idProducto) REFERENCES Productos(id),
-    CONSTRAINT fk_pxp_pedido FOREIGN KEY (idPedido) REFERENCES Pedidos(id)
+    CONSTRAINT fk_pxp_pedido FOREIGN KEY (idPedido) REFERENCES Pedidos(id),
+    CONSTRAINT fk_pxp_guarnicion FOREIGN KEY (idGuarnicion) REFERENCES Guarniciones(id)
 );
 
 -- =======================

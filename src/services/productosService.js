@@ -1,7 +1,6 @@
 const { Producto, Categoria, ProductosXTam } = require("../models");
 const cloudinaryService = require("./cloudinaryService");
 const { sequelize } = require("../config/db");
-const models = require("../models");
 
 class ProductosService {
   async getProducts(soloActivos = true) {
@@ -109,17 +108,15 @@ class ProductosService {
     }
   }
 
-  async updateProduct(id, updateData, imageBuffer) {
-    const producto = await Producto.findByPk(id);
+   async updateProduct(id, productoData, tamData, imageBuffer) {
+    const transaction = await sequelize.transaction();
 
-    if (!producto) {
-      throw new Error("Producto no encontrado");
-    }
+    try {
+      // 1. Buscamos el producto dentro de la transacción.
+      const producto = await Producto.findByPk(id, { transaction });
 
-    let imageUrl = producto.url_imagen;
-
-    // Si hay nueva imagen, subirla y eliminar la anterior si existe
-    if (imageBuffer) {
+      let imageUrl = producto.url_imagen;
+       if (imageBuffer) {
       try {
         // Eliminar imagen anterior de Cloudinary
         if (producto.url_imagen) {
@@ -130,7 +127,6 @@ class ProductosService {
             await cloudinaryService.deleteImage(publicId);
           }
         }
-
         // Subir nueva imagen
         const uploadResult = await cloudinaryService.uploadImage(imageBuffer);
         imageUrl = uploadResult.secure_url;
@@ -138,13 +134,35 @@ class ProductosService {
         throw new Error("Error al actualizar la imagen: " + error.message);
       }
     }
+      productoData.url_imagen = imageUrl; 
 
-    await producto.update({
-      ...updateData,
-      url_imagen: imageUrl,
-    });
+      await producto.update(productoData, { transaction });
 
-    return await this.getProductById(id);
+      //actualizamos tamaño y precio
+      if (tamData !== null) { 
+        await ProductosXTam.destroy({
+          where: { idProducto: id },
+          transaction
+        });
+        // creamos las nuevas asociaciones.
+        if (tamData.length > 0) {
+          const asociaciones = tamData.map(tam => ({
+            idProducto: id,
+            idTam: tam.idTam,
+            precio: tam.precio
+          }));
+          await ProductosXTam.bulkCreate(asociaciones, { transaction });
+        }
+      }
+
+      await transaction.commit();
+
+      return await this.getProductById(id);
+
+    } catch (error) {
+      await transaction.rollback();
+      throw new Error(`Error al actualizar el producto: ${error.message}`);
+    }
   }
 
   async deleteProduct(id) {

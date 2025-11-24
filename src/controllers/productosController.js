@@ -1,3 +1,4 @@
+const { body } = require("express-validator");
 const productosService = require("../services/productosService");
 
 class ProductosController {
@@ -122,40 +123,47 @@ class ProductosController {
     }
   }
 
-  async updateProduct(req, res) {
-    try {
-      const { id } = req.params;
-      const updateData = req.body;
-      const imageBuffer = req.file ? req.file.buffer : null;
+  updateProduct = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const data = req.body;
+    const imageBuffer = req.file ? req.file.buffer : null;
 
-      // Parsear campos numéricos
-      if (updateData.precio) updateData.precio = parseFloat(updateData.precio);
-      if (updateData.descuento)
-        updateData.descuento = parseFloat(updateData.descuento);
-      if (updateData.stock) updateData.stock = parseInt(updateData.stock);
-
-      if (updateData.isPromocion !== undefined) {
-        updateData.isPromocion = updateData.isPromocion === "true";
+    let tamData = null; 
+    if (data.tam) {
+      try {
+        tamData = JSON.parse(data.tam);
+        if (!Array.isArray(tamData)) throw new Error();
+      } catch (e) {
+        return res.status(400).json({ success: false, message: "El formato del campo 'tam' es inválido." });
       }
-
-      const producto = await productosService.updateProduct(
-        id,
-        updateData,
-        imageBuffer
-      );
-
-      res.json({
-        success: true,
-        message: "Producto actualizado exitosamente",
-        data: producto,
-      });
-    } catch (error) {
-      res.status(500).json({
-        success: false,
-        message: error.message,
-      });
     }
+
+    const productoData = {
+      nombre: data.nombre,
+      descripcion: data.descripcion,
+      stock: data.stock,
+      idCategoria: data.idCategoria,
+      descuento: data.descuento,
+      isPromocion: data.isPromocion !== undefined ? data.isPromocion === 'true' : undefined,
+    };
+    
+    Object.keys(productoData).forEach(key => productoData[key] === undefined && delete productoData[key]);
+
+    const productoActualizado = await productosService.updateProduct(id, productoData, tamData, imageBuffer);
+
+    return res.status(200).json({
+      success: true,
+      message: "Producto actualizado exitosamente",
+      data: productoActualizado,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: `Error al actualizar el producto ${error.message}`,
+    });
   }
+}
 
   async deleteProduct(req, res) {
     try {
