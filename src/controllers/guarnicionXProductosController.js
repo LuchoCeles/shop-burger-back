@@ -1,27 +1,32 @@
 const GuarnicionesXProductoService = require("../services/guarnicionesXProductoService");
 
 class GuarnicionesXProductoController {
-    async create(req,res,next){
-        try {
-            const {idProducto, idGuarnicion} = req.body;
+  async create(req, res) {
+    try {
+      const { idProducto, idGuarnicion } = req.body;
 
-            if (!idGuarnicion || !idProducto){
-                return res.status(400).json({
-                    success : true,
-                    message: "Se necesita la guarnicion y el producto",
-                });
-            }
-
-            const prod  = await GuarnicionesXProductoService.create({idProducto,idGuarnicion});
-            return res.status(201).json({
-                success: true,
-                message: "Asociacion guarnicion producto creada",
-                data: prod,
-            });
-        } catch (error) {   
-            next(error);
-        }
+      const prod = await GuarnicionesXProductoService.create({ idProducto, idGuarnicion });
+      return res.status(201).json({
+        success: true,
+        message: "Asociacion guarnicion producto creada",
+        data: prod,
+      });
+    } catch (error) {
+      return res.status(500).json({ success: false, message: error.message });
     }
-}
+  }
 
+  async delete(req, res) {
+    try {
+      const { id } = req.params;
+      const result = await GuarnicionesXProductoService.delete(id);
+      return res.status(200).json({
+        success: true,
+        message: result.message,
+      });
+    } catch (error) {
+      return res.status(500).json({ success: false, message: error.message });
+    }
+  }
+}
 module.exports = new GuarnicionesXProductoController();

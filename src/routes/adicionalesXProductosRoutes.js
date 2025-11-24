@@ -6,17 +6,17 @@ const { body } = require("express-validator");
 const validateRequest = require("../middlewares/validateRequest");
 
 
-router.post("/create", authAdmin, [
+router.post("/create", authAdmin, validateRequest, [
     body("idProducto"),
     body("idAdicional"),
-], validateRequest, adicionalesXProductoController.create);
+], adicionalesXProductoController.create);
 
-router.delete("/:id", authAdmin, [
-], validateRequest, adicionalesXProductoController.delete);
+router.delete("/:id", authAdmin, validateRequest, [
+], adicionalesXProductoController.delete);
 
-router.patch("/:id/update", authAdmin, [
+router.patch("/:id/update", authAdmin, validateRequest, [
     body("idProducto"),
     body("idAdicional"),
-], validateRequest, adicionalesXProductoController.update);
+], adicionalesXProductoController.update);
 
 module.exports = router;

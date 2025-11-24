@@ -1,11 +1,17 @@
 const express = require('express');
 const router = express.Router();
 const guarnicionXProductosController = require('../controllers/guarnicionXProductosController');
-const authAdmin = require('../middlewares/authAdmin'); 
-const validateRequest = require('../middlewares/validateRequest'); 
+const authAdmin = require('../middlewares/authAdmin');
+const validateRequest = require('../middlewares/validateRequest');
+const { body } = require('express-validator');
 
 
-router.post('/', authAdmin, [], validateRequest, guarnicionXProductosController.create);
+router.post('/create', authAdmin, validateRequest, [
+  body("idProducto").notEmpty().isInt({ min: 1 }),
+  body("idGuarnicion").notEmpty().isInt({ min: 1 })
+], guarnicionXProductosController.create);
 
+router.delete("/:id", authAdmin, validateRequest, [
+], guarnicionXProductosController.delete);
 
 module.exports = router;
