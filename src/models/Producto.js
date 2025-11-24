@@ -64,6 +64,10 @@ module.exports = (sequelize, DataTypes) => {
       foreignKey: "idProducto",
       as: "productosXPedido",
     });
+    Producto.hasMany(models.ProductosXTam, {
+      foreignKey: "idProducto",
+      as: "productosXTam",
+    });
     Producto.hasMany(models.AdicionalesXProducto, {
       foreignKey: "idProducto",
       as: "adicionalesXProducto",
@@ -87,6 +91,10 @@ module.exports = (sequelize, DataTypes) => {
       foreignKey: "idProducto",
       otherKey: "idTam",
       as: "tamanos",
+    });
+    Producto.hasMany(models.GuarnicionesXProducto, {
+      foreignKey: 'idProducto',
+      as: 'guarnicionesXProducto',
     });
 
   };

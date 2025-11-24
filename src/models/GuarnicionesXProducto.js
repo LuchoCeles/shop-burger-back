@@ -24,5 +24,17 @@ module.exports = (sequelize, DataTypes) => {
       timestamps: true,
     }
   );
+
+  GuarnicionesXProducto.associate = function (models) {
+    GuarnicionesXProducto.belongsTo(models.Producto, {
+      foreignKey: "idProducto",
+      as: "producto",
+    });
+    GuarnicionesXProducto.belongsTo(models.Guarniciones, {
+      foreignKey: "idGuarnicion",
+      as: "guarnicion",
+    });
+  };
+
   return GuarnicionesXProducto;
 };
