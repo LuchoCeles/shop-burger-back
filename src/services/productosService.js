@@ -1,7 +1,6 @@
 const { Producto, Categoria, ProductosXTam } = require("../models");
 const cloudinaryService = require("./cloudinaryService");
 const { sequelize } = require("../config/db");
-const models = require("../models");
 
 class ProductosService {
   async getProducts(soloActivos = true) {
@@ -165,7 +164,6 @@ class ProductosService {
       throw new Error(`Error al actualizar el producto: ${error.message}`);
     }
   }
-
 
   async deleteProduct(id) {
     const producto = await Producto.findByPk(id);

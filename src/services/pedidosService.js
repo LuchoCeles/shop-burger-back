@@ -9,8 +9,11 @@ const {
   MetodosDePago,
   Categoria,
   Envio,
+  Guarniciones,
+  ProductosXTam,
 } = require("../models");
 const { sequelize } = require("../config/db");
+const models = require("../models");
 
 class PedidosService {
   async Create(datosPedido) {
@@ -27,119 +30,113 @@ class PedidosService {
   }
 
   async getAll(filtros = {}) {
-    try {
-      const pedidos = await Pedido.findAll({
-        attributes: ["id", "estado", "precioTotal", "descripcion"],
-        include: [
-          {
-            model: Cliente,
-            as: "cliente",
-            attributes: ["id", "telefono", "direccion"],
-          },
-          {
-            model : Envio,
-            as :"envio",
-            attributes:["precio"]
-          },
-          {
-            model: Pago,
-            as: "pago",
-            attributes: ["id", "estado"],
-            include: [
-              {
-                model: MetodosDePago,
-                as: "MetodosDePago",
-                attributes: ["id", "nombre"],
-              },
-            ],
-          },
-        ],
-        order: [["id", "DESC"]],
-        where: filtros.estado ? { estado: filtros.estado } : undefined,
-      });
+  try {
+    const pedidos = await Pedido.findAll({
+      attributes: ["id", "estado", "precioTotal", "descripcion"],
+      include: [
+        {
+          model: Cliente,
+          as: "cliente",
+          attributes: ["id", "telefono", "direccion"],
+        },
+        {
+          model: Envio,
+          as: "envio",
+          attributes: ["precio"]
+        },
+        {
+          model: Pago,
+          as: "pago",
+          attributes: ["id", "estado"],
+          include: [
+            {
+              model: MetodosDePago,
+              as: "MetodosDePago",
+              attributes: ["id", "nombre"],
+            },
+          ],
+        },
+      ],
+      order: [["id", "DESC"]],
+      where: filtros.estado ? { estado: filtros.estado } : undefined,
+    });
 
-      const pedidosConProductos = await Promise.all(
-        pedidos.map(async (pedido) => {
-          const pxp = await ProductosXPedido.findAll({
-            where: { idPedido: pedido.id },
-            include: [
-              {
-                model: Producto,
-                as: "producto",
-                attributes: ["id", "nombre", "precio"],
-                include: [
-                  {
-                    model: Categoria,
-                    as: "categoria",
-                    attributes: ["id", "nombre"],
-                  },
-                ],
-              },
-            ],
-          });
-
-          const productos = await Promise.all(
-            pxp.map(async (item) => {
-              // Buscar adicionales para este producto del pedido
-              const adicionalesXPxP =
-                await AdicionalesXProductosXPedidos.findAll({
-                  where: { idProductoXPedido: item.id },
+    const pedidosConProductos = await Promise.all(
+      pedidos.map(async (pedido) => {
+        const pxp = await ProductosXPedido.findAll({
+          where: { idPedido: pedido.id },
+          include: [
+            {
+              model: Producto,
+              as: "producto",
+              attributes: ["id", "nombre", "descripcion"],
+              include: [
+                { model: Categoria, as: "categoria", attributes: ["id", "nombre"] },
+                {
+                  model: ProductosXTam,
+                  as: "tamaños",
+                  attributes: ["id", "precio"],
                   include: [
-                    {
-                      model: Adicionales,
-                      as: "adicional",
-                      attributes: ["id", "nombre", "precio"],
-                    },
-                  ],
-                });
-
-              const adicionales = adicionalesXPxP.map((a) => ({
-                id: a.adicional.id,
-                nombre: a.adicional.nombre,
-                precio: a.adicional.precio,
-                cantidad: a.cantidad,
-              }));
-
-              return {
-                id: item.producto.id,
-                nombre: item.producto.nombre,
-                precio: item.producto.precio,
-                cantidad: item.cantidad,
-                adicionales,
-                categoria :{
-                  id: item.producto.categoria.id,
-                  nombre: item.producto.categoria.nombre
+                    { model: Tam, as: "tam", attributes: ["id", "nombre"] }
+                  ]
                 },
-              };
-            })
-          );
-
-          return {
-            id: pedido.id,
-            estado: pedido.estado,
-            precioTotal: pedido.precioTotal,
-            descripcion: pedido.descripcion,
-            cliente: pedido.cliente,
-            envio: pedido.envio? {
-              precio: pedido.envio.precio
-            } : null ,
-            Pago: pedido.pago
-              ? {
-                  id: pedido.pago.id,
-                  estado: pedido.pago.estado,
-                  metodoDePago: pedido.pago.MetodosDePago.nombre,
+                {
+                  model: GuarnicionesXProducto,
+                  as: "guarnicionesXProducto",
+                  include: [
+                    { model: Guarniciones, as: "guarnicion", attributes: ["id", "nombre"] }
+                  ]
                 }
-              : null,
-            productos,
-          };
-        })
-      );
+              ]
+            }
+          ],
+        });
 
-      return pedidosConProductos;
-    } catch (error) {
-      throw new Error(`Error al obtener pedidos: ${error.message}`);
-    }
+        const productos = pxp.map((item) => ({
+          id: item.producto.id,
+          nombre: item.producto.nombre,
+          descripcion: item.producto.descripcion,
+          cantidad: item.cantidad,
+
+          precio: item.producto.tamaños?.[0]?.precio || 0,
+          tam: item.producto.tamaños?.[0]?.tam || null,
+
+          guarniciones: item.producto.guarnicionesXProducto.map(g => ({
+            id: g.guarnicion.id,
+            nombre: g.guarnicion.nombre
+          })),
+
+          categoria: {
+            id: item.producto.categoria.id,
+            nombre: item.producto.categoria.nombre,
+          },
+        }));
+
+        return {
+          id: pedido.id,
+          estado: pedido.estado,
+          precioTotal: pedido.precioTotal,
+          descripcion: pedido.descripcion,
+          cliente: pedido.cliente,
+          envio: pedido.envio ? { precio: pedido.envio.precio } : null,
+          Pago: pedido.pago
+            ? {
+                id: pedido.pago.id,
+                estado: pedido.pago.estado,
+                metodoDePago: pedido.pago.MetodosDePago.nombre,
+              }
+            : null,
+          productos,
+        };
+      })
+    );
+
+    return pedidosConProductos;
+  } catch (error) {
+    throw new Error(`Error al obtener pedidos: ${error.message}`);
   }
+}
+
 
   async getPrecioById(id) {
     try {
