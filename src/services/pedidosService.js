@@ -210,6 +210,10 @@ class PedidosService {
                   },
                 ],
               },
+              {
+                model: Guarniciones,
+                as: "guarnicion",
+              },
             ],
           },
         ],
@@ -237,6 +241,14 @@ class PedidosService {
           where: { id: productoXPedido.producto.id },
           transaction,
         });
+
+        if (productoXPedido.guarnicion) {
+          await Guarniciones.increment("stock", {
+            by: 1,
+            where: { id: productoXPedido.guarnicion.id },
+            transaction,
+          });
+        }
 
         if (productoXPedido.AxPxP && productoXPedido.AxPxP.length > 0) {
           for (const adicionalX of productoXPedido.AxPxP) {
