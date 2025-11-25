@@ -12,6 +12,9 @@ router.post('/', [
   body('descripcion').optional().isString().withMessage('descripcion debe ser una cadena'),
   body('productos').isArray({ min: 1 }).notEmpty().withMessage('productos debe ser un array con al menos un elemento'),
   body('productos.adicionales').isArray({ min: 1 }).optional().withMessage('adicionales debe ser un array con al menos un elemento'),
+  body('productos.idGuarnicion').optional().isInt({ min: 1 }).withMessage('idGuarnicion debe ser un número entero'),
+  body('productos.id').isInt({ min: 1 }).withMessage('id del Producto debe ser un número entero'),
+  body('productos.cantidad').isInt({ min: 1 }).withMessage('cantidad debe ser un número entero'),
   body('metodoDePago').notEmpty().isString().withMessage('metodoDePago es requerido')
 ], validateRequest, validateHour,pedidosController.CreateOrder.bind(pedidosController));
 
