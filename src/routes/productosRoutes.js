@@ -13,13 +13,13 @@ router.get('/', productosController.getProducts);
 router.post('/', authAdmin, handleUpload, [
   body('nombre').trim().notEmpty().withMessage('El nombre es obligatorio'),
   body('descripcion').optional({ checkFalsy: true }).trim(), // checkFalsy permite strings vacíos
-  
+
   // Para campos numéricos, primero verificamos si es un string que parece número
   body('stock').optional({ checkFalsy: true }).isNumeric().withMessage('El stock debe ser un número'),
   body('idCategoria').notEmpty().withMessage('La categoría es obligatoria').isNumeric().withMessage('idCategoria debe ser un número'),
   body('descuento').optional({ checkFalsy: true }).isNumeric().withMessage('El descuento debe ser un número'),
 
-  body('isPromocion').optional().isIn(['true', 'false']).withMessage('isPromocion debe ser "true" o "false"').toBoolean(), 
+  body('isPromocion').optional().isIn(['true', 'false']).withMessage('isPromocion debe ser "true" o "false"').toBoolean(),
 
   body('tam')
     .trim()
@@ -46,13 +46,13 @@ router.post('/', authAdmin, handleUpload, [
       req.body.tam = tamArray;
       return true;
     }),
-    
+
 ], validateRequest, productosController.createProduct);
 
 router.patch('/:id', authAdmin, handleUpload, [
- 
+
   param('id').isInt({ min: 1 }).withMessage('El ID del producto debe ser un número válido.'),
-  
+
   body('nombre').optional().trim().notEmpty().withMessage('El nombre no puede estar vacío.'),
   body('descripcion').optional().trim(),
   body('stock').optional({ checkFalsy: true }).isNumeric().withMessage('El stock debe ser un número.'),
@@ -60,7 +60,8 @@ router.patch('/:id', authAdmin, handleUpload, [
   body('descuento').optional({ checkFalsy: true }).isNumeric().withMessage('El descuento debe ser un número.'),
   body('isPromocion').optional().isIn(['true', 'false']).toBoolean(),
   body('tam')
-    .optional()
+    .trim()
+    .notEmpty().withMessage("Debe proporcionar al menos un tamaño y precio.")
     .custom((value, { req }) => {
       let tamArray;
       try {
