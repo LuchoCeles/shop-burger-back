@@ -1,18 +1,28 @@
-function valiteHour(req, res, next) {
-  const apertura = 9;   // 09:00
-  const cierre = 23;    // 23:00
+const { Horario } = require("../models");
 
-  const ahora = new Date();
-  const horaActual = ahora.getHours();
+async function valiteHour(req, res) {
+  try {
+    const horario = await Horario.finOne();
 
-  if (horaActual < apertura || horaActual >= cierre) {
-    return res.status(403).json({
-      ok: false,
-      message: "El comercio está cerrado por fuera del horario de atención."
-    });
+    if (!horario) {
+      return res
+        .status(400)
+        .json({ message: "No se ha establecido un horario" });
+    }
+
+    const apertura = horario.apertura;
+    const cierre = horario.cierre;
+
+    const ahora = new Date();
+    const horaActual = ahora.getHours();
+    if (horaActual >= apertura && horaActual < cierre) {
+      return res.status(200).json({ message: "Abierto" });
+    }
+
+    return res.status(400).json({ message: "Cerrado" });
+  } catch (error) {
+    return res.status(500).json({ message: "Error al verifiacar el horario" });
   }
-
-  next();
 }
 
 module.exports = valiteHour;

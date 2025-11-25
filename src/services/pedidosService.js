@@ -15,7 +15,6 @@ const {
   GuarnicionesXProducto,
 } = require("../models");
 const { sequelize } = require("../config/db");
-const models = require("../models");
 
 class PedidosService {
   async Create(datosPedido) {
