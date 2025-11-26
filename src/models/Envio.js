@@ -11,7 +11,7 @@ module.exports = (sequelize, DataTypes) => {
     },
     estado: {
       type: DataTypes.TINYINT,
-      defaultValue: 0
+      defaultValue: 1
     }
   }, {
     tableName: 'envios',

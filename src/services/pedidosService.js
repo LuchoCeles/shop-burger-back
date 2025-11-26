@@ -34,7 +34,7 @@ class PedidosService {
   async getAll(filtros = {}) {
     try {
       const where = {};
-      
+
       // filtrar por estado
       if (filtros.estado) {
         where.estado = filtros.estado;
@@ -65,6 +65,7 @@ class PedidosService {
           [Op.between]: [desde, hasta],
         };
       }
+      //Pedido
       const pedidos = await Pedido.findAll({
         attributes: ["id", "estado", "precioTotal", "descripcion"],
         include: [
