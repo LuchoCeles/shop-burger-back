@@ -1,22 +1,25 @@
 const authAdminService = require('../services/authAdminService');
 
 class AuthAdminController {
-  async login(req, res, next) {
+  async login(req, res) {
     try {
       const { nombre, password } = req.body;
       const result = await authAdminService.login(nombre, password);
 
-      res.json({
+      res.status(201).json({
         success: true,
         message: 'Login exitoso',
         data: result
       });
     } catch (error) {
-      next(error);
+      res.status(403).json({
+        success: false,
+        message: error.message
+      });
     }
   }
 
-  async register(req, res, next) {
+  async register(req, res) {
     try {
       const { nombre, password } = req.body;
       const result = await authAdminService.register(nombre, password);
@@ -27,7 +30,10 @@ class AuthAdminController {
         data: result
       });
     } catch (error) {
-      next(error);
+      res.status(403).json({
+        success: false,
+        message: error.message
+      });
     }
   }
 }

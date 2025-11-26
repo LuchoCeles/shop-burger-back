@@ -1,4 +1,4 @@
-const { Tam,  Categoria } = require("../models");
+const { Tam, Categoria } = require("../models");
 
 class TamService {
   async create(data) {
@@ -13,15 +13,7 @@ class TamService {
   async get() {
     try {
       const tams = await Tam.findAll({
-        attributes: ["id", "nombre", "estado"],
-        include: [
-          {
-            model: Categoria,
-            as: "categorias",
-            attributes: ["id", "nombre", "estado"],
-          },
-        ],
-        order: [["id", "ASC"]],
+        attributes: ["id", "nombre", "idCategoria", "estado"]
       });
       return tams;
     } catch (error) {
@@ -31,17 +23,17 @@ class TamService {
     }
   }
 
-  async updateCategoria(id, data) {
+  async updateTam(id, data) {
     try {
       const tam = await Tam.findByPk(id);
       await tam.update(data);
       return tam;
     } catch (error) {
-      throw new Error(`Error al actualizar categoria ${error.message}`);
+      throw new Error(`Error al actualizar ${error.message}`);
     }
   }
 
-  async update(id) {
+  async updateEstado(id) {
     try {
       const tam = await Tam.findByPk(id);
       tam.estado = tam.estado === 1 ? 0 : 1;
