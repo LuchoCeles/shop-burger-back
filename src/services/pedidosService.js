@@ -78,6 +78,11 @@ class PedidosService {
                     attributes: ["id", "nombre"],
                   },
                   {
+                    model: Adicionales,
+                    as: "adicionales",
+                    attributes: ["id", "nombre", "precio"],
+                  },
+                  {
                     model: ProductosXTam,
                     as: "productosXTam",
                     attributes: ["id", "precio"],
@@ -115,6 +120,11 @@ class PedidosService {
               nombre: g.guarnicion.nombre,
             })),
 
+            adicional: item.producto.adicionales.map((a) => ({
+              id: a.id,
+              nombre: a.nombre,
+              precio: a.precio,
+            })),
             categoria: {
               id: item.producto.categoria.id,
               nombre: item.producto.categoria.nombre,
@@ -132,7 +142,7 @@ class PedidosService {
               ? {
                   id: pedido.pago.id,
                   estado: pedido.pago.estado,
-                  metodoDePago: pedido.pago.MetodosDePago.nombre,
+                  metodoDePago: pedido.pago.MetodosDePago?.nombre || null,
                 }
               : null,
             productos,
