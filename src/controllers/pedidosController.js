@@ -30,6 +30,7 @@ class PedidosController {
       }
       
       return res.status(201).json({
+        success: true,
         message: "Pedido creado exitosamente",
         data: {
           id: pedido.id,
@@ -38,6 +39,7 @@ class PedidosController {
     } catch (error) {
       console.error("Error al crear pedido:", error);
       return res.status(500).json({
+        success: false,
         error: error.message,
       });
     }
