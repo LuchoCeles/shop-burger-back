@@ -57,6 +57,8 @@ router.patch('/:id', authAdmin, handleUpload,validateRequest, [
   body('descripcion').optional().trim(),
   body('stock').optional({ checkFalsy: true }).isNumeric().withMessage('El stock debe ser un número.'),
   body('idCategoria').optional().isNumeric().withMessage('idCategoria debe ser un número.'),
+  body('idTamAntigua').optional().isNumeric().withMessage('idTamAntigua debe ser un número.'),
+  body('idCategoriaAntigua').optional().isNumeric().withMessage('idCategoriaAntigua debe ser un número.'),
   body('descuento').optional({ checkFalsy: true }).isNumeric().withMessage('El descuento debe ser un número.'),
   body('isPromocion').optional().isIn(['true', 'false']).toBoolean(),
   body('tam')

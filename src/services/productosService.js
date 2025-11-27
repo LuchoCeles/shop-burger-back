@@ -160,7 +160,6 @@ class ProductosService {
           }
         }
       }
-
       //actualizamos tamaño y precio
       if (tamData !== null) {
         await ProductosXTam.destroy({
