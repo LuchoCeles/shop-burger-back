@@ -1,5 +1,5 @@
 const datosBancariosService = require("../services/datosBancariosService");
-const jwt = require('jsonwebtoken');
+const jwt = require("jsonwebtoken");
 
 class DatosBancariosController {
   async create(req, res) {
@@ -17,7 +17,7 @@ class DatosBancariosController {
           cbu: datos.cbu,
           apellido: datos.apellido,
           nombre: datos.nombre,
-          mpEstado: datos.mpEstado
+          mpEstado: datos.mpEstado,
         },
       });
     } catch (error) {
@@ -39,11 +39,14 @@ class DatosBancariosController {
           cbu: datos.cbu,
           apellido: datos.apellido,
           nombre: datos.nombre,
-          mpEstado: datos.mpEstado
+          mpEstado: datos.mpEstado,
         },
       });
     } catch (error) {
-      next(error);
+      return res.status(500).json({
+        success: false,
+        message: error.message,
+      });
     }
   }
 
@@ -71,8 +74,8 @@ class DatosBancariosController {
           cbu: datos.cbu,
           apellido: datos.apellido,
           nombre: datos.nombre,
-          mpEstado: datos.mpEstado
-        }
+          mpEstado: datos.mpEstado,
+        },
       });
     } catch (error) {
       res.status(403).json({
@@ -87,18 +90,17 @@ class DatosBancariosController {
       const { id } = req.params;
       const { password, newPassword } = req.body;
 
-      await datosBancariosService.updatePassword(
-        id,
-        password,
-        newPassword
-      );
+      await datosBancariosService.updatePassword(id, password, newPassword);
 
       res.status(200).json({
         success: true,
-        message: "Contraseña actualizada"
+        message: "Contraseña actualizada",
       });
     } catch (error) {
-      next(error);
+      return res.status(500).json({
+        success: false,
+        message: error.message,
+      });
     }
   }
 
@@ -118,8 +120,8 @@ class DatosBancariosController {
           cbu: datos.cbu,
           apellido: datos.apellido,
           nombre: datos.nombre,
-          mpEstado: datos.mpEstado
-        }
+          mpEstado: datos.mpEstado,
+        },
       });
     } catch (error) {
       res.status(403).json({
@@ -145,8 +147,8 @@ class DatosBancariosController {
           cbu: datos.cbu,
           apellido: datos.apellido,
           nombre: datos.nombre,
-          mpEstado: datos.mpEstado
-        }
+          mpEstado: datos.mpEstado,
+        },
       });
     } catch (error) {
       res.status(403).json({
@@ -155,7 +157,6 @@ class DatosBancariosController {
       });
     }
   }
-
 }
 
 module.exports = new DatosBancariosController();
