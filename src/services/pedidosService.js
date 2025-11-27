@@ -14,6 +14,7 @@ const {
   Tam,
   GuarnicionesXProducto,
 } = require("../models");
+const { Op } = require("sequelize");
 const { sequelize } = require("../config/db");
 
 class PedidosService {
@@ -32,6 +33,39 @@ class PedidosService {
 
   async getAll(filtros = {}) {
     try {
+      const where = {};
+
+      // filtrar por estado
+      if (filtros.estado) {
+        where.estado = filtros.estado;
+      }
+
+      // Filtrar por fecha exacta
+      if (filtros.fecha) {
+        const fechaInicio = new Date(filtros.fecha);
+        fechaInicio.setHours(0, 0, 0, 0);
+
+        const fechaFin = new Date(filtros.fecha);
+        fechaFin.setHours(23, 59, 59, 999);
+
+        where.createdAt = {
+          [Op.between]: [fechaInicio, fechaFin],
+        };
+      }
+
+      // Filtrar por rango de fechas
+      if (filtros.fechaDesde && filtros.fechaHasta) {
+        const desde = new Date(filtros.fechaDesde);
+        desde.setHours(0, 0, 0, 0);
+
+        const hasta = new Date(filtros.fechaHasta);
+        hasta.setHours(23, 59, 59, 999);
+
+        where.createdAt = {
+          [Op.between]: [desde, hasta],
+        };
+      }
+      //Pedido
       const pedidos = await Pedido.findAll({
         attributes: ["id", "estado", "precioTotal", "descripcion"],
         include: [
@@ -59,7 +93,7 @@ class PedidosService {
           },
         ],
         order: [["id", "DESC"]],
-        where: filtros.estado ? { estado: filtros.estado } : undefined,
+        where,
       });
 
       const pedidosConProductos = await Promise.all(
@@ -98,6 +132,17 @@ class PedidosService {
                   },
                 ],
               },
+              {
+                model: AdicionalesXProductosXPedidos,
+                as: "AxPxP",
+                include: [
+                  {
+                    model: Adicionales,
+                    as: "adicional",
+                    attributes: ["id", "nombre", "precio"],
+                  },
+                ],
+              },
             ],
           });
 
@@ -114,11 +159,15 @@ class PedidosService {
               id: g.guarnicion.id,
               nombre: g.guarnicion.nombre,
             })),
-
             categoria: {
               id: item.producto.categoria.id,
               nombre: item.producto.categoria.nombre,
             },
+            adicionales: item.AxPxP.map((ad) => ({
+              id: ad.adicional.id,
+              nombre: ad.adicional.nombre,
+              precio: ad.adicional.precio,
+            })),
           }));
 
           return {
@@ -132,7 +181,7 @@ class PedidosService {
               ? {
                   id: pedido.pago.id,
                   estado: pedido.pago.estado,
-                  metodoDePago: pedido.pago.MetodosDePago.nombre,
+                  metodoDePago: pedido.pago.MetodosDePago?.nombre || null,
                 }
               : null,
             productos,

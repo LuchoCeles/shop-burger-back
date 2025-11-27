@@ -71,8 +71,7 @@ BEGIN
                                 'nombre', T.nombre,
                                 'precio', PXT.precio,
                                 'precioFinal', ROUND(PXT.precio - (PXT.precio * (p.descuento / 100)), 2)
-                            )
-                        SEPARATOR ','),
+                            ) ORDER BY PXT.precio ASC SEPARATOR ','),
                     ']')
                 FROM ProductosXTam AS PXT
                 INNER JOIN Tam AS T ON PXT.idTam = T.id
