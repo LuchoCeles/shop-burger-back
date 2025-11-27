@@ -1,5 +1,6 @@
 const { Producto, Categoria, ProductosXTam } = require("../models");
 const cloudinaryService = require("./cloudinaryService");
+const productosXTamService = require("./productosXTamService");
 const { sequelize } = require("../config/db");
 
 class ProductosService {
@@ -47,12 +48,12 @@ class ProductosService {
           attributes: ["id", "nombre"],
         },
         {
-          model :Tam,
-          as: 'tam',
-          attributes : ['id','nombre'],
-          through : {attributes: ['precio']}
+          model: Tam,
+          as: "tam",
+          attributes: ["id", "nombre"],
+          through: { attributes: ["precio"] },
         },
-      ]
+      ],
     });
 
     if (!producto) {
@@ -77,7 +78,7 @@ class ProductosService {
     const dataForProcedure = {
       ...productoData,
       url_imagen: imageUrl,
-      tam: tamData, 
+      tam: tamData,
     };
 
     const [result] = await sequelize.query("CALL createProducts(:data);", {
@@ -108,7 +109,7 @@ class ProductosService {
     }
   }
 
-   async updateProduct(id, productoData, tamData, imageBuffer) {
+  async updateProduct(id, productoData, tamData, antiguaData,imageBuffer) {
     const transaction = await sequelize.transaction();
 
     try {
@@ -116,49 +117,62 @@ class ProductosService {
       const producto = await Producto.findByPk(id, { transaction });
 
       let imageUrl = producto.url_imagen;
-       if (imageBuffer) {
-      try {
-        // Eliminar imagen anterior de Cloudinary
-        if (producto.url_imagen) {
-          const publicId = cloudinaryService.getPublicIdFromUrl(
-            producto.url_imagen
-          );
-          if (publicId) {
-            await cloudinaryService.deleteImage(publicId);
+      if (imageBuffer) {
+        try {
+          // Eliminar imagen anterior de Cloudinary
+          if (producto.url_imagen) {
+            const publicId = cloudinaryService.getPublicIdFromUrl(
+              producto.url_imagen
+            );
+            if (publicId) {
+              await cloudinaryService.deleteImage(publicId);
+            }
           }
+          // Subir nueva imagen
+          const uploadResult = await cloudinaryService.uploadImage(imageBuffer);
+          imageUrl = uploadResult.secure_url;
+        } catch (error) {
+          throw new Error("Error al actualizar la imagen: " + error.message);
         }
-        // Subir nueva imagen
-        const uploadResult = await cloudinaryService.uploadImage(imageBuffer);
-        imageUrl = uploadResult.secure_url;
-      } catch (error) {
-        throw new Error("Error al actualizar la imagen: " + error.message);
       }
-    }
-      productoData.url_imagen = imageUrl; 
+      productoData.url_imagen = imageUrl;
 
       await producto.update(productoData, { transaction });
 
-      //actualizamos tamaño y precio
-      if (tamData !== null) { 
-        await ProductosXTam.destroy({
-          where: { idProducto: id },
-          transaction
-        });
-        // creamos las nuevas asociaciones.
+      if (antiguaData.idCategoria !== productoData.idCategoria) {
         if (tamData.length > 0) {
-          const asociaciones = tamData.map(tam => ({
+          const asociaciones = tamData.map((tam) => ({
             idProducto: id,
             idTam: tam.idTam,
-            precio: tam.precio
+            precio: tam.precio,
           }));
-          await ProductosXTam.bulkCreate(asociaciones, { transaction });
+
+          try {
+            await ProductosXTam.create(asociaciones, { transaction });
+            await productosXTamService.deleteByProducto({
+              where: { idProducto: id ,idTam: antiguaData.idTam},
+              transaction,
+            });
+          } catch (error) {
+            throw new Error(
+              `Error al crear asociaciones de tamaños: ${error.message}`
+            );
+          }
         }
+      }
+
+      //actualizamos tamaño y precio
+      if (tamData !== null) {
+        await ProductosXTam.destroy({
+          where: { idProducto: id },
+          transaction,
+        });
+        // creamos las nuevas asociaciones.
       }
 
       await transaction.commit();
 
       return await this.getProductById(id);
-
     } catch (error) {
       await transaction.rollback();
       throw new Error(`Error al actualizar el producto: ${error.message}`);

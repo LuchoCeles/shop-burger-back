@@ -1,4 +1,3 @@
-const { body } = require("express-validator");
 const productosService = require("../services/productosService");
 
 class ProductosController {
@@ -137,6 +136,10 @@ class ProductosController {
     try {
       const { id } = req.params;
       const data = req.body;
+      const antiguaData = {
+        idTam: data.idTamAntigua,
+        idCategoria: data.idCategoriaAntigua,
+      }
       const imageBuffer = req.file ? req.file.buffer : null;
 
       let tamData = null;
@@ -174,6 +177,7 @@ class ProductosController {
         id,
         productoData,
         tamData,
+        antiguaData,
         imageBuffer
       );
 
