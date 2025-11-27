@@ -9,13 +9,13 @@ const { body } = require('express-validator');
 router.get('/', guarnicionesController.getAll);
 
 
-router.post('/', authAdmin, [
+router.post('/', authAdmin,validateRequest, [
   body('nombre').notEmpty().withMessage('El nombre es obligatorio'),
   body('stock').notEmpty().isInt({ min: 0 }).withMessage('El stock debe ser un número entero mayor o igual a 0')
-], validateRequest, guarnicionesController.create);
+],  guarnicionesController.create);
 
 
-router.patch('/:id', authAdmin, [], validateRequest, guarnicionesController.update);
+router.patch('/:id', authAdmin, validateRequest,[],  guarnicionesController.update);
 
 
 router.patch('/:id/estado', authAdmin, guarnicionesController.updateEstado);

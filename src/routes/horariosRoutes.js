@@ -7,11 +7,11 @@ const router = express.Router();
 
 router.get('/', HorariosController.getAll);
 
-router.post('/', authAdmin, [
-], validateRequest, HorariosController.create);
+router.post('/', authAdmin,validateRequest, [
+],  HorariosController.create);
 
-router.patch('/:id', authAdmin, [
-], validateRequest, HorariosController.updateHorario);
+router.patch('/:id', authAdmin,validateRequest, [
+],  HorariosController.updateHorario);
 
 router.delete('/:id', validateRequest,authAdmin, HorariosController.deleteHorario);
 

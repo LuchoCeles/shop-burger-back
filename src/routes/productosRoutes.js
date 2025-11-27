@@ -10,7 +10,7 @@ const router = express.Router();
 router.get('/', productosController.getProducts);
 
 
-router.post('/', authAdmin, handleUpload, [
+router.post('/', authAdmin, handleUpload,validateRequest, [
   body('nombre').trim().notEmpty().withMessage('El nombre es obligatorio'),
   body('descripcion').optional({ checkFalsy: true }).trim(), // checkFalsy permite strings vacíos
 
@@ -47,9 +47,9 @@ router.post('/', authAdmin, handleUpload, [
       return true;
     }),
 
-], validateRequest, productosController.createProduct);
+],  productosController.createProduct);
 
-router.patch('/:id', authAdmin, handleUpload, [
+router.patch('/:id', authAdmin, handleUpload,validateRequest, [
 
   param('id').isInt({ min: 1 }).withMessage('El ID del producto debe ser un número válido.'),
 
@@ -88,13 +88,13 @@ router.patch('/:id', authAdmin, handleUpload, [
       return true;
     }),
 
-], validateRequest, productosController.updateProduct);
+],  productosController.updateProduct);
 
 router.delete('/:id', authAdmin, productosController.deleteProduct);
 
-router.patch("/:id/estado", authAdmin, [
+router.patch("/:id/estado", authAdmin, validateRequest,[
   param("id").isInt({ min: 1 }).withMessage("ID de producto inválido"),
   body("estado").isBoolean().withMessage("Estado debe ser 0 o 1"),
-], validateRequest, productosController.updateState);
+],  productosController.updateState);
 
 module.exports = router;
