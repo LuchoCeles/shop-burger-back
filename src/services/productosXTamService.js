@@ -1,11 +1,12 @@
 const { ProductosXTam } = require('../models');
 
 class ProductosXTamService {
-  async deleteByProducto(id,idTam) {
+  async deleteByProducto(id,idTam, transaction = null) {
     try {
       await ProductosXTam.destroy({
         where: { idProducto: id , idTam: idTam},
         force: true,
+        transaction,
       });
     } catch (error) {
       throw new Error(

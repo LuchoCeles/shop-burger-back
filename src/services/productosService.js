@@ -141,6 +141,7 @@ class ProductosService {
 
       if (antiguaData.idCategoria !== productoData.idCategoria) {
         if (tamData.length > 0) {
+
           const asociaciones = tamData.map((tam) => ({
             idProducto: id,
             idTam: tam.idTam,
@@ -148,11 +149,8 @@ class ProductosService {
           }));
 
           try {
-            await ProductosXTam.create(asociaciones, { transaction });
-            await productosXTamService.deleteByProducto({
-              where: { idProducto: id ,idTam: antiguaData.idTam},
-              transaction,
-            });
+            await ProductosXTam.bulkCreate(asociaciones, { transaction });
+            await productosXTamService.deleteByProducto(id,antiguaData.idTam,{transaction});
           } catch (error) {
             throw new Error(
               `Error al crear asociaciones de tamaños: ${error.message}`

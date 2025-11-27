@@ -140,6 +140,7 @@ class ProductosController {
         idTam: data.idTamAntigua,
         idCategoria: data.idCategoriaAntigua,
       }
+      
       const imageBuffer = req.file ? req.file.buffer : null;
 
       let tamData = null;
