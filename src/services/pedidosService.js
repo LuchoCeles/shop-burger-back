@@ -118,19 +118,13 @@ class PedidosService {
                     include: [
                       { model: Tam, as: "tam", attributes: ["id", "nombre"] },
                     ],
-                  },
-                  {
-                    model: GuarnicionesXProducto,
-                    as: "guarnicionesXProducto",
-                    include: [
-                      {
-                        model: Guarniciones,
-                        as: "guarnicion",
-                        attributes: ["id", "nombre"],
-                      },
-                    ],
-                  },
+                  }
                 ],
+              },
+              {
+                model: Guarniciones,
+                as: "guarnicion",
+                attributes: ["id", "nombre"],
               },
               {
                 model: AdicionalesXProductosXPedidos,
@@ -146,29 +140,34 @@ class PedidosService {
             ],
           });
 
-          const productos = pxp.map((item) => ({
-            id: item.producto.id,
-            nombre: item.producto.nombre,
-            descripcion: item.producto.descripcion,
-            cantidad: item.cantidad,
+          const productos = pxp.map((item) => {
 
-            precio: item.producto.productosXTam?.[0]?.precio || 0,
-            tam: item.producto.productosXTam?.[0]?.tam || null,
 
-            guarniciones: item.producto.guarnicionesXProducto.map((g) => ({
-              id: g.guarnicion.id,
-              nombre: g.guarnicion.nombre,
-            })),
-            categoria: {
-              id: item.producto.categoria.id,
-              nombre: item.producto.categoria.nombre,
-            },
-            adicionales: item.AxPxP.map((ad) => ({
-              id: ad.adicional.id,
-              nombre: ad.adicional.nombre,
-              precio: ad.adicional.precio,
-            })),
-          }));
+
+            return {
+              nombre: item.producto.nombre,
+              cantidad: item.cantidad,
+
+              precio: item.producto.productosXTam?.[0]?.precio || 0,
+              tam: item.producto.productosXTam?.[0]?.tam || null,
+
+              guarnicion: item.guarnicion
+                ? { id: item.guarnicion.id, nombre: item.guarnicion.nombre }
+                : null,
+
+              categoria: {
+                id: item.producto.categoria.id,
+                nombre: item.producto.categoria.nombre,
+              },
+
+              adicionales: item.AxPxP.map((ad) => ({
+                id: ad.adicional.id,
+                nombre: ad.adicional.nombre,
+                precio: Number(ad.precio),
+                cantidad: ad.cantidad,
+              })),
+            };
+          });
 
           return {
             id: pedido.id,
@@ -179,12 +178,12 @@ class PedidosService {
             envio: pedido.envio ? { precio: pedido.envio.precio } : null,
             Pago: pedido.pago
               ? {
-                  id: pedido.pago.id,
-                  estado: pedido.pago.estado,
-                  metodoDePago: pedido.pago.MetodosDePago?.nombre || null,
-                }
+                id: pedido.pago.id,
+                estado: pedido.pago.estado,
+                metodoDePago: pedido.pago.MetodosDePago?.nombre || null,
+              }
               : null,
-            productos,
+            productos: productos,
           };
         })
       );
