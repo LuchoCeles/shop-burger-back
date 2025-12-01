@@ -6,13 +6,13 @@ const localController = require('../controllers/localController');
 
 router.get('/', localController.getAll);
 
-router.post('/', authAdmin, [
-], validateRequest, localController.createLocal);
+router.post('/', authAdmin,validateRequest,  [
+], localController.createLocal);
 
-router.patch('/:id/estado',authAdmin,[
-], validateRequest,localController.deleteLocal);
+router.patch('/:id/estado',authAdmin,validateRequest,[
+], localController.deleteLocal);
 
-router.patch('/:id/direccion',authAdmin,[
-], validateRequest,localController.updateDireccion);
+router.patch('/:id/direccion',authAdmin,validateRequest,[
+], localController.updateDireccion);
 
 module.exports = router;

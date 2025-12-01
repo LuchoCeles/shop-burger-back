@@ -9,7 +9,10 @@ class CategoriasController {
         data: categorias,
       });
     } catch (error) {
-      next(error);
+      return res.status(500).json({
+        success: false,
+        message: error.message,
+      });
     }
   }
 
@@ -23,7 +26,10 @@ class CategoriasController {
         data: categoria,
       });
     } catch (error) {
-      next(error);
+      return res.status(500).json({
+        success: false,
+        message: error.message,
+      });
     }
   }
 
@@ -38,10 +44,9 @@ class CategoriasController {
         message: "Estado actualizado",
         data: {
           id: categoria.id,
-          esatdo: categoria.estado
+          esatdo: categoria.estado,
         },
       });
-
     } catch (error) {
       res.status(500).json({
         success: false,
@@ -61,7 +66,10 @@ class CategoriasController {
         data: categoria,
       });
     } catch (error) {
-      next(error);
+      return res.status(500).json({
+        success: false,
+        message: error.message,
+      });
     }
   }
 

@@ -8,19 +8,19 @@ const router = express.Router();
 
 router.get('/', categoriasController.getCategories);
 
-router.post('/', authAdmin, [
+router.post('/', authAdmin, validateRequest,[
   body('nombre').notEmpty().trim()
-], validateRequest, categoriasController.createCategorie);
+], categoriasController.createCategorie);
 
-router.patch('/:id', authAdmin, [
+router.patch('/:id', authAdmin,validateRequest, [
   body('nombre').notEmpty().trim()
-], validateRequest, categoriasController.updateCategorie);
+],  categoriasController.updateCategorie);
 
 router.delete('/:id', authAdmin, categoriasController.deleteCategory);
 
-router.patch('/:id/estado', authAdmin, [
+router.patch('/:id/estado', authAdmin,validateRequest, [
   param("id").isInt({ min: 1 }).withMessage("ID invalido"),
   body("estado").isBoolean().withMessage("El campo 'Estado' debe ser un valor booleano"),
-], validateRequest, categoriasController.updateEstate);
+],  categoriasController.updateEstate);
 
 module.exports = router;

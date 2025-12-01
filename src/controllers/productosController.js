@@ -1,4 +1,3 @@
-const { body } = require("express-validator");
 const productosService = require("../services/productosService");
 
 class ProductosController {
@@ -11,7 +10,7 @@ class ProductosController {
 
       res.json({
         success: true,
-        data: productos
+        data: productos,
       });
     } catch (error) {
       res.status(500).json({
@@ -29,7 +28,7 @@ class ProductosController {
       );
       res.json({
         success: true,
-        data: productos
+        data: productos,
       });
     } catch (error) {
       res.status(500).json({
@@ -66,7 +65,12 @@ class ProductosController {
         try {
           tamData = JSON.parse(body.tam);
         } catch (e) {
-          return res.status(400).json({ success: false, message: "El formato del array 'tam' es inválido." });
+          return res
+            .status(400)
+            .json({
+              success: false,
+              message: "El formato del array 'tam' es inválido.",
+            });
         }
       }
 
@@ -76,21 +80,27 @@ class ProductosController {
         stock: body.stock,
         idCategoria: body.idCategoria,
         descuento: body.descuento,
-        isPromocion: body.isPromocion === 'true',
+        isPromocion: body.isPromocion === "true",
       };
-      
-      const productoCreado = await productosService.createProduct(productoData, tamData, imageBuffer);
+
+      const productoCreado = await productosService.createProduct(
+        productoData,
+        tamData,
+        imageBuffer
+      );
 
       return res.status(201).json({
         success: true,
         message: "Producto creado exitosamente",
         data: productoCreado,
       });
-
     } catch (error) {
-      next(error); 
+      return res.status(500).json({
+        success: false,
+        message: error.message,
+      });
     }
-  }
+  };
 
   async updateState(req, res) {
     try {
@@ -114,7 +124,6 @@ class ProductosController {
           estado: producto.estado,
         },
       });
-
     } catch (error) {
       res.status(500).json({
         success: false,
@@ -124,46 +133,67 @@ class ProductosController {
   }
 
   updateProduct = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const data = req.body;
-    const imageBuffer = req.file ? req.file.buffer : null;
-
-    let tamData = null; 
-    if (data.tam) {
-      try {
-        tamData = JSON.parse(data.tam);
-        if (!Array.isArray(tamData)) throw new Error();
-      } catch (e) {
-        return res.status(400).json({ success: false, message: "El formato del campo 'tam' es inválido." });
+    try {
+      const { id } = req.params;
+      const data = req.body;
+      const antiguaData = {
+        idTam: data.idTamAntigua,
+        idCategoria: data.idCategoriaAntigua,
       }
+      
+      const imageBuffer = req.file ? req.file.buffer : null;
+
+      let tamData = null;
+      if (data.tam) {
+        try {
+          tamData = JSON.parse(data.tam);
+          if (!Array.isArray(tamData)) throw new Error();
+        } catch (e) {
+          return res
+            .status(400)
+            .json({
+              success: false,
+              message: "El formato del campo 'tam' es inválido.",
+            });
+        }
+      }
+
+      const productoData = {
+        nombre: data.nombre,
+        descripcion: data.descripcion,
+        stock: data.stock,
+        idCategoria: data.idCategoria,
+        descuento: data.descuento,
+        isPromocion:
+          data.isPromocion !== undefined
+            ? data.isPromocion === "true"
+            : undefined,
+      };
+
+      Object.keys(productoData).forEach(
+        (key) => productoData[key] === undefined && delete productoData[key]
+      );
+
+      const productoActualizado = await productosService.updateProduct(
+        id,
+        productoData,
+        tamData,
+        antiguaData,
+        imageBuffer
+      );
+
+      return res.status(200).json({
+        success: true,
+        message: "Producto actualizado exitosamente",
+        data: productoActualizado,
+      });
+    } catch (error) {
+      return res.status(500).json({
+        success: false,
+        message: `Error al actualizar el producto ${error.message}`,
+      });
     }
-
-    const productoData = {
-      nombre: data.nombre,
-      descripcion: data.descripcion,
-      stock: data.stock,
-      idCategoria: data.idCategoria,
-      descuento: data.descuento,
-      isPromocion: data.isPromocion !== undefined ? data.isPromocion === 'true' : undefined,
-    };
-    
-    Object.keys(productoData).forEach(key => productoData[key] === undefined && delete productoData[key]);
-
-    const productoActualizado = await productosService.updateProduct(id, productoData, tamData, imageBuffer);
-
-    return res.status(200).json({
-      success: true,
-      message: "Producto actualizado exitosamente",
-      data: productoActualizado,
-    });
-  } catch (error) {
-    return res.status(500).json({
-      success: false,
-      message: `Error al actualizar el producto ${error.message}`,
-    });
-  }
-}
+  };
 
   async deleteProduct(req, res) {
     try {

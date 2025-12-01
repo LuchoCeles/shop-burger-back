@@ -26,11 +26,12 @@ class GuarnicionesService {
   }
   async update(id, data) {
     try {
-      const { nombre, tamId } = data;
+      const {tamId} = data;
 
       const guarnicion = await Guarniciones.findByPk(id);
 
-      guarnicion.nombre = nombre;
+      guarnicion.nombre = data.nombre;
+      guarnicion.stock = data.stock;
       await guarnicion.save();
 
       if (tamId && Array.isArray(tamId)) {
