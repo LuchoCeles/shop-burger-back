@@ -1,4 +1,5 @@
 const { sequelize } = require("../config/db")
+const {Producto, Categoria} =  require("../models");
 
 class CategoriasService {
   async getCategories() {
@@ -51,7 +52,6 @@ class CategoriasService {
   }
 
   async deleteCategory(id) {
-    // no elimina, da de baja la categoria
     const transaction = await sequelize.transaction();
     try {
       const products = await Producto.count({

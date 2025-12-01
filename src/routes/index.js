@@ -5,8 +5,15 @@ const categoriasRoutes = require('./categoriasRoutes');
 const pedidosRoutes = require('./pedidosRoutes');
 const datosBancariosRoutes = require('./datosBancariosRoutes');
 const adicionalesRoutes = require('./adicionalesRoutes');
-const adicionalesXProductosRoutes = require('./adicioanlesXProductosRoutes');
+const adicionalesXProductosRoutes = require('./adicionalesXProductosRoutes');
 const mercadoPagoRoutes = require('./mercadoPagoRoutes');
+const horariosRoute = require('./horariosRoutes');
+const localRoute = require('./localRoutes');
+const horarioDiasRoutes = require('./horarioDiasRoutes');
+const guarnicionRoutes = require('./guarnicionesRoutes');
+const guarnicionesXProductoRoutes = require('./guarnicionesXProductoRoutes');
+const tamRoutes = require('./tamRoutes');
+const productosXTamRoutes = require('./productosXTamRoutes');
 
 const router = express.Router();
 
@@ -18,5 +25,12 @@ router.use('/admin/banco', datosBancariosRoutes);
 router.use('/api/adicional', adicionalesRoutes);
 router.use('/admin/adicionalxproducto', adicionalesXProductosRoutes);
 router.use('/api/mercadopago', mercadoPagoRoutes);
+router.use('/api/horarios', horariosRoute);
+router.use('/api/local', localRoute);
+router.use('/api/horarioDias', horarioDiasRoutes);
+router.use('/api/guarnicion', guarnicionRoutes);
+router.use('/admin/guarnicionesxproducto', guarnicionesXProductoRoutes);
+router.use('/api/tam', tamRoutes);
+router.use('/api/productosxtam', productosXTamRoutes);
 
 module.exports = router;

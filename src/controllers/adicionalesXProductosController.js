@@ -12,7 +12,10 @@ class AdicionalesXProductosController {
         data: registro,
       });
     } catch (error) {
-      next(error);
+      return res.status(500).json({
+        success: false,
+        message: error.message,
+      });
     }
   }
 

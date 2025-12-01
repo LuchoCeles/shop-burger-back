@@ -11,7 +11,7 @@ module.exports = (sequelize, DataTypes) => {
       unique: true
     },
     cbu: {
-      type: DataTypes.STRING(22),
+      type: DataTypes.STRING(50),
       allowNull: false,
       unique: true
     },
@@ -20,15 +20,15 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false
     },
     apellido: {
-      type: DataTypes.STRING(100),
+      type: DataTypes.STRING(50),
       defaultValue: true
     },
     nombre: {
-      type: DataTypes.STRING(100),
+      type: DataTypes.STRING(50),
       defaultValue: true
     },
     password :{
-      type: DataTypes.STRING, // ← hash bcrypt
+      type: DataTypes.STRING(70),
       allowNull: false,
     },
   }, {

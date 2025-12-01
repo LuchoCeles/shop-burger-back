@@ -15,21 +15,9 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.TEXT,
         allowNull: true,
       },
-      precio: {
-        type: DataTypes.DECIMAL(10, 2),
-        allowNull: false,
-      },
       descuento: {
-        type: DataTypes.DECIMAL(5, 2),
+        type: DataTypes.INTEGER,
         defaultValue: 0,
-      },
-      precioFinal: {
-        type: DataTypes.VIRTUAL,
-        get() {
-          const descuento = this.getDataValue("descuento") || 0;
-          const precio = parseFloat(this.getDataValue("precio"));
-          return precio * (1 - descuento / 100);
-        },
       },
       stock: {
         type: DataTypes.INTEGER,
@@ -55,12 +43,6 @@ module.exports = (sequelize, DataTypes) => {
           key: "id",
         },
       },
-      nombrecategoria: {
-        type: DataTypes.VIRTUAL,
-        get() {
-          return this.categoria ? this.categoria.nombre : null;
-        },
-      },
     },
     {
       tableName: "productos",
@@ -82,6 +64,10 @@ module.exports = (sequelize, DataTypes) => {
       foreignKey: "idProducto",
       as: "productosXPedido",
     });
+    Producto.hasMany(models.ProductosXTam, {
+      foreignKey: "idProducto",
+      as: "productosXTam",
+    });
     Producto.hasMany(models.AdicionalesXProducto, {
       foreignKey: "idProducto",
       as: "adicionalesXProducto",
@@ -93,6 +79,24 @@ module.exports = (sequelize, DataTypes) => {
       otherKey: "idAdicional",
       as: "adicionales",
     });
+
+    Producto.belongsToMany(models.Guarniciones, {
+      through: models.GuarnicionesXProducto,
+      foreignKey: 'idProducto',
+      otherKey: 'idGuarnicion',
+      as: 'guarniciones',
+    });
+    Producto.belongsToMany(models.Tam, {
+      through: models.ProductosXTam,
+      foreignKey: "idProducto",
+      otherKey: "idTam",
+      as: "tamanos",
+    });
+    Producto.hasMany(models.GuarnicionesXProducto, {
+      foreignKey: 'idProducto',
+      as: 'guarnicionesXProducto',
+    });
+
   };
 
   return Producto;

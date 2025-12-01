@@ -47,6 +47,272 @@ END$$
 DELIMITER ;
 
 DELIMITER $$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `createPedido`(IN p_data JSON)
+BEGIN
+    DECLARE v_idCliente INT;
+    DECLARE v_telefono VARCHAR(40);
+    DECLARE v_direccion VARCHAR(255);
+    DECLARE v_descripcion TEXT;
+    DECLARE v_metodoDePago INT;
+
+    DECLARE v_cantidadProducto INT;
+    DECLARE v_descuentoProducto INT;
+    DECLARE v_stockActualProducto INT;
+    DECLARE v_estadoProducto TINYINT;
+
+    DECLARE v_precioProducto DECIMAL(10,2);
+    DECLARE v_subTotalProductos DECIMAL(10,2) DEFAULT 0;
+
+    DECLARE v_precioAdicional DECIMAL(10,2);
+    DECLARE v_idAdicional INT;
+    DECLARE v_cantidadAdicional INT;
+    DECLARE v_maxCantidad INT;
+    DECLARE v_stockActual INT;
+    DECLARE v_estadoAdicional TINYINT;
+    DECLARE v_subTotalAdicionales DECIMAL(10,2) DEFAULT 0;
+
+    DECLARE v_precioEnvio DECIMAL(10,2) DEFAULT 0;
+    DECLARE v_idEnvio INT;
+
+    DECLARE v_precioTotal DECIMAL(10,2) DEFAULT 0;
+    DECLARE v_idPedido INT;
+
+    DECLARE v_i INT DEFAULT 0;
+    DECLARE v_j INT DEFAULT 0;
+
+    DECLARE v_idProducto INT;
+    DECLARE v_idTam INT;
+
+    DECLARE v_idGuarnicion INT;
+    DECLARE v_estadoGuarnicion TINYINT;
+    DECLARE v_stockGuarnicion INT;
+
+    -- =============================
+    -- Crear cliente
+    -- =============================
+    SET v_telefono = JSON_UNQUOTE(JSON_EXTRACT(p_data, '$.cliente.telefono'));
+    SET v_direccion = JSON_UNQUOTE(JSON_EXTRACT(p_data, '$.cliente.direccion'));
+    SET v_descripcion = JSON_UNQUOTE(JSON_EXTRACT(p_data, '$.descripcion'));
+
+    INSERT INTO Clientes (telefono, direccion)
+    VALUES (v_telefono, v_direccion);
+
+    SET v_idCliente = LAST_INSERT_ID();
+
+    -- =============================
+    -- Crear pedido
+    -- =============================
+    INSERT INTO Pedidos (idCliente, precioTotal, descripcion)
+    VALUES (v_idCliente, 0, v_descripcion);
+
+    SET v_idPedido = LAST_INSERT_ID();
+
+    -- =============================
+    -- Obtener envío activo
+    -- =============================
+    SELECT id, precio INTO v_idEnvio, v_precioEnvio
+    FROM Envios WHERE estado = 1 LIMIT 1;
+
+    IF v_idEnvio IS NOT NULL THEN
+        UPDATE Pedidos SET idEnvio = v_idEnvio WHERE id = v_idPedido;
+    END IF;
+
+    -- =============================
+    -- PROCESAR PRODUCTOS
+    -- =============================
+    WHILE v_i < JSON_LENGTH(JSON_EXTRACT(p_data, '$.productos')) DO
+
+        SET v_idProducto = JSON_EXTRACT(p_data, CONCAT('$.productos[', v_i, '].id'));
+        SET v_idTam = JSON_EXTRACT(p_data, CONCAT('$.productos[', v_i, '].idTam'));
+        SET v_cantidadProducto = JSON_EXTRACT(p_data, CONCAT('$.productos[', v_i, '].cantidad'));
+        SET v_idGuarnicion = JSON_EXTRACT(p_data, CONCAT('$.productos[', v_i, '].idGuarnicion'));
+
+        -- =============================
+        -- Validar guarnición
+        -- =============================
+        IF v_idGuarnicion IS NOT NULL THEN
+
+            -- Validar que el producto permita esa guarnición
+            IF NOT EXISTS (
+                SELECT 1 FROM GuarnicionesXProducto
+                WHERE idProducto = v_idProducto AND idGuarnicion = v_idGuarnicion
+            ) THEN
+                SIGNAL SQLSTATE '45000'
+                SET MESSAGE_TEXT = 'Guarnición no permitida para este producto';
+            END IF;
+
+            -- Obtener stock/estado
+            SELECT stock, estado INTO v_stockGuarnicion, v_estadoGuarnicion
+            FROM Guarniciones WHERE id = v_idGuarnicion;
+
+            IF v_estadoGuarnicion <> 1 THEN
+                SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Guarnición no disponible';
+            END IF;
+
+            IF v_stockGuarnicion < v_cantidadProducto THEN
+                SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Stock insuficiente de guarnición';
+            END IF;
+
+            -- Restar stock de guarnición
+            UPDATE Guarniciones SET stock = stock - v_cantidadProducto
+            WHERE id = v_idGuarnicion;
+        END IF;
+
+        -- =============================
+        -- Validar producto
+        -- =============================
+        SELECT descuento, stock, estado
+        INTO v_descuentoProducto, v_stockActualProducto, v_estadoProducto
+        FROM Productos WHERE id = v_idProducto;
+
+        IF v_estadoProducto <> 1 THEN
+            SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Producto no disponible';
+        END IF;
+
+        IF v_cantidadProducto > v_stockActualProducto THEN
+            SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Stock insuficiente';
+        END IF;
+
+        -- Obtener precio según tamaño
+        SELECT precio INTO v_precioProducto
+        FROM ProductosXTam
+        WHERE idProducto = v_idProducto AND idTam = v_idTam AND estado = 1;
+
+        IF v_precioProducto IS NULL THEN
+            SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'El precio del producto no está configurado';
+        END IF;
+
+        -- Restar stock
+        UPDATE Productos SET stock = stock - v_cantidadProducto
+        WHERE id = v_idProducto;
+
+        -- Subtotal productos
+        SET v_subTotalProductos = v_subTotalProductos
+            + (v_precioProducto * v_cantidadProducto * (1 - v_descuentoProducto / 100));
+
+        -- Insertar producto en pedido — con guarnición
+        INSERT INTO ProductosXPedidos (idProducto, idPedido, cantidad, idGuarnicion)
+        VALUES (v_idProducto, v_idPedido, v_cantidadProducto, v_idGuarnicion);
+
+        SET @idProdXPED = LAST_INSERT_ID();
+
+        -- =============================
+        -- ADICIONALES
+        -- =============================
+        SET v_j = 0;
+
+        WHILE v_j < JSON_LENGTH(JSON_EXTRACT(p_data, CONCAT('$.productos[', v_i, '].adicionales'))) DO
+
+            SET v_idAdicional = JSON_EXTRACT(p_data, CONCAT('$.productos[', v_i, '].adicionales[', v_j, '].id'));
+            SET v_cantidadAdicional = JSON_EXTRACT(p_data, CONCAT('$.productos[', v_i, '].adicionales[', v_j, '].cantidad'));
+
+            SELECT precio, maxCantidad, stock, estado
+            INTO v_precioAdicional, v_maxCantidad, v_stockActual, v_estadoAdicional
+            FROM Adicionales WHERE id = v_idAdicional;
+
+            IF v_estadoAdicional <> 1 THEN
+                SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Adicional no disponible';
+            END IF;
+
+            IF v_cantidadAdicional > v_stockActual
+                OR v_cantidadAdicional > v_maxCantidad THEN
+                SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Cantidad de adicional inválida';
+            END IF;
+
+            UPDATE Adicionales SET stock = stock - v_cantidadAdicional
+            WHERE id = v_idAdicional;
+
+            INSERT INTO AdicionalesXProductosXPedidos
+                (idProductoXPedido, idAdicional, cantidad, precio)
+            VALUES
+                (@idProdXPED, v_idAdicional, v_cantidadAdicional, v_precioAdicional);
+
+            SET v_subTotalAdicionales = v_subTotalAdicionales
+                + (v_precioAdicional * v_cantidadAdicional);
+
+            SET v_j = v_j + 1;
+
+        END WHILE;
+
+        SET v_i = v_i + 1;
+
+    END WHILE;
+
+    -- =============================
+    -- MÉTODO DE PAGO
+    -- =============================
+    SELECT id INTO v_metodoDePago
+    FROM MetodosDePago
+    WHERE nombre = JSON_UNQUOTE(JSON_EXTRACT(p_data, '$.metodoDePago'));
+
+    INSERT INTO Pagos (idPedido, idMetodoDePago)
+    VALUES (v_idPedido, v_metodoDePago);
+
+    -- =============================
+    -- TOTAL FINAL
+    -- =============================
+    SET v_precioTotal = v_subTotalProductos + v_subTotalAdicionales + v_precioEnvio;
+
+    UPDATE Pedidos SET precioTotal = v_precioTotal
+    WHERE id = v_idPedido;
+
+    SELECT v_idPedido AS id;
+
+END$$
+DELIMITER ;
+
+DELIMITER $$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `createProducts`(IN p_data JSON)
+BEGIN
+    DECLARE v_nombre VARCHAR(50);
+    DECLARE v_descripcion VARCHAR(255);
+    DECLARE v_stock INT;
+    DECLARE v_descuento INT;
+    DECLARE v_isPromocion BOOLEAN;
+    DECLARE v_idCategoria INT;
+    DECLARE v_url_imagen VARCHAR(255);
+    DECLARE v_idProducto INT;
+
+    DECLARE v_i INT DEFAULT 0;
+    DECLARE v_tam_count INT;
+    DECLARE v_idTam INT;
+    DECLARE v_precio DECIMAL(10,2);
+
+    SET v_nombre = JSON_UNQUOTE(JSON_EXTRACT(p_data, '$.nombre'));
+    SET v_descripcion = JSON_UNQUOTE(JSON_EXTRACT(p_data, '$.descripcion'));
+    SET v_stock = JSON_UNQUOTE(JSON_EXTRACT(p_data, '$.stock'));
+    SET v_descuento = JSON_UNQUOTE(JSON_EXTRACT(p_data, '$.descuento'));
+    SET v_isPromocion = JSON_UNQUOTE(JSON_EXTRACT(p_data, '$.isPromocion'));
+    SET v_idCategoria = JSON_UNQUOTE(JSON_EXTRACT(p_data, '$.idCategoria'));
+    SET v_url_imagen = JSON_UNQUOTE(JSON_EXTRACT(p_data, '$.url_imagen'));
+  
+    START TRANSACTION;
+
+    INSERT INTO Productos (nombre, descripcion, stock, descuento, isPromocion, idCategoria, url_imagen)
+    VALUES (v_nombre, v_descripcion, v_stock, v_descuento, v_isPromocion, v_idCategoria, v_url_imagen);
+    
+    SET v_idProducto = LAST_INSERT_ID();
+
+    SET v_tam_count = JSON_LENGTH(p_data, '$.tam');
+    WHILE v_i < v_tam_count DO
+        -- Extraemos el idTam y el precio del objeto actual en el array
+        SET v_idTam = JSON_UNQUOTE(JSON_EXTRACT(p_data, CONCAT('$.tam[', v_i, '].idTam')));
+        SET v_precio = JSON_UNQUOTE(JSON_EXTRACT(p_data, CONCAT('$.tam[', v_i, '].precio')));
+
+        INSERT INTO ProductosXTam (idProducto, idTam, precio)
+        VALUES (v_idProducto, v_idTam, v_precio);
+
+        SET v_i = v_i + 1;
+    END WHILE;
+
+    COMMIT;
+
+    SELECT v_idProducto AS id;
+
+END$$
+DELIMITER ;
+
+DELIMITER $$
 CREATE DEFINER=`root`@`localhost` PROCEDURE `deleteAdicional`(IN p_id INT)
 BEGIN
     DECLARE v_asociado INT DEFAULT 0;
@@ -76,6 +342,17 @@ END$$
 DELIMITER ;
 
 DELIMITER $$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `deleteHorario`(IN p_id INT)
+BEGIN
+/*Desactiva horario y elimina relación con días.*/
+    UPDATE horario SET estado = 0 WHERE id = p_id;
+    DELETE FROM horario_dias WHERE idHorario = p_id;
+
+    SELECT 'Horario eliminado' AS mensaje;
+END$$
+DELIMITER ;
+
+DELIMITER $$
 CREATE DEFINER=`root`@`localhost` PROCEDURE `getAllCategories`()
 BEGIN
     SELECT id, nombre, estado
@@ -93,6 +370,81 @@ END$$
 DELIMITER ;
 
 DELIMITER $$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `getHorario`()
+BEGIN
+    SELECT * FROM Horario ORDER BY id DESC;
+END$$
+DELIMITER ;
+
+DELIMITER $$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `getLocalDetails`(IN p_idLocal INT)
+BEGIN
+    -- Validación de existencia (se queda igual)
+    IF (SELECT COUNT(*) FROM Local WHERE id = p_idLocal) = 0 THEN
+        SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'El local con el ID especificado no existe.';
+    END IF;
+
+    -- Construimos y devolvemos UN ÚNICO resultado.
+    SELECT 
+        JSON_OBJECT(
+            'id', L.id,
+            'direccion', L.direccion,
+            'estado', L.estado,
+            'horarios', (
+                -- Subconsulta para construir el array de horarios MANUALMENTE
+                SELECT
+                    -- 1. CONCAT para añadir los corchetes de apertura y cierre del array: '[' y ']'
+                    CONCAT('[',
+                        -- 2. GROUP_CONCAT para unir todos los objetos de horario en un solo string, separados por comas
+                        GROUP_CONCAT(
+                            -- 3. JSON_OBJECT para crear cada objeto de horario individual
+                            JSON_OBJECT(
+                                'idHorario', H.id,
+                                'horarioApertura', H.horarioApertura,
+                                'horarioCierre', H.horarioCierre,
+                                'estado', H.estado,
+                                'dias', (
+                                    -- Subconsulta para los días (se queda igual)
+                                    SELECT GROUP_CONCAT(D.nombreDia ORDER BY D.id SEPARATOR ', ')
+                                    FROM horarioDias AS HD
+                                    JOIN Dias AS D ON HD.idDia = D.id
+                                    WHERE HD.idHorario = H.id AND D.estado = 1
+                                )
+                            )
+                        SEPARATOR ','), -- El separador entre objetos
+                    ']')
+                FROM horario AS H
+                WHERE H.idLocal = L.id AND H.estado = 1
+            )
+        ) AS localData
+    FROM 
+        Local AS L
+    WHERE 
+        L.id = p_idLocal;
+END$$
+DELIMITER ;
+
+DELIMITER $$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `getLocales`()
+BEGIN
+    SELECT 
+        l.id AS idLocal,
+        l.direccion,
+        d.id AS idDia,
+        d.nombreDia,
+        h.horarioApertura,
+        h.horarioCierre
+    FROM local AS l
+    INNER JOIN horario AS h ON h.idLocal = l.id
+    INNER JOIN dias AS d ON d.id = h.idDia
+    WHERE d.estado = 1
+      AND h.estado = 1
+    ORDER BY l.id ASC, d.id ASC, h.horarioApertura ASC;
+END$$
+DELIMITER ;
+
+DELIMITER $$
 CREATE DEFINER=`root`@`localhost` PROCEDURE `getProducts`(
     IN p_estado BOOLEAN
 )
@@ -101,48 +453,77 @@ BEGIN
         p.id,
         p.nombre,
         p.descripcion,
-        p.precio,
         p.url_imagen,
         p.stock,
         p.idCategoria,
         p.descuento,
         p.isPromocion,
         p.estado,
-
-        ROUND(p.precio - (p.precio *( p.descuento / 100)), 2) AS precioFinal,
-
         (
-            SELECT c.nombre 
-            FROM categorias c 
-            WHERE c.id = p.idCategoria AND c.estado = 1
-            LIMIT 1
+            SELECT JSON_OBJECT('nombre', c.nombre,'estado', c.estado) FROM categorias c 
+                WHERE c.id = p.idCategoria
+            LIMIT 1 
         ) AS categoria,
-     
         IFNULL(
             (
                 SELECT 
-                    CONCAT(
-                        '[',
+                    CONCAT('[',
                         GROUP_CONCAT(
-                            CONCAT(
-                                '{"id":', a.id,
-                                ',"nombre":"', a.nombre, '"',
-                                ',"precio":', a.precio,
-                                ',"stock":', a.stock,
-                                ',"maxCantidad":', a.maxCantidad,
-                                ',"idAxp":', axp.id,
-                                '}'
+                            JSON_OBJECT(
+                                'id', a.id,
+                                'nombre', a.nombre,
+                                'precio', a.precio,
+                                'stock', a.stock,
+                                'maxCantidad', a.maxCantidad,
+                                'idAxp', axp.id
                             ) SEPARATOR ','
                         ),
                         ']'
                     )
                 FROM adicionalesxproductos axp
-                INNER JOIN adicionales a ON axp.idAdicional = a.id
-                WHERE axp.idProducto = p.id
-                  AND a.estado = 1
+                    INNER JOIN adicionales a ON axp.idAdicional = a.id
+                WHERE axp.idProducto = p.id AND a.estado = 1
             ),
             '[]'
-        ) AS adicionales
+        ) AS adicionales,
+        IFNULL(
+            (
+                SELECT 
+                    CONCAT('[',
+                        GROUP_CONCAT(
+                            JSON_OBJECT(
+                                'id', G.id,
+                                'nombre', G.nombre,
+                                'idGxP', GXP.id
+                            )
+                        SEPARATOR ','),
+                    ']')
+                FROM GuarnicionesXProducto AS GXP
+                INNER JOIN Guarniciones AS G ON GXP.idGuarnicion = G.id
+                WHERE GXP.idProducto = p.id
+            ),
+            '[]' 
+        ) AS guarniciones,
+        IFNULL(
+            (
+                SELECT 
+                    CONCAT('[',
+                        GROUP_CONCAT(
+                            JSON_OBJECT(
+                                'id',T.id,
+                                'idPxT', PXT.id,
+                                'nombre', T.nombre,
+                                'precio', PXT.precio,
+                                'precioFinal', ROUND(PXT.precio - (PXT.precio * (p.descuento / 100)), 2)
+                            )
+                        SEPARATOR ','),
+                    ']')
+                FROM ProductosXTam AS PXT
+                INNER JOIN Tam AS T ON PXT.idTam = T.id
+                WHERE PXT.idProducto = p.id
+            ),
+            '[]' 
+        ) AS tam
 
     FROM productos p
     WHERE (p_estado = 0 OR p.estado = 1);
@@ -214,6 +595,37 @@ END$$
 DELIMITER ;
 
 DELIMITER $$
+CREATE DEFINER=`root`@`localhost` PROCEDURE `updateHorario`(IN p_data JSON)
+BEGIN
+    DECLARE v_id INT;
+    DECLARE v_horarioApertura TIME;
+    DECLARE v_horarioCierre TIME;
+    DECLARE v_estado TINYINT;
+
+    -- Extraemos los valores del JSON
+    SET v_id = JSON_UNQUOTE(JSON_EXTRACT(p_data, '$.id'));
+    SET v_horarioApertura = JSON_UNQUOTE(JSON_EXTRACT(p_data, '$.horarioApertura'));
+    SET v_horarioCierre = JSON_UNQUOTE(JSON_EXTRACT(p_data, '$.horarioCierre'));
+    SET v_estado = JSON_UNQUOTE(JSON_EXTRACT(p_data, '$.estado'));
+
+    -- Realizamos la actualización en un solo paso atómico
+
+    IF v_id = 0 THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'El horario no existe o no se realizaron cambios';
+    END IF;
+    
+    UPDATE Horario
+    SET
+        horarioApertura = v_horarioApertura,
+        horarioCierre = v_horarioCierre,
+        -- Usamos IFNULL/COALESCE aquí. Si v_estado es NULL, mantiene el valor existente.
+        estado = COALESCE(v_estado, estado)
+    WHERE id = v_id;
+END$$
+DELIMITER ;
+
+DELIMITER $$
 CREATE DEFINER=`root`@`localhost` PROCEDURE `updateMPState`(
     IN p_id INT,
     IN p_mpEstado TINYINT
@@ -258,19 +670,19 @@ BEGIN
     DECLARE v_direccion VARCHAR(255);
     DECLARE v_descripcion TEXT;
 
-    DECLARE v_precioProducto DECIMAL(10,2);
+    DECLARE v_precioProducto DECIMAL(10,0);
     DECLARE v_cantidadProducto INT;
-    DECLARE v_descuentoProducto DECIMAL(5,2);
+    DECLARE v_descuentoProducto DECIMAL(5,0);
     DECLARE v_stockActualProducto INT;
-    DECLARE v_subTotalProductos DECIMAL(10,2) DEFAULT 0;
+    DECLARE v_subTotalProductos DECIMAL(10,0) DEFAULT 0;
 
-    DECLARE v_precioAdicional DECIMAL(10,2);
+    DECLARE v_precioAdicional DECIMAL(10,0);
     DECLARE v_cantidadAdicional INT;
     DECLARE v_stockActual INT;
     DECLARE v_maxCantidad INT;
-    DECLARE v_subTotalAdicionales DECIMAL(10,2) DEFAULT 0;
+    DECLARE v_subTotalAdicionales DECIMAL(10,0) DEFAULT 0;
 
-    DECLARE v_precioTotal DECIMAL(10,2) DEFAULT 0;
+    DECLARE v_precioTotal DECIMAL(10,0) DEFAULT 0;
     DECLARE v_i INT DEFAULT 0;
     DECLARE v_j INT DEFAULT 0;
     DECLARE v_path VARCHAR(200);

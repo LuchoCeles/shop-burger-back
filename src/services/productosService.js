@@ -1,5 +1,6 @@
-const { Producto, Categoria, Adicionales } = require("../models");
+const { Producto, Categoria, ProductosXTam } = require("../models");
 const cloudinaryService = require("./cloudinaryService");
+const productosXTamService = require("./productosXTamService");
 const { sequelize } = require("../config/db");
 
 class ProductosService {
@@ -9,11 +10,30 @@ class ProductosService {
       replacements: { estado: whereClause },
     });
 
-    const productosParseados = productos.map((p) => ({
-      ...p,
-      adicionales: JSON.parse(p.adicionales),
-      categoria: JSON.parse(p.categoria),
-    }));
+    const productosParseados = productos.map((p) => {
+      const parseJsonField = (field) => {
+        if (field && typeof field === "string") {
+          try {
+            return JSON.parse(field);
+          } catch (e) {
+            console.error("Error al parsear campo JSON de primer nivel:", e);
+            return [];
+          }
+        }
+        return [];
+      };
+      const adicionales = parseJsonField(p.adicionales);
+      let guarniciones = parseJsonField(p.guarniciones);
+      let tam = parseJsonField(p.tam);
+
+      return {
+        ...p,
+        adicionales: adicionales,
+        guarniciones: guarniciones,
+        categoria: JSON.parse(p.categoria),
+        tam: tam,
+      };
+    });
 
     return productosParseados;
   }
@@ -27,6 +47,12 @@ class ProductosService {
           as: "categoria",
           attributes: ["id", "nombre"],
         },
+        {
+          model: Tam,
+          as: "tam",
+          attributes: ["id", "nombre"],
+          through: { attributes: ["precio"] },
+        },
       ],
     });
 
@@ -37,24 +63,31 @@ class ProductosService {
     return producto;
   }
 
-  async createProduct(productoData, imageBuffer) {
+  async createProduct(productoData, tamData, imageBuffer) {
     let imageUrl = null;
 
     if (imageBuffer) {
       try {
         const uploadResult = await cloudinaryService.uploadImage(imageBuffer);
         imageUrl = uploadResult.secure_url;
-      } catch (error) {
-        throw new Error("Error al subir la imagen: " + error.message);
+      } catch (uploadError) {
+        throw new Error("Error al subir la imagen: " + uploadError.message);
       }
     }
 
-    const producto = await Producto.create({
+    const dataForProcedure = {
       ...productoData,
       url_imagen: imageUrl,
+      tam: tamData,
+    };
+
+    const [result] = await sequelize.query("CALL createProducts(:data);", {
+      replacements: { data: JSON.stringify(dataForProcedure) },
     });
 
-    return await this.getProductById(producto.id);
+    const newProductId = result[0].id;
+
+    return await this.getProductById(newProductId);
   }
 
   async updateState(id, nuevoEstado) {
@@ -76,42 +109,71 @@ class ProductosService {
     }
   }
 
-  async updateProduct(id, updateData, imageBuffer) {
-    const producto = await Producto.findByPk(id);
+  async updateProduct(id, productoData, tamData, antiguaData,imageBuffer) {
+    const transaction = await sequelize.transaction();
 
-    if (!producto) {
-      throw new Error("Producto no encontrado");
-    }
+    try {
+      // 1. Buscamos el producto dentro de la transacción.
+      const producto = await Producto.findByPk(id, { transaction });
 
-    let imageUrl = producto.url_imagen;
+      let imageUrl = producto.url_imagen;
+      if (imageBuffer) {
+        try {
+          // Eliminar imagen anterior de Cloudinary
+          if (producto.url_imagen) {
+            const publicId = cloudinaryService.getPublicIdFromUrl(
+              producto.url_imagen
+            );
+            if (publicId) {
+              await cloudinaryService.deleteImage(publicId);
+            }
+          }
+          // Subir nueva imagen
+          const uploadResult = await cloudinaryService.uploadImage(imageBuffer);
+          imageUrl = uploadResult.secure_url;
+        } catch (error) {
+          throw new Error("Error al actualizar la imagen: " + error.message);
+        }
+      }
+      productoData.url_imagen = imageUrl;
 
-    // Si hay nueva imagen, subirla y eliminar la anterior si existe
-    if (imageBuffer) {
-      try {
-        // Eliminar imagen anterior de Cloudinary
-        if (producto.url_imagen) {
-          const publicId = cloudinaryService.getPublicIdFromUrl(
-            producto.url_imagen
-          );
-          if (publicId) {
-            await cloudinaryService.deleteImage(publicId);
+      await producto.update(productoData, { transaction });
+
+      if (antiguaData.idCategoria !== productoData.idCategoria) {
+        if (tamData.length > 0) {
+
+          const asociaciones = tamData.map((tam) => ({
+            idProducto: id,
+            idTam: tam.idTam,
+            precio: tam.precio,
+          }));
+
+          try {
+            await ProductosXTam.bulkCreate(asociaciones, { transaction });
+            await productosXTamService.deleteByProducto(id,antiguaData.idTam,{transaction});
+          } catch (error) {
+            throw new Error(
+              `Error al crear asociaciones de tamaños: ${error.message}`
+            );
           }
         }
-
-        // Subir nueva imagen
-        const uploadResult = await cloudinaryService.uploadImage(imageBuffer);
-        imageUrl = uploadResult.secure_url;
-      } catch (error) {
-        throw new Error("Error al actualizar la imagen: " + error.message);
       }
+      //actualizamos tamaño y precio
+      if (tamData !== null) {
+        await ProductosXTam.destroy({
+          where: { idProducto: id },
+          transaction,
+        });
+        // creamos las nuevas asociaciones.
+      }
+
+      await transaction.commit();
+
+      return await this.getProductById(id);
+    } catch (error) {
+      await transaction.rollback();
+      throw new Error(`Error al actualizar el producto: ${error.message}`);
     }
-
-    await producto.update({
-      ...updateData,
-      url_imagen: imageUrl,
-    });
-
-    return await this.getProductById(id);
   }
 
   async deleteProduct(id) {

@@ -7,7 +7,14 @@ const {
   Adicionales,
   AdicionalesXProductosXPedidos,
   MetodosDePago,
+  Categoria,
+  Envio,
+  Guarniciones,
+  ProductosXTam,
+  Tam,
+  GuarnicionesXProducto,
 } = require("../models");
+const { Op } = require("sequelize");
 const { sequelize } = require("../config/db");
 
 class PedidosService {
@@ -26,6 +33,39 @@ class PedidosService {
 
   async getAll(filtros = {}) {
     try {
+      const where = {};
+
+      // filtrar por estado
+      if (filtros.estado) {
+        where.estado = filtros.estado;
+      }
+
+      // Filtrar por fecha exacta
+      if (filtros.fecha) {
+        const fechaInicio = new Date(filtros.fecha);
+        fechaInicio.setHours(0, 0, 0, 0);
+
+        const fechaFin = new Date(filtros.fecha);
+        fechaFin.setHours(23, 59, 59, 999);
+
+        where.createdAt = {
+          [Op.between]: [fechaInicio, fechaFin],
+        };
+      }
+
+      // Filtrar por rango de fechas
+      if (filtros.fechaDesde && filtros.fechaHasta) {
+        const desde = new Date(filtros.fechaDesde);
+        desde.setHours(0, 0, 0, 0);
+
+        const hasta = new Date(filtros.fechaHasta);
+        hasta.setHours(23, 59, 59, 999);
+
+        where.createdAt = {
+          [Op.between]: [desde, hasta],
+        };
+      }
+      //Pedido
       const pedidos = await Pedido.findAll({
         attributes: ["id", "estado", "precioTotal", "descripcion"],
         include: [
@@ -35,20 +75,25 @@ class PedidosService {
             attributes: ["id", "telefono", "direccion"],
           },
           {
+            model: Envio,
+            as: "envio",
+            attributes: ["precio"],
+          },
+          {
             model: Pago,
             as: "pago",
             attributes: ["id", "estado"],
             include: [
               {
                 model: MetodosDePago,
-                as: "metodosDePago",
+                as: "MetodosDePago",
                 attributes: ["id", "nombre"],
               },
             ],
           },
         ],
         order: [["id", "DESC"]],
-        where: filtros.estado ? { estado: filtros.estado } : undefined,
+        where,
       });
 
       const pedidosConProductos = await Promise.all(
@@ -59,42 +104,70 @@ class PedidosService {
               {
                 model: Producto,
                 as: "producto",
-                attributes: ["id", "nombre", "precio"],
+                attributes: ["id", "nombre", "descripcion"],
+                include: [
+                  {
+                    model: Categoria,
+                    as: "categoria",
+                    attributes: ["id", "nombre"],
+                  },
+                  {
+                    model: ProductosXTam,
+                    as: "productosXTam",
+                    attributes: ["id", "precio"],
+                    include: [
+                      { model: Tam, as: "tam", attributes: ["id", "nombre"] },
+                    ],
+                  }
+                ],
+              },
+              {
+                model: Guarniciones,
+                as: "guarnicion",
+                attributes: ["id", "nombre"],
+              },
+              {
+                model: AdicionalesXProductosXPedidos,
+                as: "AxPxP",
+                include: [
+                  {
+                    model: Adicionales,
+                    as: "adicional",
+                    attributes: ["id", "nombre", "precio"],
+                  },
+                ],
               },
             ],
           });
 
-          const productos = await Promise.all(
-            pxp.map(async (item) => {
-              // Buscar adicionales para este producto del pedido
-              const adicionalesXPxP =
-                await AdicionalesXProductosXPedidos.findAll({
-                  where: { idProductoXPedido: item.id },
-                  include: [
-                    {
-                      model: Adicionales,
-                      as: "adicional",
-                      attributes: ["id", "nombre", "precio"],
-                    },
-                  ],
-                });
+          const productos = pxp.map((item) => {
 
-              const adicionales = adicionalesXPxP.map((a) => ({
-                id: a.adicional.id,
-                nombre: a.adicional.nombre,
-                precio: a.adicional.precio,
-                cantidad: a.cantidad,
-              }));
 
-              return {
-                id: item.producto.id,
-                nombre: item.producto.nombre,
-                precio: item.producto.precio,
-                cantidad: item.cantidad,
-                adicionales,
-              };
-            })
-          );
+
+            return {
+              nombre: item.producto.nombre,
+              cantidad: item.cantidad,
+
+              precio: item.producto.productosXTam?.[0]?.precio || 0,
+              tam: item.producto.productosXTam?.[0]?.tam || null,
+
+              guarnicion: item.guarnicion
+                ? { id: item.guarnicion.id, nombre: item.guarnicion.nombre }
+                : null,
+
+              categoria: {
+                id: item.producto.categoria.id,
+                nombre: item.producto.categoria.nombre,
+              },
+
+              adicionales: item.AxPxP.map((ad) => ({
+                id: ad.adicional.id,
+                nombre: ad.adicional.nombre,
+                precio: Number(ad.precio),
+                cantidad: ad.cantidad,
+              })),
+            };
+          });
 
           return {
             id: pedido.id,
@@ -102,14 +175,15 @@ class PedidosService {
             precioTotal: pedido.precioTotal,
             descripcion: pedido.descripcion,
             cliente: pedido.cliente,
+            envio: pedido.envio ? { precio: pedido.envio.precio } : null,
             Pago: pedido.pago
               ? {
                 id: pedido.pago.id,
                 estado: pedido.pago.estado,
-                metodoDePago: pedido.pago.metodoDePago,
+                metodoDePago: pedido.pago.MetodosDePago?.nombre || null,
               }
               : null,
-            productos,
+            productos: productos,
           };
         })
       );
@@ -142,6 +216,13 @@ class PedidosService {
 
       await pedido.update({ estado: nuevoEstado });
 
+      if (nuevoEstado === "entregado") {
+        const pago = await Pago.findOne({ where: { idPedido: id } });
+        if (pago) {
+          await pago.update({ estado: "pagado" });
+        }
+      }
+
       const rsp = await Pedido.findByPk(id, {
         include: [
           { model: Cliente, as: "cliente" },
@@ -154,37 +235,51 @@ class PedidosService {
       throw new Error(`Error al actualizar estado: ${error.message}`);
     }
   }
-  
+
   async cancel(id) {
     const transaction = await sequelize.transaction();
 
     try {
       const pedido = await Pedido.findByPk(id, {
-        include: [{
-          model: ProductosXPedido,
-          as: "productosxpedido",
-          include: [
-            { model: Producto, as: "producto" },
-            {
-              model: AdicionalesXProductosXPedidos,
-              as: "AxPxP",
-              include: [{
-                model: Adicionales,
-                as: "adicional"
-              }]
-            }
-          ]
-        }],
-        transaction
+        include: [
+          {
+            model: ProductosXPedido,
+            as: "productosxpedido",
+            include: [
+              { model: Producto, as: "producto" },
+              {
+                model: AdicionalesXProductosXPedidos,
+                as: "AxPxP",
+                include: [
+                  {
+                    model: Adicionales,
+                    as: "adicional",
+                  },
+                ],
+              },
+              {
+                model: Guarniciones,
+                as: "guarnicion",
+              },
+            ],
+          },
+        ],
+        transaction,
       });
 
-      if (!pedido) { throw new Error("Pedido no encontrado"); }
+      if (!pedido) {
+        throw new Error("Pedido no encontrado");
+      }
       if (pedido.estado === "cancelado") {
         await transaction.rollback();
-        console.log(`Intento de cancelar pedido ${id} que ya estaba cancelado.`);
+        console.log(
+          `Intento de cancelar pedido ${id} que ya estaba cancelado.`
+        );
         return pedido;
       }
-      if (pedido.estado === "entregado") { throw new Error("No se puede cancelar un pedido entregado"); }
+      if (pedido.estado === "entregado") {
+        throw new Error("No se puede cancelar un pedido entregado");
+      }
 
       // Devolvemos el stock
       for (const productoXPedido of pedido.productosxpedido) {
@@ -193,6 +288,14 @@ class PedidosService {
           where: { id: productoXPedido.producto.id },
           transaction,
         });
+
+        if (productoXPedido.guarnicion) {
+          await Guarniciones.increment("stock", {
+            by: 1,
+            where: { id: productoXPedido.guarnicion.id },
+            transaction,
+          });
+        }
 
         if (productoXPedido.AxPxP && productoXPedido.AxPxP.length > 0) {
           for (const adicionalX of productoXPedido.AxPxP) {
@@ -208,10 +311,11 @@ class PedidosService {
       await pedido.update({ estado: "cancelado" }, { transaction });
 
       await transaction.commit();
-
     } catch (error) {
       await transaction.rollback();
-      throw new Error(`Error durante la transacción de cancelación: ${error.message}`);
+      throw new Error(
+        `Error durante la transacción de cancelación: ${error.message}`
+      );
     }
 
     try {
@@ -220,7 +324,7 @@ class PedidosService {
       return pedidoActualizado;
     } catch (readError) {
       // Devolvemos un objeto simple para indicar que la cancelación tuvo éxito aunque no pudimos devolver el objeto completo.
-      return { id: id, estado: 'cancelado', errorAlReleer: true };
+      return { id: id, estado: "cancelado", errorAlReleer: true };
     }
   }
 

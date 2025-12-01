@@ -1,7 +1,7 @@
 const productosService = require("../services/productosService");
 
 class ProductosController {
-  async getProducts(req, res, next) {
+  async getProducts(req, res) {
     try {
       const { soloActivos } = req.query;
       // es para parsear el string a boolean
@@ -10,14 +10,17 @@ class ProductosController {
 
       res.json({
         success: true,
-        data: productos
+        data: productos,
       });
     } catch (error) {
-      next(error);
+      res.status(500).json({
+        success: false,
+        message: error.message,
+      });
     }
   }
 
-  async getProductoByCategoria(req, res, next) {
+  async getProductoByCategoria(req, res) {
     try {
       const { idCategoria } = req.params;
       const productos = await productosService.getProductoByCategoria(
@@ -25,14 +28,17 @@ class ProductosController {
       );
       res.json({
         success: true,
-        data: productos
+        data: productos,
       });
     } catch (error) {
-      next(error);
+      res.status(500).json({
+        success: false,
+        message: error.message,
+      });
     }
   }
 
-  async getProductById(req, res, next) {
+  async getProductById(req, res) {
     try {
       const { id } = req.params;
       const producto = await productosService.getProductById(id);
@@ -42,42 +48,59 @@ class ProductosController {
         data: producto,
       });
     } catch (error) {
-      next(error);
+      res.status(500).json({
+        success: false,
+        message: error.message,
+      });
     }
   }
 
-  async createProduct(req, res, next) {
+  createProduct = async (req, res, next) => {
     try {
-      const productoData = req.body;
-
       const imageBuffer = req.file ? req.file.buffer : null;
+      const body = req.body;
 
-      if (productoData.precio)
-        productoData.precio = parseFloat(productoData.precio);
-      if (productoData.descuento)
-        productoData.descuento = parseFloat(productoData.descuento);
-      if (productoData.stock) productoData.stock = parseInt(productoData.stock);
-      if (productoData.idCategoria)
-        productoData.idCategoria = parseInt(productoData.idCategoria);
-
-      if (productoData.isPromocion) {
-        productoData.isPromocion = productoData.isPromocion === "true";
+      let tamData = [];
+      if (body.tam) {
+        try {
+          tamData = JSON.parse(body.tam);
+        } catch (e) {
+          return res
+            .status(400)
+            .json({
+              success: false,
+              message: "El formato del array 'tam' es inválido.",
+            });
+        }
       }
 
-      const producto = await productosService.createProduct(
+      const productoData = {
+        nombre: body.nombre,
+        descripcion: body.descripcion,
+        stock: body.stock,
+        idCategoria: body.idCategoria,
+        descuento: body.descuento,
+        isPromocion: body.isPromocion === "true",
+      };
+
+      const productoCreado = await productosService.createProduct(
         productoData,
+        tamData,
         imageBuffer
       );
 
-      res.status(201).json({
+      return res.status(201).json({
         success: true,
         message: "Producto creado exitosamente",
-        data: producto,
+        data: productoCreado,
       });
     } catch (error) {
-      next(error);
+      return res.status(500).json({
+        success: false,
+        message: error.message,
+      });
     }
-  }
+  };
 
   async updateState(req, res) {
     try {
@@ -101,9 +124,6 @@ class ProductosController {
           estado: producto.estado,
         },
       });
-
-
-
     } catch (error) {
       res.status(500).json({
         success: false,
@@ -112,39 +132,70 @@ class ProductosController {
     }
   }
 
-  async updateProduct(req, res, next) {
+  updateProduct = async (req, res) => {
     try {
       const { id } = req.params;
-      const updateData = req.body;
+      const data = req.body;
+      const antiguaData = {
+        idTam: data.idTamAntigua,
+        idCategoria: data.idCategoriaAntigua,
+      }
+      
       const imageBuffer = req.file ? req.file.buffer : null;
 
-      // Parsear campos numéricos
-      if (updateData.precio) updateData.precio = parseFloat(updateData.precio);
-      if (updateData.descuento)
-        updateData.descuento = parseFloat(updateData.descuento);
-      if (updateData.stock) updateData.stock = parseInt(updateData.stock);
-
-      if (updateData.isPromocion !== undefined) {
-        updateData.isPromocion = updateData.isPromocion === "true";
+      let tamData = null;
+      if (data.tam) {
+        try {
+          tamData = JSON.parse(data.tam);
+          if (!Array.isArray(tamData)) throw new Error();
+        } catch (e) {
+          return res
+            .status(400)
+            .json({
+              success: false,
+              message: "El formato del campo 'tam' es inválido.",
+            });
+        }
       }
 
-      const producto = await productosService.updateProduct(
+      const productoData = {
+        nombre: data.nombre,
+        descripcion: data.descripcion,
+        stock: data.stock,
+        idCategoria: data.idCategoria,
+        descuento: data.descuento,
+        isPromocion:
+          data.isPromocion !== undefined
+            ? data.isPromocion === "true"
+            : undefined,
+      };
+
+      Object.keys(productoData).forEach(
+        (key) => productoData[key] === undefined && delete productoData[key]
+      );
+
+      const productoActualizado = await productosService.updateProduct(
         id,
-        updateData,
+        productoData,
+        tamData,
+        antiguaData,
         imageBuffer
       );
 
-      res.json({
+      return res.status(200).json({
         success: true,
         message: "Producto actualizado exitosamente",
-        data: producto,
+        data: productoActualizado,
       });
     } catch (error) {
-      next(error);
+      return res.status(500).json({
+        success: false,
+        message: `Error al actualizar el producto ${error.message}`,
+      });
     }
-  }
+  };
 
-  async deleteProduct(req, res, next) {
+  async deleteProduct(req, res) {
     try {
       const { id } = req.params;
       await productosService.deleteProduct(id);
@@ -154,7 +205,10 @@ class ProductosController {
         message: "Producto eliminado exitosamente",
       });
     } catch (error) {
-      next(error);
+      res.status(500).json({
+        success: false,
+        message: error.message,
+      });
     }
   }
 }

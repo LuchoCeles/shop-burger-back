@@ -11,7 +11,10 @@ class AdicionalesController {
         data: adicionales
       });
     } catch (error) {
-      next(error);
+      return res.status(500).json({
+        success: false,
+        message: error.message
+      });
     }
   }
 
@@ -26,7 +29,10 @@ class AdicionalesController {
         data: nuevoAdicional
       });
     } catch (error) {
-      next(error);
+      return res.status(500).json({
+        success: false,
+        message: error.message
+      });
     }
   }
 
@@ -48,7 +54,10 @@ class AdicionalesController {
         data: adicionalActualizado
       });
     } catch (error) {
-      next(error);
+      return res.status(500).json({
+        success: false,
+        message: error.message
+      });
     }
   }
 
@@ -68,7 +77,7 @@ class AdicionalesController {
         message: result.message
       });
     } catch (error) {
-      return res.status(400).json({
+      return res.status(500).json({
         success: false,
         message: error.message
       });
@@ -91,7 +100,10 @@ class AdicionalesController {
         data: adicional
       });
     } catch (error) {
-      next(error);
+        return res.status(500).json({
+        success: false,
+        message: error.message
+      });
     }
   }
 

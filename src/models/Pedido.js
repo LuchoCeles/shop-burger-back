@@ -1,6 +1,6 @@
 module.exports = (sequelize, DataTypes) => {
   const Pedido = sequelize.define(
-    "Pedido",
+    "Pedido", 
     {
       id: {
         type: DataTypes.INTEGER,
@@ -8,11 +8,11 @@ module.exports = (sequelize, DataTypes) => {
         autoIncrement: true,
       },
       estado: {
-        type: DataTypes.ENUM("pendiente", "entregado", "cancelado"),
-        defaultValue: "pendiente",
+        type: DataTypes.STRING(30),
+        defaultValue: "Pendiente",
       },
       precioTotal: {
-        type: DataTypes.DECIMAL(10, 2),
+        type: DataTypes.DECIMAL(10, 0),
         allowNull: false,
       },
       descripcion: {
@@ -24,6 +24,14 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
         references: {
           model: "clientes",
+          key: "id",
+        },
+      },
+      idEnvio: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+          model: "envios",
           key: "id",
         },
       },
@@ -41,6 +49,11 @@ module.exports = (sequelize, DataTypes) => {
     Pedido.belongsTo(models.Cliente, {
       foreignKey: "idCliente",
       as: "cliente",
+    });
+
+    Pedido.belongsTo(models.Envio, {
+      foreignKey: "idEnvio",
+      as: "envio",
     });
 
     Pedido.hasMany(models.ProductosXPedido, {
