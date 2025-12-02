@@ -115,6 +115,8 @@ class ProductosService {
 
     try {
       const producto = await Producto.findByPk(id, { transaction });
+      const antiguaCategoria = await producto.idCategoria;
+
       if (!producto) {
         throw new Error("Producto no encontrado");
       }
@@ -135,16 +137,18 @@ class ProductosService {
         }
       }
       productoData.url_imagen = imageUrl;
-
+       
       await producto.update(productoData, { transaction });
 
       // asociaciones de tamaños y precios
       if (tamData && Array.isArray(tamData) && tamData.length > 0) {
         // Verificar si cambió la categoría
-        const cambiCategoria = antiguaData.idCategoria !== productoData.idCategoria;
+        
+        const nuevaCategoria = productoData.idCategoria;
+        
 
-        if (cambiCategoria) {
-          //eliminar todas las asociaciones antiguas
+        if (parseInt(nuevaCategoria)!== antiguaCategoria) {
+        //eliminar todas las asociaciones antiguas
           await ProductosXTam.destroy({
             where: { idProducto: id },
             transaction,
@@ -158,19 +162,18 @@ class ProductosService {
           }));
           await ProductosXTam.bulkCreate(nuevasAsociaciones, { transaction });
         } else {
-          // Si NO cambió la categoría, solo actualizar precios
-          // Eliminar asociaciones existentes
-          await ProductosXTam.destroy({
-            where: { idProducto: id },
-            transaction,
-          });
-          
-          const nuevasAsociaciones = tamData.map((t) => ({
-            idProducto: id,
-            idTam: t.idTam,
-            precio: t.precio,
-          }));
-          await ProductosXTam.bulkCreate(nuevasAsociaciones, { transaction });
+         for (const tam of tamData) {
+            await ProductosXTam.update(
+              { precio: tam.precio },
+              {
+                where: {
+                  idProducto: id,
+                  idTam: tam.idTam
+                },
+                transaction
+              }
+            );
+          }
         }
       }
       
