@@ -89,7 +89,6 @@ router.patch('/:id', authAdmin, handleUpload,validateRequest, [
       req.body.tam = tamArray;
       return true;
     }),
-
 ],  productosController.updateProduct);
 
 router.delete('/:id', authAdmin, productosController.deleteProduct);
