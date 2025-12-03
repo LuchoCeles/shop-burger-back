@@ -126,11 +126,11 @@ class PedidosController {
         throw new Error("Pedido no encontrado");
       }
 
-      if (pedidoActual.estado === "entregado") {
+      if (pedidoActual.estado === "Entregado") {
         throw new Error("No se puede cambiar el estado de un pedido entregado");
       }
 
-      if (pedidoActual.estado === "cancelado" && estado !== "cancelado") {
+      if (pedidoActual.estado === "Cancelado" && estado !== "Cancelado") {
         throw new Error("No se puede reactivar un pedido cancelado");
       }
 
