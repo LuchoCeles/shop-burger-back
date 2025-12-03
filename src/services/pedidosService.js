@@ -416,6 +416,7 @@ class PedidosService {
       throw error;
     }
   }
+  
 }
 
 module.exports = new PedidosService();
