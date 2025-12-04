@@ -3,7 +3,7 @@
 
 module.exports = (sequelize, DataTypes) => {
   const HorarioDias = sequelize.define(
-    'HorarioDias',
+    'HorarioXDias',
     {
       id: {
         type: DataTypes.INTEGER,
@@ -28,7 +28,7 @@ module.exports = (sequelize, DataTypes) => {
       },
     },
     {
-      tableName: 'HorarioDias', 
+      tableName: 'HorarioXDias', 
     }
   );
 
