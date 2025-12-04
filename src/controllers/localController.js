@@ -1,5 +1,4 @@
 const localService = require("../services/localService");
-const { json } = require("sequelize");
 
 class LocalController {
   getAll = async (req, res) => {

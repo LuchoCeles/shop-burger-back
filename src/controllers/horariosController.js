@@ -1,4 +1,3 @@
-const { json } = require("sequelize");
 const horarioService = require("../services/horarioService");
 class HorariosController {
   async create(req, res) {
