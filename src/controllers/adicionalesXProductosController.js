@@ -1,9 +1,7 @@
-const { clearParserCache } = require("mysql2");
-const { sequelize, AdicionalesXProducto } = require("../models");
 const adicionalesXProductosService = require("../services/adicionalesXProductosService");
 
 class AdicionalesXProductosController {
-  async create(req, res, next) {
+  async create(req, res) {
     try {
       const registro = await adicionalesXProductosService.create(req.body);
       res.status(201).json({
@@ -20,7 +18,7 @@ class AdicionalesXProductosController {
   }
 
 
-  async update(req, res, next) {
+  async update(req, res) {
     try {
       const { id } = req.params;
       const registro = await adicionalesXProductosService.update(id, req.body);
@@ -36,7 +34,7 @@ class AdicionalesXProductosController {
     }
   }
 
-  async delete(req, res, next) {
+  async delete(req, res) {
     try {
       const { id } = req.params;
       const resultado = await adicionalesXProductosService.delete(id);

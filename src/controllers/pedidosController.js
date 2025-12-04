@@ -21,6 +21,7 @@ class PedidosController {
       if (metodoDePago === "Mercado Pago") {
         const mpResponse = await this.createOrderByMercadoPago(pedido.id);
         return res.status(201).json({
+          success: true,
           message: "Pedido creado exitosamente",
           data: {
             id: mpResponse.pedidoId,
@@ -105,12 +106,13 @@ class PedidosController {
       const pedidos = await pedidoService.getAll(filtros);
 
       return res.status(200).json({
+        success: true,
         message: "Pedidos obtenidos exitosamente",
         data: pedidos,
       });
     } catch (error) {
-      console.error("Error al obtener pedidos:", error);
       return res.status(500).json({
+        success: false,
         error: error.message,
       });
     }
@@ -143,13 +145,13 @@ class PedidosController {
       const pedido = await pedidoService.updateStatus(id, estado);
 
       return res.status(200).json({
-        suscess: true,
+        success: true,
         message: "Estado actualizado exitosamente",
         data: pedido,
       });
     } catch (error) {
       return res.status(500).json({
-        suscess: false,
+        success: false,
         error: "Error al actualizar estado: " + error.message,
       });
     }
@@ -161,12 +163,13 @@ class PedidosController {
       const pedido = await pedidoService.cancel(id);
 
       return res.status(200).json({
+        success: true,
         message: "Pedido cancelado exitosamente",
         data: pedido,
       });
     } catch (error) {
       return res.status(500).json({
-        suscess: false,
+        success: false,
         error: "Error al cancelar pedido: " + error.message,
       });
     }
@@ -181,7 +184,7 @@ class PedidosController {
       if (!producto || !Array.isArray(producto) || producto.length === 0) {
         return res.status(400).json({
           success: false,
-          message: " Debe incluir al menos un producto",
+          message: "Debe incluir al menos un producto",
         });
       }
 
@@ -194,12 +197,14 @@ class PedidosController {
         }
         if (item.cantidad <= 0) {
           return res.status(400).json({
+            success: false,
             message: "La cantidad debe ser mayor a 0",
           });
         }
 
         if (item.adicionales && !Array.isArray(item.adicionales)) {
           return res.status(400).json({
+            success: false,
             message: "Error al cargar adicionales",
           });
         }
@@ -223,8 +228,8 @@ class PedidosController {
         data: result,
       });
     } catch (error) {
-      console.error("Error al actualizar pedido", error);
       return res.status(500).json({
+        success: false,
         message: error.message,
       });
     }

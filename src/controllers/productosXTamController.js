@@ -5,22 +5,25 @@ class ProductosXTamController {
     try {
       const { id } = req.params;
       await ProductosXTamService.deleteByProducto(id);
-      return res
-        .status(200)
-        .json({
-          success: true,message: `Asociaciones de tamaños para el producto eliminadas correctamente.`,
-        });
+      return res.status(200).json({
+        success: true,
+        message: `Asociaciones de tamaños para el producto eliminadas correctamente.`,
+      });
     } catch (error) {
-      return res.status(500).json({ success:false, error: error.message });
+      return res.status(500).json({ success: false, error: error.message });
     }
   }
 
   async getAll(req, res) {
     try {
       const asociaciones = await ProductosXTamService.getAll();
-      return res.status(200).json(asociaciones);
+      return res.status(200).json({
+        success: true,
+        message: "Lista de asociaciones obtenida correctamente.",
+        data: asociaciones,
+      });
     } catch (error) {
-      return res.status(500).json({ error: error.message });
+      return res.status(500).json({ success: false, error: error.message });
     }
   }
 }
