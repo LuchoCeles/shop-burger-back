@@ -2,6 +2,7 @@ const { Producto, Categoria, ProductosXTam } = require("../models");
 const cloudinaryService = require("./cloudinaryService");
 const productosXTamService = require("./productosXTamService");
 const { sequelize } = require("../config/db");
+const { where } = require("sequelize");
 
 class ProductosService {
   async getProducts(soloActivos = true) {
@@ -109,26 +110,26 @@ class ProductosService {
     }
   }
 
-  async updateProduct(id, productoData, tamData, antiguaData,imageBuffer) {
+  async updateProduct(id, productoData, tamData, antiguaData, imageBuffer) {
     const transaction = await sequelize.transaction();
 
     try {
-      // 1. Buscamos el producto dentro de la transacción.
       const producto = await Producto.findByPk(id, { transaction });
+      const antiguaCategoria = await producto.idCategoria;
+
+      if (!producto) {
+        throw new Error("Producto no encontrado");
+      }
 
       let imageUrl = producto.url_imagen;
       if (imageBuffer) {
         try {
-          // Eliminar imagen anterior de Cloudinary
           if (producto.url_imagen) {
             const publicId = cloudinaryService.getPublicIdFromUrl(
               producto.url_imagen
             );
-            if (publicId) {
-              await cloudinaryService.deleteImage(publicId);
-            }
+            if (publicId) await cloudinaryService.deleteImage(publicId);
           }
-          // Subir nueva imagen
           const uploadResult = await cloudinaryService.uploadImage(imageBuffer);
           imageUrl = uploadResult.secure_url;
         } catch (error) {
@@ -136,39 +137,47 @@ class ProductosService {
         }
       }
       productoData.url_imagen = imageUrl;
-
+       
       await producto.update(productoData, { transaction });
 
-      if (antiguaData.idCategoria !== productoData.idCategoria) {
-        if (tamData.length > 0) {
+      // asociaciones de tamaños y precios
+      if (tamData && Array.isArray(tamData) && tamData.length > 0) {
+        // Verificar si cambió la categoría
+        
+        const nuevaCategoria = productoData.idCategoria;
+        
 
-          const asociaciones = tamData.map((tam) => ({
+        if (parseInt(nuevaCategoria)!== antiguaCategoria) {
+        //eliminar todas las asociaciones antiguas
+          await ProductosXTam.destroy({
+            where: { idProducto: id },
+            transaction,
+          });
+          
+          // Crear las nuevas asociaciones con los tamaños de la nueva categoría
+          const nuevasAsociaciones = tamData.map((t) => ({
             idProducto: id,
-            idTam: tam.idTam,
-            precio: tam.precio,
+            idTam: t.idTam,
+            precio: t.precio,
           }));
-
-          try {
-            await ProductosXTam.bulkCreate(asociaciones, { transaction });
-            await productosXTamService.deleteByProducto(id,antiguaData.idTam,{transaction});
-          } catch (error) {
-            throw new Error(
-              `Error al crear asociaciones de tamaños: ${error.message}`
+          await ProductosXTam.bulkCreate(nuevasAsociaciones, { transaction });
+        } else {
+         for (const tam of tamData) {
+            await ProductosXTam.update(
+              { precio: tam.precio },
+              {
+                where: {
+                  idProducto: id,
+                  idTam: tam.idTam
+                },
+                transaction
+              }
             );
           }
         }
       }
-      //actualizamos tamaño y precio
-      if (tamData !== null) {
-        await ProductosXTam.destroy({
-          where: { idProducto: id },
-          transaction,
-        });
-        // creamos las nuevas asociaciones.
-      }
-
+      
       await transaction.commit();
-
       return await this.getProductById(id);
     } catch (error) {
       await transaction.rollback();

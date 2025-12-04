@@ -1,7 +1,7 @@
 const categoriasService = require("../services/categoriasService");
 
 class CategoriasController {
-  async getCategories(req, res, next) {
+  async getCategories(req, res) {
     try {
       const categorias = await categoriasService.getCategories();
       res.status(200).json({
@@ -16,7 +16,7 @@ class CategoriasController {
     }
   }
 
-  async createCategorie(req, res, next) {
+  async createCategorie(req, res) {
     try {
       const categoriaData = req.body;
       const categoria = await categoriasService.createCategorie(categoriaData);
@@ -55,7 +55,7 @@ class CategoriasController {
     }
   }
 
-  async updateCategorie(req, res, next) {
+  async updateCategorie(req, res) {
     try {
       const { id } = req.params;
       const { nombre } = req.body;

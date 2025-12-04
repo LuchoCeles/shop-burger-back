@@ -5,7 +5,7 @@ const { Op } = require('sequelize');
 class PagosService {
   async updateMp(id, estado) {
     try {
-      await sequelize.query("CALL updateMp(:id,:estado);", {
+      const rsp = await sequelize.query("CALL updateMp(:id,:estado);", {
         replacements: { id, estado },
       });
       return true;

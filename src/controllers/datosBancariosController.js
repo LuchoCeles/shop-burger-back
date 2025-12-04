@@ -9,6 +9,7 @@ class DatosBancariosController {
       const datos = await datosBancariosService.create(id, { banco });
 
       return res.status(201).json({
+        success: true,
         message: "Datos creados exitosamente",
         data: {
           id: datos.id,
@@ -22,12 +23,13 @@ class DatosBancariosController {
       });
     } catch (error) {
       return res.status(500).json({
+        success: false,
         error: error.message,
       });
     }
   }
 
-  async get(req, res, next) {
+  async get(req, res) {
     try {
       const datos = await datosBancariosService.get();
       res.status(200).json({

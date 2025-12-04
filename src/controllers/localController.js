@@ -1,5 +1,4 @@
 const localService = require("../services/localService");
-const { json } = require("sequelize");
 
 class LocalController {
   getAll = async (req, res) => {
@@ -47,46 +46,46 @@ class LocalController {
 
   deleteLocal = async (req, res) => {
     try {
-      const {id} = req.params;
+      const { id } = req.params;
       const nuevoEstado = await localService.delete(id);
 
       return res.status(200).json({
-        succes: true,
+        success: true,
         message: "Local dado de baja",
-        data : nuevoEstado,
+        data: nuevoEstado,
       });
     } catch (error) {
-        return res.status(500).json({
-            succes: false,
-            message: error.message,
-        });
+      return res.status(500).json({
+        success: false,
+        message: error.message,
+      });
     }
   };
 
-  updateDireccion = async (req,res)=>{
+  updateDireccion = async (req, res) => {
     try {
-        const {id} = req.params;
-        const {direccion} = req.body;
+      const { id } = req.params;
+      const { direccion } = req.body;
 
-        if(!direccion || typeof direccion !== 'string' || !direccion.trim()){
-            return res.status(400).json({
-                succes:false,
-                message: "El campo 'direccion' es obligatorio y debe ser un texto.",
-            });
-        }
-
-        const local =  await localService.updateLocal(id,direccion.trim());
-
-        return res.status(200).json({
-            succes: true,
-            message : "Direccion cambiada correctamente",
-            data:local,
+      if (!direccion || typeof direccion !== 'string' || !direccion.trim()) {
+        return res.status(400).json({
+          success: false,
+          message: "El campo 'direccion' es obligatorio y debe ser un texto.",
         });
+      }
+
+      const local = await localService.updateLocal(id, direccion.trim());
+
+      return res.status(200).json({
+        success: true,
+        message: "Direccion cambiada correctamente",
+        data: local,
+      });
     } catch (error) {
-        return res.status(500).json({
-            succes:false,
-            message: error.message,
-        });
+      return res.status(500).json({
+        success: false,
+        message: error.message,
+      });
     }
   };
 }

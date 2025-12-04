@@ -370,40 +370,12 @@ class PedidosService {
       };
     }
   }
+  
   async getById(id) {
     try {
       const pedido = await Pedido.findOne({
         where: { id },
-        attributes: ["id", "estado", "precioTotal", "descripcion"],
-        include: [
-          {
-            model: Cliente,
-            as: "cliente",
-            attributes: ["id", "telefono", "direccion"],
-          },
-          {
-            model: ProductosXPedido,
-            as: "productosxpedido",
-            include: [
-              {
-                model: Producto,
-                as: "producto",
-                attributes: ["id", "nombre", "precio"],
-              },
-              {
-                model: AdicionalesXProductosXPedidos,
-                as: "AxPxP",
-                include: [
-                  {
-                    model: Adicionales,
-                    as: "adicional",
-                    attributes: ["id", "nombre", "precio"],
-                  },
-                ],
-              },
-            ],
-          },
-        ],
+        attributes: ["id", "estado"],
       });
 
       if (!pedido) {
@@ -412,10 +384,10 @@ class PedidosService {
 
       return pedido;
     } catch (error) {
-      console.error("Error en pedidoService.getById:", error);
-      throw error;
+      throw new Error (`Error al obtener el pedido: ${error.message}`);
     }
   }
+  
 }
 
 module.exports = new PedidosService();
