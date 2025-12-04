@@ -34,8 +34,7 @@ router.patch('/:id/cancelar', authAdmin, validateRequest, [
   param('id').isInt({ min: 1 }).withMessage('ID debe ser válido')
 ], pedidosController.cancel);
 
-router.patch('/:id/update', validateRequest, [
-  authAdmin,
+router.patch('/:id/update', authAdmin, validateRequest, [
   param('id').isInt({ min: 1 }).withMessage('ID debe ser válido'),
   body('estado').optional().isIn(['Entregado', 'Cancelado']).withMessage('Estado inválido'),
 ], pedidosController.updateOrder);
