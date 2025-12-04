@@ -55,7 +55,7 @@ class ProductosController {
     }
   }
 
-  createProduct = async (req, res, next) => {
+  createProduct = async (req, res) => {
     try {
       const imageBuffer = req.file ? req.file.buffer : null;
       const body = req.body;
@@ -65,12 +65,10 @@ class ProductosController {
         try {
           tamData = JSON.parse(body.tam);
         } catch (e) {
-          return res
-            .status(400)
-            .json({
-              success: false,
-              message: "El formato del array 'tam' es inválido.",
-            });
+          return res.status(400).json({
+            success: false,
+            message: "El formato del array 'tam' es inválido.",
+          });
         }
       }
 
@@ -140,7 +138,7 @@ class ProductosController {
         idTam: data.idTamAntigua,
         idCategoria: data.idCategoriaAntigua,
       }
-      
+
       const imageBuffer = req.file ? req.file.buffer : null;
 
       let tamData = null;
@@ -149,12 +147,10 @@ class ProductosController {
           tamData = JSON.parse(data.tam);
           if (!Array.isArray(tamData)) throw new Error();
         } catch (e) {
-          return res
-            .status(400)
-            .json({
-              success: false,
-              message: "El formato del campo 'tam' es inválido.",
-            });
+          return res.status(400).json({
+            success: false,
+            message: "El formato del campo 'tam' es inválido.",
+          });
         }
       }
 

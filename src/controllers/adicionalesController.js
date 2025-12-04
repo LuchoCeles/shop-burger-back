@@ -1,7 +1,7 @@
 const adicionalesService = require('../services/adicionalesService');
 
 class AdicionalesController {
-  async getAll(req, res, next) {
+  async getAll(req, res) {
     const isActive = req.query.isActive === 'true';
     try {
       const adicionales = await adicionalesService.getAll(isActive);
@@ -18,9 +18,9 @@ class AdicionalesController {
     }
   }
 
-  async create(req, res, next) {
+  async create(req, res) {
     try {
-      const {nombre, precio, stock, maxCantidad} = req.body;
+      const { nombre, precio, stock, maxCantidad } = req.body;
 
       const nuevoAdicional = await adicionalesService.create({ nombre, precio, stock, maxCantidad });
       res.status(201).json({
@@ -36,7 +36,7 @@ class AdicionalesController {
     }
   }
 
-  async update(req, res, next) {
+  async update(req, res) {
     try {
       const { id } = req.params;
       const { nombre, precio, stock, maxCantidad } = req.body;
@@ -100,7 +100,7 @@ class AdicionalesController {
         data: adicional
       });
     } catch (error) {
-        return res.status(500).json({
+      return res.status(500).json({
         success: false,
         message: error.message
       });

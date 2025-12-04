@@ -20,9 +20,6 @@ class HorarioDiasController {
         data: result,
       });
     } catch (error) {
-      if (error.message.includes("ya está asignado")) {
-        return res.status(409).json({ success: false, message: error.message });
-      }
       return res.status(500).json({ success: false, message: error.message });
     }
   };
@@ -49,9 +46,6 @@ class HorarioDiasController {
         message: result.message,
       });
     } catch (error) {
-      if (error.message.includes("No se encontró")) {
-        return res.status(404).json({ success: false, message: error.message });
-      }
       return res.status(500).json({ success: false, message: error.message });
     }
   };
