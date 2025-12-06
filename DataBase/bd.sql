@@ -260,8 +260,7 @@ CREATE TABLE Horarios (
     horarioCierre TIME NOT NULL,
     estado TINYINT(1) DEFAULT 1,
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    CONSTRAINT fk_horario_local FOREIGN KEY (idLocal) REFERENCES Local(id)
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
 CREATE TABLE horariosXDias (
@@ -285,7 +284,7 @@ INSERT INTO `MetodosDePago` (`nombre`, `createdAt`, `updatedAt`) VALUES ('Efecti
 INSERT INTO `MetodosDePago` (`nombre`, `createdAt`, `updatedAt`) VALUES ('Transferencia', current_timestamp(), current_timestamp());
 INSERT INTO `MetodosDePago` (`nombre`, `createdAt`, `updatedAt`) VALUES ('Mercado Pago', current_timestamp(), current_timestamp());
 
-INSERT INTO Dias (nombreDia)
+INSERT INTO Dias (nombre)
 VALUES
   ('Lunes'),
   ('Martes'),
