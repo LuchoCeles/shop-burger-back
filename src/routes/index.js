@@ -14,6 +14,7 @@ const guarnicionRoutes = require('./guarnicionesRoutes');
 const guarnicionesXProductoRoutes = require('./guarnicionesXProductoRoutes');
 const tamRoutes = require('./tamRoutes');
 const pagosRoutes = require('./pagosRoutes');
+const diasRoutes = require('./diasRoutes');
 
 const router = express.Router();
 
@@ -32,6 +33,7 @@ router.use('/api/guarnicion', guarnicionRoutes);
 router.use('/admin/guarnicionesxproducto', guarnicionesXProductoRoutes);
 router.use('/api/tam', tamRoutes);
 router.use('/admin/pago', pagosRoutes);
+router.use('/api/dias', diasRoutes);
 
 
 module.exports = router;
