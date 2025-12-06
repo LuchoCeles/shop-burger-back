@@ -270,14 +270,14 @@ class PedidosService {
       if (!pedido) {
         throw new Error("Pedido no encontrado");
       }
-      if (pedido.estado === "cancelado") {
+      if (pedido.estado === "Cancelado") {
         await transaction.rollback();
         console.log(
           `Intento de cancelar pedido ${id} que ya estaba cancelado.`
         );
         return pedido;
       }
-      if (pedido.estado === "entregado") {
+      if (pedido.estado === "Entregado") {
         throw new Error("No se puede cancelar un pedido entregado");
       }
 
@@ -308,7 +308,7 @@ class PedidosService {
         }
       }
 
-      await pedido.update({ estado: "cancelado" }, { transaction });
+      await pedido.update({ estado: "Cancelado" }, { transaction });
 
       await transaction.commit();
     } catch (error) {
