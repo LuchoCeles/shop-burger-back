@@ -48,8 +48,8 @@ CREATE TABLE Productos (
 -- =======================
 CREATE TABLE Tam (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    nombre VARCHAR(25),
     idCategoria INT,
+    nombre VARCHAR(25),
     estado TINYINT DEFAULT 1,
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
@@ -275,7 +275,7 @@ CREATE TABLE horario (
     CONSTRAINT fk_horario_local FOREIGN KEY (idLocal) REFERENCES Local(id)
 );
 
-CREATE TABLE horarioDias (
+CREATE TABLE horarioXDias (
     id INT AUTO_INCREMENT PRIMARY KEY,
     idHorario INT,
     idDia INT,
