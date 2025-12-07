@@ -4,7 +4,8 @@ DELIMITER //
 
 CREATE PROCEDURE updateMPState(
     IN p_id INT,
-    IN p_mpEstado TINYINT
+    IN p_mpEstado TINYINT,
+    IN p_mercadoPagoAccessToken VARCHAR(70)
 )
 
 BEGIN
@@ -12,9 +13,9 @@ BEGIN
       SET updatedAt = CURRENT_TIMESTAMP(), mercadoPagoAccessToken = p_mercadoPagoAccessToken
     WHERE id = p_id;
 
-    UPDATE MetodosDePago AS m
+    UPDATE MetodosDePago
       SET estado = p_mpEstado
-    WHERE m.nombre = 'Mercado Pago';
+    WHERE nombre = 'Mercado Pago';
 
     CALL getBanco();
 END //

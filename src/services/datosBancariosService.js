@@ -85,15 +85,14 @@ class DatosBancariosService {
   async update(id, datosActualizados) {
     const transaction = await sq.transaction();
     try {
-      const datos = await sequelize.query("CALL updateDatosBancarios(:id, :cuit, :alias, :cbu, :apellido, :nombre, :mercadoPagoAccessToken);", {
+      const datos = await sequelize.query("CALL updateDatosBancarios(:id, :cuit, :alias, :cbu, :apellido, :nombre);", {
         replacements: {
           id,
           cuit: datosActualizados.cuit,
           alias: datosActualizados.alias,
           cbu: datosActualizados.cbu,
           apellido: datosActualizados.apellido,
-          nombre: datosActualizados.nombre,
-          mercadoPagoAccessToken: datosActualizados.mpAccessToken
+          nombre: datosActualizados.nombre
         }
       }, { transaction });
 
@@ -110,7 +109,7 @@ class DatosBancariosService {
     const transaction = await sq.transaction();
     try {
       const datos = await sequelize.query("CALL updateMPState(:id, :mpEstado, :mercadoPagoAccessToken);", {
-        replacements: { id, mpEstado, mpAccessToken }
+        replacements: { id, mpEstado, mercadoPagoAccessToken: mpAccessToken }
       }, { transaction });
 
       await transaction.commit();
