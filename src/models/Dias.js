@@ -7,7 +7,7 @@ module.exports = (sequelize, DataTypes) => {
         primaryKey: true,
         autoIncrement: true,
       },
-      nombreDia: {
+      nombre: {
         type: DataTypes.STRING(10),
         allowNull: false,
       },
@@ -23,10 +23,10 @@ module.exports = (sequelize, DataTypes) => {
   );
 
 Dias.associate = function(models) {
-  Dias.belongsToMany(models.Horario, {
-    through: 'horarioDias',
+  Dias.belongsToMany(models.Horarios, {
+    through: 'horariosDias',
     foreignKey: 'idDia',
-    otherKey: 'idHorario',
+    otherKey: 'idHorarios',
     as: 'horarios'
   });
 };

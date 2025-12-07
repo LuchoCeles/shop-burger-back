@@ -1,20 +1,12 @@
 module.exports = (sequelize, DataTypes) => {
-  const Horario = sequelize.define(
-    "Horario",
+  const Horarios = sequelize.define(
+    "Horarios",
     {
       id: {
         type: DataTypes.INTEGER,
         primaryKey: true,
         autoIncrement: true,
       },
-      idLocal: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-      references: {
-        model: 'Local',
-        key: 'id'
-      }
-    },
       horarioApertura: {
         type: DataTypes.TIME,
         allowNull: false,
@@ -29,21 +21,21 @@ module.exports = (sequelize, DataTypes) => {
       },
     },
     {
-      tableName: "horario",
+      tableName: "horarios",
       timestamps: true,
     }
   );
 
 
-  Horario.associate = function(models) {
-  Horario.belongsTo(models.Local, { foreignKey: 'idLocal' });
-  Horario.belongsToMany(models.Dias, {
+  Horarios.associate = function(models) {
+
+  Horarios.belongsToMany(models.Dias, {
     through: 'horarioDias', 
-    foreignKey: 'idHorario',
+    foreignKey: 'idHorarios',
     otherKey: 'idDia',
     as: 'dias'
   });
 };
 
-  return Horario;
+  return Horarios;
 };
