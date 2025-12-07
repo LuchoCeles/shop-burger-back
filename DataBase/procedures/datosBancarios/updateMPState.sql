@@ -9,10 +9,14 @@ CREATE PROCEDURE updateMPState(
 
 BEGIN
     UPDATE DatosBancarios 
-      SET mpEstado = p_mpEstado
+      SET updatedAt = CURRENT_TIMESTAMP(), mercadoPagoAccessToken = p_mercadoPagoAccessToken
     WHERE id = p_id;
 
-    SELECT * FROM DatosBancarios WHERE id = p_id;
+    UPDATE MetodosDePago AS m
+      SET estado = p_mpEstado
+    WHERE m.nombre = 'Mercado Pago';
+
+    CALL getBanco();
 END //
 
 DELIMITER ;

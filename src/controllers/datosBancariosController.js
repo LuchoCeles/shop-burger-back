@@ -17,8 +17,7 @@ class DatosBancariosController {
           alias: datos.alias,
           cbu: datos.cbu,
           apellido: datos.apellido,
-          nombre: datos.nombre,
-          mpEstado: datos.mpEstado,
+          nombre: datos.nombre
         },
       });
     } catch (error) {
@@ -34,15 +33,7 @@ class DatosBancariosController {
       const datos = await datosBancariosService.get();
       res.status(200).json({
         success: true,
-        data: {
-          id: datos.id,
-          cuit: datos.cuit,
-          alias: datos.alias,
-          cbu: datos.cbu,
-          apellido: datos.apellido,
-          nombre: datos.nombre,
-          mpEstado: datos.mpEstado,
-        },
+        data: datos,
       });
     } catch (error) {
       return res.status(500).json({
@@ -59,7 +50,7 @@ class DatosBancariosController {
 
       const token = jwt.sign(
         {
-          id: datos.id,
+          id: datos.id
         },
         process.env.JWT_SECRET,
         { expiresIn: process.env.JWT_BANK_EXPIRES_IN }
@@ -77,6 +68,7 @@ class DatosBancariosController {
           apellido: datos.apellido,
           nombre: datos.nombre,
           mpEstado: datos.mpEstado,
+          mpAccessToken: datos.mercadoPagoAccessToken
         },
       });
     } catch (error) {
@@ -87,7 +79,7 @@ class DatosBancariosController {
     }
   }
 
-  async updatePassword(req, res, next) {
+  async updatePassword(req, res) {
     try {
       const { id } = req.params;
       const { password, newPassword } = req.body;
@@ -115,15 +107,7 @@ class DatosBancariosController {
       res.status(200).json({
         success: true,
         message: "Datos bancarios actualizados",
-        data: {
-          id: datos.id,
-          cuit: datos.cuit,
-          alias: datos.alias,
-          cbu: datos.cbu,
-          apellido: datos.apellido,
-          nombre: datos.nombre,
-          mpEstado: datos.mpEstado,
-        },
+        data: datos,
       });
     } catch (error) {
       res.status(403).json({
@@ -136,21 +120,13 @@ class DatosBancariosController {
   async updateMPState(req, res) {
     try {
       const { id } = req.params;
-      const { mpEstado } = req.body;
+      const { mpEstado, mpAccessToken } = req.body;
 
-      const datos = await datosBancariosService.updateMPState(id, mpEstado);
+      const datos = await datosBancariosService.updateMPState(id, mpEstado, mpAccessToken);
       res.status(200).json({
         success: true,
         message: "Estado de Mercado Pago actualizado",
-        data: {
-          id: datos.id,
-          cuit: datos.cuit,
-          alias: datos.alias,
-          cbu: datos.cbu,
-          apellido: datos.apellido,
-          nombre: datos.nombre,
-          mpEstado: datos.mpEstado,
-        },
+        data: datos,
       });
     } catch (error) {
       res.status(403).json({
