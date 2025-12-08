@@ -16,7 +16,7 @@ BEGIN
       SET cuit = p_cuit, alias = p_alias, cbu = p_cbu, apellido = p_apellido, nombre = p_nombre, updatedAt = CURRENT_TIMESTAMP()
     WHERE id = p_id;
 
-    SELECT * FROM DatosBancarios WHERE id = p_id;
+    CALL getBanco();
 END //
 
 DELIMITER ;

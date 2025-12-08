@@ -105,11 +105,11 @@ class DatosBancariosService {
     }
   }
 
-  async updateMPState(id, mpEstado) {
+  async updateMPState(id, mpEstado, mpAccessToken) {
     const transaction = await sq.transaction();
     try {
-      const datos = await sequelize.query("CALL updateMPState(:id, :mpEstado);", {
-        replacements: { id, mpEstado }
+      const datos = await sequelize.query("CALL updateMPState(:id, :mpEstado, :mercadoPagoAccessToken);", {
+        replacements: { id, mpEstado, mercadoPagoAccessToken: mpAccessToken }
       }, { transaction });
 
       await transaction.commit();

@@ -1,6 +1,7 @@
 const pagosService = require('../services/pagosService');
 
 class PagosController {
+
 	async update(req, res) {
 		const { id, estado } = req.body;
 		try {

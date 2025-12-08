@@ -27,15 +27,16 @@ router.post("/login", authAdmin, validateRequest,[
 
 router.patch("/:id",
   authAdmin, authBanco,validateRequest, [
-  body("banco.cuit").optional().isString().notEmpty().withMessage("El CUIT no puede estar vacío"),
-  body("banco.alias").optional().isString().notEmpty().withMessage("El alias no puede estar vacío"),
-  body("banco.cbu").optional().isString().notEmpty().withMessage("El CBU no puede estar vacío"),
-  body("banco.apellido").optional().isString().notEmpty().withMessage("El apellido no puede estar vacío"),
-  body("banco.nombre").optional().isString().notEmpty().withMessage("El nombre no puede estar vacío"),
+  body("banco.cuit").notEmpty().isString().withMessage("El CUIT no puede estar vacío"),
+  body("banco.alias").notEmpty().isString().withMessage("El alias no puede estar vacío"),
+  body("banco.cbu").notEmpty().isString().withMessage("El CBU no puede estar vacío"),
+  body("banco.apellido").notEmpty().isString().withMessage("El apellido no puede estar vacío"),
+  body("banco.nombre").notEmpty().isString().withMessage("El nombre no puede estar vacío"),
 ],  datosBancariosController.update);
 
 router.patch("/:id/stateMP", authAdmin, authBanco, validateRequest,[
   body("mpEstado").notEmpty().toBoolean().isBoolean().withMessage("El estado de MP es obligatorio"),
+  body("mpAccessToken").optional().isString(),
 ],  datosBancariosController.updateMPState);
 
 router.patch("/password/:id", authAdmin, authBanco,validateRequest, [

@@ -118,7 +118,7 @@ class PedidosService {
                     include: [
                       { model: Tam, as: "tam", attributes: ["id", "nombre"] },
                     ],
-                  }
+                  },
                 ],
               },
               {
@@ -141,9 +141,6 @@ class PedidosService {
           });
 
           const productos = pxp.map((item) => {
-
-
-
             return {
               nombre: item.producto.nombre,
               cantidad: item.cantidad,
@@ -178,10 +175,10 @@ class PedidosService {
             envio: pedido.envio ? { precio: pedido.envio.precio } : null,
             Pago: pedido.pago
               ? {
-                id: pedido.pago.id,
-                estado: pedido.pago.estado,
-                metodoDePago: pedido.pago.MetodosDePago?.nombre || null,
-              }
+                  id: pedido.pago.id,
+                  estado: pedido.pago.estado,
+                  metodoDePago: pedido.pago.MetodosDePago?.nombre || null,
+                }
               : null,
             productos: productos,
           };
@@ -216,10 +213,17 @@ class PedidosService {
 
       await pedido.update({ estado: nuevoEstado });
 
-      if (nuevoEstado === "entregado") {
+      if (nuevoEstado === "Entregado") {
         const pago = await Pago.findOne({ where: { idPedido: id } });
         if (pago) {
-          await pago.update({ estado: "pagado" });
+          await pago.update({ estado: "Pagado" });
+        }
+      }
+
+      if (nuevoEstado === "Cancelado") {
+        const pago = await Pago.findOne({ where: { idPedido: id } });
+        if (pago) {
+          await pago.update({ estado: "Cancelado" });
         }
       }
 
@@ -270,14 +274,14 @@ class PedidosService {
       if (!pedido) {
         throw new Error("Pedido no encontrado");
       }
-      if (pedido.estado === "cancelado") {
+      if (pedido.estado === "Cancelado") {
         await transaction.rollback();
         console.log(
           `Intento de cancelar pedido ${id} que ya estaba cancelado.`
         );
         return pedido;
       }
-      if (pedido.estado === "entregado") {
+      if (pedido.estado === "Entregado") {
         throw new Error("No se puede cancelar un pedido entregado");
       }
 
@@ -308,7 +312,7 @@ class PedidosService {
         }
       }
 
-      await pedido.update({ estado: "cancelado" }, { transaction });
+      await pedido.update({ estado: "Cancelado" }, { transaction });
 
       await transaction.commit();
     } catch (error) {
@@ -370,7 +374,7 @@ class PedidosService {
       };
     }
   }
-  
+
   async getById(id) {
     try {
       const pedido = await Pedido.findOne({
@@ -384,10 +388,9 @@ class PedidosService {
 
       return pedido;
     } catch (error) {
-      throw new Error (`Error al obtener el pedido: ${error.message}`);
+      throw new Error(`Error al obtener el pedido: ${error.message}`);
     }
   }
-  
 }
 
 module.exports = new PedidosService();
