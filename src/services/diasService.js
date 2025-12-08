@@ -1,5 +1,5 @@
 const { Dias, Horarios, HorariosXDias } = require("../models");
-const { sequelize } = require("../config/db")
+const { sequelize } = require("../config/db");
 
 class DiasService {
   async getAll() {
@@ -48,33 +48,35 @@ class DiasService {
 
  async update(id, rangos) {
   try {
-    // 1. Eliminar relaciones anteriores
+
+    // 1. Eliminar relaciones viejas del día
     await HorariosXDias.destroy({
       where: { idDia: id },
     });
 
-    // 2. Crear horarios nuevos
-    await Horarios.bulkCreate(rangos); // SIN returning
+    // 2. Actualizar cada horario por ID (NO bulkCreate)
+    for (const rango of rangos) {
+      await Horarios.update(
+        {
+          horarioApertura: rango.inicio,
+          horarioCierre: rango.fin,
+          estado: rango.estado
+        },
+        {
+          where: { id: rango.id }
+        }
+      );
+    }
 
-    // 3. Buscar los horarios recién creados (según rangos enviados)
-    const horarios = await Horarios.findAll({
-      where: {
-        horarioApertura: rangos.map(r => r.horarioApertura),
-        horarioCierre: rangos.map(r => r.horarioCierre),
-      },
-      order: [["id", "DESC"]], // por si ya había otros horarios iguales
-      limit: rangos.length,
-    });
-
-    // 4. Crear relaciones nuevas
-    const relaciones = horarios.map(h => ({
-      idHorarios: h.id,
+    // 3. Crear nuevas relaciones usando los mismos IDs
+    const relaciones = rangos.map(r => ({
+      idHorario: r.id,
       idDia: id,
     }));
 
     await HorariosXDias.bulkCreate(relaciones);
 
-    // 5. Obtener el día con sus horarios actualizados
+    // 4. Devolver resultado final
     return await Dias.findByPk(id, {
       attributes: ["id", "nombre", "estado"],
       include: [
@@ -89,6 +91,7 @@ class DiasService {
     throw new Error(`Error al actualizar los horarios del día: ${error.message}`);
   }
 }
+
 
 }
 
