@@ -27,16 +27,20 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING(50),
       defaultValue: true
     },
-    password :{
+    password: {
       type: DataTypes.STRING(70),
       allowNull: false,
     },
+    mercadoPagoAccessToken: {
+      type: DataTypes.STRING(70),
+      allowNull: true,
+    }
   }, {
     tableName: 'datosBancarios',
     timestamps: true
   });
 
-  DatosBancarios.associate = function(models) {
+  DatosBancarios.associate = function (models) {
     DatosBancarios.hasMany(models.Pago, {
       foreignKey: 'idMetodoDePago',
       as: 'pagos'

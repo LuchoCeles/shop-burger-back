@@ -2,8 +2,8 @@
 'use strict';
 
 module.exports = (sequelize, DataTypes) => {
-  const HorarioDias = sequelize.define(
-    'HorarioXDias',
+  const HorariosXDias = sequelize.define(
+    'HorariosXDias',
     {
       id: {
         type: DataTypes.INTEGER,
@@ -14,7 +14,7 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.INTEGER,
         allowNull: false,
         references: {
-          model: 'Horario',
+          model: 'Horarios',
           key: 'id',
         },
       },
@@ -28,21 +28,21 @@ module.exports = (sequelize, DataTypes) => {
       },
     },
     {
-      tableName: 'HorarioXDias', 
+      tableName: 'HorariosXDias', 
     }
   );
 
-  HorarioDias.associate = function (models) {
-    HorarioDias.belongsTo(models.Horario, {
-      foreignKey: 'idHorario',
-      as: 'horario', 
+  HorariosXDias.associate = function (models) {
+    HorariosXDias.belongsTo(models.Horarios, {
+      foreignKey: 'idHorarios',
+      as: 'horarios', 
     });
 
-    HorarioDias.belongsTo(models.Dias, {
+    HorariosXDias.belongsTo(models.Dias, {
       foreignKey: 'idDia',
       as: 'dia', 
     });
   };
 
-  return HorarioDias;
+  return HorariosXDias;
 };

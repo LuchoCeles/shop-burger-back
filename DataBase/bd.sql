@@ -197,7 +197,7 @@ CREATE TABLE DatosBancarios (
     apellido VARCHAR(50) NOT NULL,
     nombre VARCHAR(50) NOT NULL,
     password VARCHAR(70) NOT NULL,
-    mpEstado TINYINT DEFAULT 0 NOT NULL,
+    mercadoPagoAccessToken VARCHAR(70),
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
@@ -209,6 +209,7 @@ CREATE TABLE DatosBancarios (
 CREATE TABLE MetodosDePago (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nombre VARCHAR(30) NOT NULL,
+    estado TINYINT DEFAULT 1,
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
@@ -244,18 +245,7 @@ CREATE TABLE Admin (
 
 CREATE TABLE Dias (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    nombreDia VARCHAR(10) NOT NULL,
-    estado TINYINT(1) DEFAULT 1,
-    createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
-
--- =======================
--- TABLA: Local
--- =======================
-CREATE TABLE Local (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    direccion VARCHAR(60) NOT NULL,
+    nombre VARCHAR(10) NOT NULL,
     estado TINYINT(1) DEFAULT 1,
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
@@ -264,24 +254,23 @@ CREATE TABLE Local (
 -- =======================
 -- TABLA: Horarios
 -- =======================
-CREATE TABLE horario (
+CREATE TABLE Horarios (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    idLocal INT ,
     horarioApertura TIME NOT NULL,
     horarioCierre TIME NOT NULL,
     estado TINYINT(1) DEFAULT 1,
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    CONSTRAINT fk_horario_local FOREIGN KEY (idLocal) REFERENCES Local(id)
+    updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
-CREATE TABLE horarioXDias (
+CREATE TABLE horariosXDias (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    idHorario INT,
+    idHorarios INT,
     idDia INT,
+    estado TINYINT(1) DEFAULT 1,
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    CONSTRAINT fk_HD_horario FOREIGN KEY (idHorario) REFERENCES Horario(id),
+    CONSTRAINT fk_HD_horario FOREIGN KEY (idHorarios) REFERENCES Horarios(id),
     CONSTRAINT fk_HD_dia FOREIGN KEY (idDia) REFERENCES Dias(id)
 );
 
@@ -295,7 +284,7 @@ INSERT INTO `MetodosDePago` (`nombre`, `createdAt`, `updatedAt`) VALUES ('Efecti
 INSERT INTO `MetodosDePago` (`nombre`, `createdAt`, `updatedAt`) VALUES ('Transferencia', current_timestamp(), current_timestamp());
 INSERT INTO `MetodosDePago` (`nombre`, `createdAt`, `updatedAt`) VALUES ('Mercado Pago', current_timestamp(), current_timestamp());
 
-INSERT INTO Dias (nombreDia)
+INSERT INTO Dias (nombre)
 VALUES
   ('Lunes'),
   ('Martes'),

@@ -9,16 +9,15 @@ const Pedido = require('./Pedido');
 const ProductosXPedido = require('./ProductosXPedido');
 const DatosBancarios = require('./DatosBancarios');
 const Pago = require('./Pago');
-const Local = require('./Local');
 const Admin = require('./Admin');
 const Adicionales = require('./Adicionales');
 const AdicionalesXProducto = require('./AdicionalesXProducto');
 const AdicionalesXProductosXPedidos = require('./AdicionalesXProductosXPedidos');
 const MetodosDePago = require('./MetodosDePago');
 const Envio = require('./Envio');
-const Horario = require('./Horario');
+const Horarios = require('./Horarios');
 const Dias = require("./Dias");
-const HorarioDias = require('./horarioDias');
+const HorariosXDias = require('./HorarioXDias');
 const Guarniciones = require('./Guarniciones');
 const Tam = require('./Tam');
 const GuarnicionesXProducto = require('./GuarnicionesXProducto');
@@ -35,15 +34,14 @@ const models = {
   ProductosXPedido: ProductosXPedido(sequelize, DataTypes),
   DatosBancarios: DatosBancarios(sequelize, DataTypes),
   Pago: Pago(sequelize, DataTypes),
-  Local: Local(sequelize, DataTypes),
   Admin: Admin(sequelize, DataTypes),
   AdicionalesXProducto: AdicionalesXProducto(sequelize, DataTypes),
   AdicionalesXProductosXPedidos: AdicionalesXProductosXPedidos(sequelize, DataTypes),
   MetodosDePago: MetodosDePago(sequelize, DataTypes),
   Envio: Envio(sequelize, DataTypes),
-  Horario: Horario(sequelize, DataTypes),
+  Horarios: Horarios(sequelize, DataTypes),
   Dias: Dias(sequelize, DataTypes),
-  HorarioDias: HorarioDias(sequelize, DataTypes),
+  HorariosXDias: HorariosXDias(sequelize, DataTypes),
   Guarniciones: Guarniciones(sequelize, DataTypes),
   Tam: Tam(sequelize, DataTypes),
   GuarnicionesXProducto: GuarnicionesXProducto(sequelize, DataTypes),

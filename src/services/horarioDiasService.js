@@ -2,9 +2,9 @@ const { HorarioDias, Horario, Dias } = require("../models");
 
 class HorarioDiasService {
   async create(data) {
-    const { idHorario, idDia } = data;
+    const { idHorario } = data;
 
-    const existing = await HorarioDias.findOne({ where: { idHorario, idDia } });
+    const existing = await HorarioDias.findOne({ where: { idHorario } });
     if (existing) {
       throw new Error(
         `El horario ${idHorario} ya está asignado al día ${idDia}.`
