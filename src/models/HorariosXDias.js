@@ -10,7 +10,7 @@ module.exports = (sequelize, DataTypes) => {
         primaryKey: true,
         autoIncrement: true,
       },
-      idHorario: {
+      idHorarios: {
         type: DataTypes.INTEGER,
         allowNull: false,
         references: {
