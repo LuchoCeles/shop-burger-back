@@ -68,7 +68,7 @@ class DatosBancariosController {
           apellido: datos.apellido,
           nombre: datos.nombre,
           mpEstado: datos.mpEstado,
-          mpAccessToken: datos.mercadoPagoAccessToken
+          mercadoPagoAccessToken: datos.mercadoPagoAccessToken
         },
       });
     } catch (error) {
