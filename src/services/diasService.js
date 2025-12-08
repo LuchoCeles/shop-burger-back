@@ -1,5 +1,6 @@
 const { Dias, Horarios, HorariosXDias } = require("../models");
 const { sequelize } = require("../config/db");
+const { where } = require("sequelize");
 
 class DiasService {
   async getAll() {
@@ -46,46 +47,65 @@ class DiasService {
     }
   }
 
-  
- async update(id, rangos) {
-  const t = await sequelize.transaction();
-  try {
-    await HorariosXDias.destroy({ where: { idDia: id }, transaction: t });
+  async update(id, rangos) {
+    const t = await sequelize.transaction();
 
-    const horarios = await Horarios.bulkCreate(rangos, {
-      transaction: t,
-      individualHooks: true
-    });
+    try {
+      // Recorremos todos los rangos recibidos
+      for (const rango of rangos) {
+        // SI NO TIENE ID → SE CREA
+        if (!rango.id) {
+          const nuevoHorario = await Horarios.create(
+            {
+              horarioApertura: rango.horarioApertura,
+              horarioCierre: rango.horarioCierre,
+              estado: rango.estado,
+            },
+            { transaction: t }
+          );
 
-    const relaciones = horarios.map(h => ({
-      idHorario: h.id,
-      idDia: id,
-    }));
+          await HorariosXDias.create(
+            {
+              idHorarios: nuevoHorario.id,
+              idDia: id,
+            },
+            { transaction: t }
+          );
+        } else {
+          // SI TIENE ID → SE ACTUALIZA
+          await Horarios.update(
+            {
+              horarioApertura: rango.horarioApertura,
+              horarioCierre: rango.horarioCierre,
+              estado: rango.estado,
+            },
+            {
+              where: { id: rango.id },
+              transaction: t,
+            }
+          );
+        }
+      }
 
-    await HorariosXDias.bulkCreate(relaciones, { transaction: t });
+      await t.commit();
 
-    await t.commit();
-
-    return await Dias.findByPk(id, {
-      attributes: ["id", "nombre", "estado"],
-      include: [
-        {
-          association: "horarios",
-          attributes: ["id", "horarioApertura", "horarioCierre", "estado"],
-        },
-      ],
-    });
-
-  } catch (error) {
-    await t.rollback();
-    throw new Error(
-      `Error al actualizar los horarios del día: ${error.message}`
-    );
+      // Retornamos el día actualizado con sus horarios
+      return await Dias.findByPk(id, {
+        attributes: ["id", "nombre", "estado"],
+        include: [
+          {
+            association: "horarios",
+            attributes: ["id", "horarioApertura", "horarioCierre", "estado"],
+          },
+        ],
+      });
+    } catch (error) {
+      await t.rollback();
+      throw new Error(
+        `Error al actualizar los horarios del día: ${error.message}`
+      );
+    }
   }
-}
-
-
-
 }
 
 module.exports = new DiasService();
