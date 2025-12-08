@@ -54,7 +54,8 @@ class DiasService {
       // Recorremos todos los rangos recibidos
       for (const rango of rangos) {
         // SI NO TIENE ID → SE CREA
-        if (!rango.id) {
+        
+        if (!rango.idHorario) {
           const nuevoHorario = await Horarios.create(
             {
               horarioApertura: rango.horarioApertura,
@@ -80,7 +81,7 @@ class DiasService {
               estado: rango.estado,
             },
             {
-              where: { id: rango.id },
+              where: { id: rango.idHorario },
               transaction: t,
             }
           );
