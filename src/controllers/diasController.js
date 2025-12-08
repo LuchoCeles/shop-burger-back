@@ -11,8 +11,8 @@ class DiasController {
         estado: dia.estado,
         rangos: dia.horarios.map(horario => ({
           id: horario.id,
-          inicio: horario.horarioApertura,
-          fin: horario.horarioCierre,
+          inicio: horario.horarioApertura.substring(0,5),
+          fin: horario.horarioCierre.substring(0,5),
           estado: horario.estado
         }))
       }));
