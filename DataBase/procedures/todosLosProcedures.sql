@@ -384,7 +384,7 @@ DELIMITER ;
 DELIMITER $$
 CREATE DEFINER=`root`@`localhost` PROCEDURE `getBanco`()
 BEGIN
-    SELECT id, cuit, alias, cbu, apellido, nombre, mpEstado
+    SELECT id, cuit, alias, cbu, apellido, nombre, mercadoPagoAccessToken, (SELECT estado FROM MetodosDePago WHERE nombre = 'Mercado Pago') AS mpEstado
       FROM DatosBancarios
     LIMIT 1;
 END$$
@@ -564,7 +564,7 @@ CREATE DEFINER=`root`@`localhost` PROCEDURE `loginBanco`(
     IN p_cuit VARCHAR(20)
 )
 BEGIN
-    SELECT * FROM DatosBancarios WHERE cuit = p_cuit ;
+    SELECT * ,(SELECT estado FROM MetodosDePago WHERE nombre = 'Mercado Pago') AS mpEstado FROM DatosBancarios WHERE cuit = p_cuit ;
 END$$
 DELIMITER ;
 
@@ -610,7 +610,7 @@ BEGIN
       SET cuit = p_cuit, alias = p_alias, cbu = p_cbu, apellido = p_apellido, nombre = p_nombre, updatedAt = CURRENT_TIMESTAMP()
     WHERE id = p_id;
 
-    SELECT * FROM DatosBancarios WHERE id = p_id;
+    CALL getBanco();
 END$$
 DELIMITER ;
 
@@ -648,14 +648,19 @@ DELIMITER ;
 DELIMITER $$
 CREATE DEFINER=`root`@`localhost` PROCEDURE `updateMPState`(
     IN p_id INT,
-    IN p_mpEstado TINYINT
+    IN p_mpEstado TINYINT,
+    IN p_mercadoPagoAccessToken VARCHAR(70)
 )
 BEGIN
     UPDATE DatosBancarios 
-      SET mpEstado = p_mpEstado
+      SET updatedAt = CURRENT_TIMESTAMP(), mercadoPagoAccessToken = p_mercadoPagoAccessToken
     WHERE id = p_id;
 
-    SELECT * FROM DatosBancarios WHERE id = p_id;
+    UPDATE MetodosDePago
+      SET estado = p_mpEstado
+    WHERE nombre = 'Mercado Pago';
+
+    CALL getBanco();
 END$$
 DELIMITER ;
 
