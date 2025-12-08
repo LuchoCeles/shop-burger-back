@@ -46,37 +46,26 @@ class DiasService {
     }
   }
 
+  
  async update(id, rangos) {
+  const t = await sequelize.transaction();
   try {
+    await HorariosXDias.destroy({ where: { idDia: id }, transaction: t });
 
-    // 1. Eliminar relaciones viejas del día
-    await HorariosXDias.destroy({
-      where: { idDia: id },
+    const horarios = await Horarios.bulkCreate(rangos, {
+      transaction: t,
+      individualHooks: true
     });
 
-    // 2. Actualizar cada horario por ID (NO bulkCreate)
-    for (const rango of rangos) {
-      await Horarios.update(
-        {
-          horarioApertura: rango.inicio,
-          horarioCierre: rango.fin,
-          estado: rango.estado
-        },
-        {
-          where: { id: rango.id }
-        }
-      );
-    }
-
-    // 3. Crear nuevas relaciones usando los mismos IDs
-    const relaciones = rangos.map(r => ({
-      idHorario: r.id,
+    const relaciones = horarios.map(h => ({
+      idHorario: h.id,
       idDia: id,
     }));
 
-    await HorariosXDias.bulkCreate(relaciones);
+    await HorariosXDias.bulkCreate(relaciones, { transaction: t });
 
-    // 4. Devolver resultado final
+    await t.commit();
+
     return await Dias.findByPk(id, {
       attributes: ["id", "nombre", "estado"],
       include: [
@@ -88,9 +77,13 @@ class DiasService {
     });
 
   } catch (error) {
-    throw new Error(`Error al actualizar los horarios del día: ${error.message}`);
+    await t.rollback();
+    throw new Error(
+      `Error al actualizar los horarios del día: ${error.message}`
+    );
   }
 }
+
 
 
 }

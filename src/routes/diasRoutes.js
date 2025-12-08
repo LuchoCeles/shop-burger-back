@@ -17,7 +17,7 @@ router.post('/',authAdmin,validateRequest,[
 
 router.patch('/:id',authAdmin,validateRequest,[
   body("rangos").isArray({ min: 1 }).withMessage("Debe proporcionar al menos un rango de horario"),
-], DiasController.create);
+], DiasController.update);
 
 
 module.exports = router;
