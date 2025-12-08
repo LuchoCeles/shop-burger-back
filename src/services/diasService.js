@@ -58,8 +58,8 @@ class DiasService {
     for (const rango of rangos) {
       await Horarios.update(
         {
-          horarioApertura: rango.inicio,
-          horarioCierre: rango.fin,
+          horarioApertura: rango.horarioApertura,
+          horarioCierre: rango.horarioCierre,
           estado: rango.estado
         },
         {

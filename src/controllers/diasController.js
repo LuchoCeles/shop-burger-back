@@ -51,8 +51,8 @@ class DiasController {
     try {
       const { id } = req.params;
       const { rangos } = req.body;
-      
-      const diaActualizado = await diasService.update(id, rangos);
+      const idN = Number(id);
+      const diaActualizado = await diasService.update(idN, rangos);
       return res.status(200).json({
         success: true,
         data: diaActualizado,
