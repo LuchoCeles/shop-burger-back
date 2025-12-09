@@ -1,6 +1,5 @@
 const { Dias, Horarios, HorariosXDias } = require("../models");
 const { sequelize } = require("../config/db");
-const { where } = require("sequelize");
 
 class DiasService {
   async getAll() {
@@ -18,32 +17,6 @@ class DiasService {
       return dias;
     } catch (error) {
       throw new Error(`Error al obtener los días ${error.message}`);
-    }
-  }
-
-  async create(idDia, rangos) {
-    try {
-      const horarios = await Horarios.bulkCreate(rangos, { returning: true });
-
-      const relaciones = horarios.map((horario) => ({
-        idHorarios: horario.id,
-        idDia: idDia,
-      }));
-
-      await HorariosXDias.bulkCreate(relaciones);
-      const diaConHorarios = await Dias.findByPk(idDia, {
-        attributes: ["id", "nombre", "estado"],
-        include: [
-          {
-            association: "horarios",
-            attributes: ["id", "horarioApertura", "horarioCierre", "estado"],
-          },
-        ],
-      });
-
-      return diaConHorarios;
-    } catch (error) {
-      throw new Error(`Error al crear horarios: ${error.message}`);
     }
   }
 
