@@ -43,6 +43,29 @@ class DatosBancariosController {
     }
   }
 
+  async getPublic(req, res) {
+    try {
+      const datos = await datosBancariosService.get();
+      res.status(200).json({
+        success: true,
+        message: "Acceso autorizado",
+        data: {
+          id: datos.id,
+          cuit: datos.cuit,
+          alias: datos.alias,
+          cbu: datos.cbu,
+          apellido: datos.apellido,
+          nombre: datos.nombre
+        },
+      });
+    } catch (error) {
+      return res.status(500).json({
+        success: false,
+        message: error.message,
+      });
+    }
+  }
+
   async login(req, res) {
     const { cuit, password } = req.body;
     try {

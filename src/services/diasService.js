@@ -22,7 +22,6 @@ class DiasService {
 
   async update(id, rangos) {
     const t = await sequelize.transaction();
-
     try {
       // Recorremos todos los rangos recibidos
       for (const rango of rangos) {
