@@ -24,7 +24,7 @@ module.exports = (sequelize, DataTypes) => {
 
 Dias.associate = function(models) {
   Dias.belongsToMany(models.Horarios, {
-    through: 'horariosDias',
+    through: 'horariosXDias',
     foreignKey: 'idDia',
     otherKey: 'idHorarios',
     as: 'horarios'
