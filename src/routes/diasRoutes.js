@@ -19,5 +19,9 @@ router.patch('/:id',authAdmin,validateRequest,[
   body("rangos").isArray({ min: 1 }).withMessage("Debe proporcionar al menos un rango de horario"),
 ], DiasController.update);
 
+router.delete('/:id',authAdmin,validateRequest,[
+body("horarios").isArray({ min: 1 }).withMessage("Debe proporcionar al menos un rango de horario"),
+],DiasController.delete);
+
 
 module.exports = router;
