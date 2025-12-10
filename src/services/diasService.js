@@ -1,5 +1,6 @@
 const { Dias, Horarios, HorariosXDias } = require("../models");
 const { sequelize } = require("../config/db");
+const { where } = require("sequelize");
 
 class DiasService {
   async getAll() {
@@ -26,7 +27,7 @@ class DiasService {
       // Recorremos todos los rangos recibidos
       for (const rango of rangos) {
         // SI NO TIENE ID → SE CREA
-        
+
         if (!rango.idHorario) {
           const nuevoHorario = await Horarios.create(
             {
@@ -77,6 +78,23 @@ class DiasService {
       throw new Error(
         `Error al actualizar los horarios del día: ${error.message}`
       );
+    }
+  }
+
+  async delete(id, horarios) {
+    const transaction  = await sequelize.transaction();
+    try {
+      await HorariosXDias.delete({
+        where: {
+          idDia: id,
+          idHorario: horarios.idHorario,
+        },
+      },{transaction});
+
+      await Horarios.delete(horarios.idHorario);
+      await transaction.commit();
+    } catch (error) {
+      throw new Error(`Error al eliminar Horario ${error.message}`);
     }
   }
 }
