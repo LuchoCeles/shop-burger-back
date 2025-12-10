@@ -92,18 +92,18 @@ class ProductosService {
   async updateState(id, nuevoEstado) {
     const transaction = await sequelize.transaction();
     try {
-      const producto = await Producto.findByPk(id);
+      const producto = await Producto.update(
+        { estado: nuevoEstado },
+        { where: { id }, transaction }
+      );
 
-      if (!producto) {
-        throw new Error(`Producto no encontrado`);
-      }
-
-      await producto.update({ estado: nuevoEstado }, { transaction });
+      if (!producto) throw new Error('Producto no encontrado');
 
       await transaction.commit();
+
       return producto;
     } catch (error) {
-      if (!transaction.finished) await transaction.rollback();
+      await transaction.rollback();
       throw new Error(`Error al cambiar estado: ${error.message}`);
     }
   }
@@ -115,25 +115,55 @@ class ProductosService {
         if (publicId) await cloudinaryService.deleteImage(publicId);
       }
       const uploadResult = await cloudinaryService.uploadImage(imageBuffer);
-      imageUrl = uploadResult.secure_url;
-      return imageUrl;
+      return uploadResult.secure_url;
     } catch (error) {
       throw new Error("Error al actualizar la imagen: " + error.message);
     }
   }
 
+  async updateRelationProductTam(id, tamData, transaction) {
+    try {
+      await ProductosXTam.destroy({
+        where: { idProducto: id },
+        transaction,
+      });
+      const nuevasAsociaciones = tamData.map((t) => ({
+        idProducto: id,
+        idTam: t.idTam,
+        precio: t.precio,
+      }));
+      await ProductosXTam.bulkCreate(nuevasAsociaciones, { transaction });
+    } catch (error) {
+      throw new Error(`Error al actualizar las asociaciones: ${error.message}`);
+    }
+  }
+
+  async createRelationProductTam(id, tamData, transaction) {
+    try {
+      await Promise.all(
+        tamData.map((t) =>
+          ProductosXTam.update(
+            { precio: t.precio },
+            {
+              where: { idProducto: id, idTam: t.idTam },
+              transaction
+            }
+          )
+        )
+      );
+    } catch (error) {
+      throw new Error(`Error al crear las asociaciones: ${error.message}`);
+    }
+  }
+
   async updateProduct(id, productoData, tamData, imageBuffer) {
     const transaction = await sequelize.transaction();
-
     try {
-
       const producto = await Producto.findByPk(id, { transaction });
 
-      if (!producto) {
-        throw new Error("Producto no encontrado");
-      }
+      if (!producto) throw new Error("Producto no encontrado");
 
-      const antiguaCategoria = await producto.idCategoria;
+      const antiguaCategoria = producto.idCategoria;
 
       if (imageBuffer) {
         productoData.url_imagen = await this.updateImage(imageBuffer, producto.url_imagen);
@@ -143,38 +173,12 @@ class ProductosService {
 
       // asociaciones de tamaños y precios
       if (tamData && Array.isArray(tamData) && tamData.length > 0) {
-        
-        if (productoData.idCategoria !== antiguaCategoria) {
-          //eliminar todas las asociaciones antiguas
-          await ProductosXTam.destroy({
-            where: { idProducto: id },
-            transaction,
-          });
-
-          // Crear las nuevas asociaciones con los tamaños de la nueva categoría
-          const nuevasAsociaciones = tamData.map((t) => ({
-            idProducto: id,
-            idTam: t.idTam,
-            precio: t.precio,
-          }));
-          await ProductosXTam.bulkCreate(nuevasAsociaciones, { transaction });
-        } else {
-          for (const tam of tamData) {
-            await ProductosXTam.update(
-              { precio: tam.precio },
-              {
-                where: {
-                  idProducto: id,
-                  idTam: tam.idTam
-                },
-                transaction
-              }
-            );
-          }
-        }
+        if (productoData.idCategoria !== antiguaCategoria) await this.updateRelationProductTam(id, tamData, transaction);
+        else await this.createRelationProductTam(id, tamData, transaction);
       }
 
       await transaction.commit();
+
       return await this.getProductById(id);
     } catch (error) {
       await transaction.rollback();
