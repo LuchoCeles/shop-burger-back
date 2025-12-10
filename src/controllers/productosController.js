@@ -134,11 +134,6 @@ class ProductosController {
     try {
       const { id } = req.params;
       const data = req.body;
-      const antiguaData = {
-        idTam: data.idTamAntigua,
-        idCategoria: data.idCategoriaAntigua,
-      }
-
       const imageBuffer = req.file ? req.file.buffer : null;
 
       let tamData = null;
@@ -174,7 +169,6 @@ class ProductosController {
         id,
         productoData,
         tamData,
-        antiguaData,
         imageBuffer
       );
 
