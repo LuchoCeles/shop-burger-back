@@ -4,62 +4,69 @@ const { sequelize } = require("../config/db");
 
 class ProductosService {
   async getProducts(soloActivos = true) {
-    const whereClause = soloActivos ? 1 : 0;
-    const productos = await sequelize.query("CALL getProducts(:estado)", {
-      replacements: { estado: whereClause },
-    });
+    try {
 
-    const productosParseados = productos.map((p) => {
-      const parseJsonField = (field) => {
-        if (field && typeof field === "string") {
-          try {
-            return JSON.parse(field);
-          } catch (e) {
-            console.error("Error al parsear campo JSON de primer nivel:", e);
-            return [];
+      const whereClause = soloActivos ? 1 : 0;
+      const productos = await sequelize.query("CALL getProducts(:estado)", {
+        replacements: { estado: whereClause },
+      });
+
+      const productosParseados = productos.map((p) => {
+        const parseJsonField = (field) => {
+          if (field && typeof field === "string") {
+            try {
+              return JSON.parse(field);
+            } catch (e) {
+              console.error("Error al parsear campo JSON de primer nivel:", e);
+              return [];
+            }
           }
-        }
-        return [];
-      };
-      const adicionales = parseJsonField(p.adicionales);
-      let guarniciones = parseJsonField(p.guarniciones);
-      let tam = parseJsonField(p.tam);
+          return [];
+        };
+        const adicionales = parseJsonField(p.adicionales);
+        let guarniciones = parseJsonField(p.guarniciones);
+        let tam = parseJsonField(p.tam);
 
-      return {
-        ...p,
-        adicionales: adicionales,
-        guarniciones: guarniciones,
-        categoria: JSON.parse(p.categoria),
-        tam: tam,
-      };
-    });
+        return {
+          ...p,
+          adicionales: adicionales,
+          guarniciones: guarniciones,
+          categoria: JSON.parse(p.categoria),
+          tam: tam,
+        };
+      });
 
-    return productosParseados;
+      return productosParseados;
+    } catch (error) {
+      throw new Error(`Error al obtener productos: ${error.message}`);
+    }
   }
 
   async getProductById(id) {
-    const producto = await Producto.findOne({
-      where: { id, estado: 1 },
-      include: [
-        {
-          model: Categoria,
-          as: "categoria",
-          attributes: ["id", "nombre"],
-        },
-        {
-          model: Tam,
-          as: "tam",
-          attributes: ["id", "nombre"],
-          through: { attributes: ["precio"] },
-        },
-      ],
-    });
+    try {
+      const producto = await Producto.findOne({
+        where: { id, estado: 1 },
+        include: [
+          {
+            model: Categoria,
+            as: "categoria",
+            attributes: ["id", "nombre"],
+          },
+          {
+            model: Tam,
+            as: "tamanos",
+            attributes: ["id", "nombre"],
+            through: { attributes: ["precio"] },
+          },
+        ],
+      });
 
-    if (!producto) {
-      throw new Error("Producto no encontrado");
+      if (!producto) throw new Error("Producto no encontrado");
+
+      return producto;
+    } catch (error) {
+      throw new Error(`Error al obtener el producto: ${error.message}`);
     }
-
-    return producto;
   }
 
   async createProduct(productoData, tamData, imageBuffer) {
@@ -90,8 +97,8 @@ class ProductosService {
   }
 
   async updateState(id, nuevoEstado) {
-    const transaction = await sequelize.transaction();
     try {
+      const transaction = await sequelize.transaction();
       const producto = await Producto.update(
         { estado: nuevoEstado },
         { where: { id }, transaction }
@@ -157,8 +164,8 @@ class ProductosService {
   }
 
   async updateProduct(id, productoData, tamData, imageBuffer) {
-    const transaction = await sequelize.transaction();
     try {
+      const transaction = await sequelize.transaction();
       const producto = await Producto.findByPk(id, { transaction });
 
       if (!producto) throw new Error("Producto no encontrado");
@@ -187,27 +194,30 @@ class ProductosService {
   }
 
   async deleteProduct(id) {
-    const producto = await Producto.findByPk(id);
+    try {
+      const producto = await Producto.findByPk(id);
 
-    if (!producto) {
-      throw new Error("Producto no encontrado");
-    }
+      if (!producto) throw new Error("Producto no encontrado");
 
-    // Eliminar imagen de Cloudinary si existe
-    if (producto.url_imagen) {
-      try {
-        const publicId = cloudinaryService.getPublicIdFromUrl(
-          producto.url_imagen
-        );
-        if (publicId) {
-          await cloudinaryService.deleteImage(publicId);
+      // Eliminar imagen de Cloudinary si existe
+      if (producto.url_imagen) {
+        try {
+          const publicId = cloudinaryService.getPublicIdFromUrl(
+            producto.url_imagen
+          );
+          if (publicId) {
+            await cloudinaryService.deleteImage(publicId);
+          }
+        } catch (error) {
+          throw new Error("Error al eliminar la imagen de Cloudinary: " + error.message);
         }
-      } catch (error) {
-        console.error("Error eliminando imagen de Cloudinary:", error);
       }
-    }
 
-    await producto.update({ estado: false });
+      await producto.update({ estado: false });
+
+    } catch (error) {
+      throw new Error(`Error al eliminar el producto: ${error.message}`);
+    }
   }
 }
 
