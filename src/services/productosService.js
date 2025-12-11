@@ -137,12 +137,15 @@ class ProductosService {
         where: { idProducto: id },
         transaction,
       });
-      const nuevasAsociaciones = tamData.map((t) => ({
-        idProducto: id,
-        idTam: t.idTam,
-        precio: t.precio,
-      }));
-      await ProductosXTam.bulkCreate(nuevasAsociaciones, { transaction });
+
+      if (tamData && tamData.length > 0) {
+        const nuevasAsociaciones = tamData.map((t) => ({
+          idProducto: id,
+          idTam: t.idTam,
+          precio: t.precio,
+        }));
+        await ProductosXTam.bulkCreate(nuevasAsociaciones, { transaction });
+      }
     } catch (error) {
       throw new Error(`Error al actualizar las asociaciones: ${error.message}`);
     }
@@ -150,19 +153,42 @@ class ProductosService {
 
   async createRelationProductTam(id, tamData, transaction) {
     try {
+      // Obtener los tamaños actuales
+      const tamañosActuales = await ProductosXTam.findAll({
+        where: { idProducto: id },
+        transaction
+      });
+
+      const idsActuales = tamañosActuales.map(t => t.idTam);
+      const idsNuevos = tamData.map(t => t.idTam);
+
+      // Eliminar los que ya no están en tamData
+      const idsAEliminar = idsActuales.filter(id => !idsNuevos.includes(id));
+      if (idsAEliminar.length > 0) {
+        await ProductosXTam.destroy({
+          where: {
+            idProducto: id,
+            idTam: idsAEliminar
+          },
+          transaction
+        });
+      }
+
+      // Actualizar o crear los demás
       await Promise.all(
         tamData.map((t) =>
-          ProductosXTam.update(
-            { precio: t.precio },
+          ProductosXTam.upsert(
             {
-              where: { idProducto: id, idTam: t.idTam },
-              transaction
-            }
+              idProducto: id,
+              idTam: t.idTam,
+              precio: t.precio
+            },
+            { transaction }
           )
         )
       );
     } catch (error) {
-      throw new Error(`Error al crear las asociaciones: ${error.message}`);
+      throw new Error(`Error al actualizar las asociaciones: ${error.message}`);
     }
   }
 
@@ -183,8 +209,13 @@ class ProductosService {
 
       // asociaciones de tamaños y precios
       if (tamData && Array.isArray(tamData) && tamData.length > 0) {
-        if (productoData.idCategoria !== antiguaCategoria) await this.updateRelationProductTam(id, tamData, transaction);
-        else await this.createRelationProductTam(id, tamData, transaction);
+        // Si cambió la categoría, eliminar todo y recrear
+        if (productoData.idCategoria !== antiguaCategoria) {
+          await this.updateRelationProductTam(id, tamData, transaction);
+        } else {
+          // Si no cambió, hacer update/upsert inteligente
+          await this.createRelationProductTam(id, tamData, transaction);
+        }
       }
 
       await transaction.commit();
