@@ -4,12 +4,16 @@ const { Op } = require('sequelize');
 
 class PagosService {
   async updateMp(id, estado) {
+    const transaction = await sequelize.transaction();
     try {
-      const rsp = await sequelize.query("CALL updateMp(:id,:estado);", {
+      await sequelize.query("CALL updateMp(:id,:estado);", {
         replacements: { id, estado },
+        transaction,
       });
+      await transaction.commit();
       return true;
     } catch (error) {
+      await transaction.rollback();
       throw new Error("Error al actualizar el estado del pago");
     }
   }

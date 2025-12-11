@@ -72,10 +72,7 @@ class AdicionalesController {
       }
 
       const result = await adicionalesService.delete(id);
-      res.json({
-        success: true,
-        message: result.message
-      });
+      if (result) res.status(200).json({ success: true, message: "Adicional eliminado correctamente" });
     } catch (error) {
       return res.status(500).json({
         success: false,
@@ -84,7 +81,7 @@ class AdicionalesController {
     }
   }
 
-  async changeState(req, res, next) {
+  async changeState(req, res) {
     try {
       const { id } = req.params;
       if (!id) {

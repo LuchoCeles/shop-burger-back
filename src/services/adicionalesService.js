@@ -1,54 +1,80 @@
-const {sequelize} = require("../config/db");
-const { Adicionales, AdicionalesXProducto } = require("../models");
+const { sequelize } = require("../config/db");
+const { Adicionales } = require("../models");
 
 class AdicionalesService {
   async getAll(isActive = false) {
-    const where = isActive ? { where: { estado: true } } : {};
-    return await Adicionales.findAll(where);
+    try {
+      const where = isActive ? { where: { estado: true } } : {};
+      return await Adicionales.findAll(where);
+    } catch (error) {
+      throw new Error(`Error al obtener los adicionales: ${error.message}`);
+    }
   }
 
   async create(adicional) {
-    return await Adicionales.create(adicional);
+    try {
+      const transaction = await sequelize.transaction();
+
+      const newAdicional = await Adicionales.create(adicional, { transaction });
+      await transaction.commit();
+
+      return newAdicional;
+    } catch (error) {
+      await transaction.rollback();
+      throw new Error(`Error al crear el adicional: ${error.message}`);
+    }
   }
 
   async update(id, adicional) {
-    const existingAdicional = await Adicionales.findByPk(id);
-    if (!existingAdicional) {
-      throw new Error("Adicional no encontrado");
+    try {
+      const transaction = await sequelize.transaction();
+      const existingAdicional = await Adicionales.findByPk(id);
+
+      if (!existingAdicional) throw new Error("Adicional no encontrado");
+
+      const updatedAdicional = await existingAdicional.update(adicional, { transaction });
+      await transaction.commit();
+
+      return updatedAdicional;
+    } catch (error) {
+      await transaction.rollback();
+      throw new Error(`Error al actualizar el adicional: ${error.message}`);
     }
-    return await existingAdicional.update(adicional);
   }
 
   async delete(id) {
-     const transaction = await sequelize.transaction();
-
     try {
-      // Llamamos al procedimiento
-      await sequelize.query(
-        "CALL deleteAdicional(:id)",
+      const transaction = await sequelize.transaction();
+
+      await sequelize.query("CALL deleteAdicional(:id)",
         { replacements: { id }, transaction }
       );
 
       await transaction.commit();
-      return { message: "Adicional eliminado correctamente" };
+      return true;
     } catch (error) {
-      if (!transaction.finished) await transaction.rollback();
-
-      console.error("💥 Error SQL al eliminar adicional:", error); // <-- Log completo en consola
-
-      // Lanzamos el error original para que llegue al controller
+      await transaction.rollback();
       throw new Error(`Error al eliminar adicional: ${error.message}`);
     }
   }
 
   async changeState(id) {
-    const existingAdicional = await Adicionales.findByPk(id);
-    if (!existingAdicional) {
-      throw new Error("Adicional no encontrado");
+    try {
+      const transaction = await sequelize.transaction();
+      const existingAdicional = await Adicionales.findByPk(id);
+
+      if (!existingAdicional) throw new Error("Adicional no encontrado");
+
+      existingAdicional.estado = !existingAdicional.estado;
+
+      await existingAdicional.save({ transaction });
+      await transaction.commit();
+
+      return existingAdicional;
+    } catch (error) {
+      await transaction.rollback();
+      throw new Error(`Error al cambiar el estado del adicional: ${error.message}`);
     }
-    existingAdicional.estado = !existingAdicional.estado;
-    await existingAdicional.save();
-    return existingAdicional;
   }
 }
 
