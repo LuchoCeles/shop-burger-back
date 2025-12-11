@@ -77,10 +77,7 @@ class CategoriasController {
     try {
       const { id } = req.params;
       const categoria = await categoriasService.deleteCategory(id);
-      res.json({
-        success: true,
-        message: categoria.message,
-      });
+      if (categoria) res.status(200).json({ success: true, message: "Categoria eliminada correctamente", });
     } catch (error) {
       res.status(500).json({
         success: false,
