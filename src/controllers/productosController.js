@@ -26,12 +26,12 @@ class ProductosController {
       const productos = await productosService.getProductoByCategoria(
         idCategoria
       );
-      res.json({
+      return res.status(200).json({
         success: true,
         data: productos,
       });
     } catch (error) {
-      res.status(500).json({
+      return res.status(500).json({
         success: false,
         message: error.message,
       });
@@ -43,12 +43,12 @@ class ProductosController {
       const { id } = req.params;
       const producto = await productosService.getProductById(id);
 
-      res.json({
+      return res.status(200).json({
         success: true,
         data: producto,
       });
     } catch (error) {
-      res.status(500).json({
+      return res.status(500).json({
         success: false,
         message: error.message,
       });
@@ -114,7 +114,7 @@ class ProductosController {
 
       const producto = await productosService.updateState(id, estado);
 
-      res.status(200).json({
+      return res.status(200).json({
         success: true,
         message: "Estado actualizado",
         data: {
@@ -123,7 +123,7 @@ class ProductosController {
         },
       });
     } catch (error) {
-      res.status(500).json({
+      return res.status(500).json({
         success: false,
         message: error.message,
       });
@@ -134,11 +134,6 @@ class ProductosController {
     try {
       const { id } = req.params;
       const data = req.body;
-      const antiguaData = {
-        idTam: data.idTamAntigua,
-        idCategoria: data.idCategoriaAntigua,
-      }
-
       const imageBuffer = req.file ? req.file.buffer : null;
 
       let tamData = null;
@@ -174,7 +169,6 @@ class ProductosController {
         id,
         productoData,
         tamData,
-        antiguaData,
         imageBuffer
       );
 
@@ -196,12 +190,12 @@ class ProductosController {
       const { id } = req.params;
       await productosService.deleteProduct(id);
 
-      res.json({
+      return res.status(200).json({
         success: true,
         message: "Producto eliminado exitosamente",
       });
     } catch (error) {
-      res.status(500).json({
+      return res.status(500).json({
         success: false,
         message: error.message,
       });

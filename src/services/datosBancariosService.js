@@ -1,18 +1,16 @@
 const bcrypt = require("bcrypt");
 const { sequelize } = require("../config/db");
-const { Admin, DatosBancarios, sequelize: sq } = require("../models");
+const { Admin } = require("../models");
 
 
 class DatosBancariosService {
   async create(adminId, datosBancarios) {
-    const transaction = await sq.transaction();
+    const transaction = await sequelize.transaction();
     try {
       const adminData = await Admin.findByPk(adminId);
       const hashedPassword = await bcrypt.hash(datosBancarios.password, 12);
       const match = await bcrypt.compare(datosBancarios.password, adminData.password);
-      if (match) {
-        throw new Error('La Contraseña no puede ser igual a la de su Cuenta');
-      }
+      if (match) throw new Error('La Contraseña no puede ser igual a la de su Cuenta');
 
       const datos = await sequelize.query("CALL createBanco(:cuit, :alias, :cbu, :apellido, :nombre, :password);",
         {
@@ -61,11 +59,9 @@ class DatosBancariosService {
   }
 
   async updatePassword(id, password, newPassword) {
-    const transaction = await sq.transaction();
+    const transaction = await sequelize.transaction();
     try {
-      if (password === newPassword) {
-        throw new Error(`La nueva contraseña no puede ser igual a la anterior`);
-      }
+      if (password === newPassword) throw new Error(`La nueva contraseña no puede ser igual a la anterior`);
 
       const hashedPassword = await bcrypt.hash(newPassword, 12);
 
@@ -75,7 +71,7 @@ class DatosBancariosService {
 
       await transaction.commit();
 
-      return;
+      return true;
     } catch (error) {
       await transaction.rollback();
       throw new Error(`Error al actualizar la contraseña: ${error.message}`);
@@ -83,7 +79,7 @@ class DatosBancariosService {
   }
 
   async update(id, datosActualizados) {
-    const transaction = await sq.transaction();
+    const transaction = await sequelize.transaction();
     try {
       const datos = await sequelize.query("CALL updateDatosBancarios(:id, :cuit, :alias, :cbu, :apellido, :nombre);", {
         replacements: {
@@ -106,7 +102,7 @@ class DatosBancariosService {
   }
 
   async updateMPState(id, mpEstado, mpAccessToken) {
-    const transaction = await sq.transaction();
+    const transaction = await sequelize.transaction();
     try {
       const datos = await sequelize.query("CALL updateMPState(:id, :mpEstado, :mercadoPagoAccessToken);", {
         replacements: { id, mpEstado, mercadoPagoAccessToken: mpAccessToken }
@@ -120,7 +116,6 @@ class DatosBancariosService {
       throw new Error(`Error al actualizar estado de MP: ${error.message}`);
     }
   }
-
 }
 
 module.exports = new DatosBancariosService();

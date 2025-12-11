@@ -14,9 +14,4 @@ router.post("/create", authAdmin, validateRequest, [
 router.delete("/:id", authAdmin, validateRequest, [
 ], adicionalesXProductoController.delete);
 
-router.patch("/:id/update", authAdmin, validateRequest, [
-    body("idProducto"),
-    body("idAdicional"),
-], adicionalesXProductoController.update);
-
 module.exports = router;

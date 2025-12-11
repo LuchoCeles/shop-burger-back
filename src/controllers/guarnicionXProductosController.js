@@ -19,10 +19,10 @@ class GuarnicionesXProductoController {
   async delete(req, res) {
     try {
       const { id } = req.params;
-      const result = await GuarnicionesXProductoService.delete(id);
+      await GuarnicionesXProductoService.delete(id);
       return res.status(200).json({
         success: true,
-        message: result.message,
+        message: "Asociacion guarnicion producto eliminada"
       });
     } catch (error) {
       return res.status(500).json({ success: false, message: error.message });

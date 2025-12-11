@@ -31,7 +31,7 @@ class DatosBancariosController {
   async get(req, res) {
     try {
       const datos = await datosBancariosService.get();
-      res.status(200).json({
+      return res.status(200).json({
         success: true,
         data: datos,
       });
@@ -43,9 +43,32 @@ class DatosBancariosController {
     }
   }
 
-  async login(req, res) {
-    const { cuit, password } = req.body;
+  async getPublic(req, res) {
     try {
+      const datos = await datosBancariosService.get();
+      return res.status(200).json({
+        success: true,
+        message: "Acceso autorizado",
+        data: {
+          id: datos.id,
+          cuit: datos.cuit,
+          alias: datos.alias,
+          cbu: datos.cbu,
+          apellido: datos.apellido,
+          nombre: datos.nombre
+        },
+      });
+    } catch (error) {
+      return res.status(500).json({
+        success: false,
+        message: error.message,
+      });
+    }
+  }
+
+  async login(req, res) {
+    try {
+      const { cuit, password } = req.body;
       const datos = await datosBancariosService.login(cuit, password);
 
       const token = jwt.sign(
@@ -84,12 +107,9 @@ class DatosBancariosController {
       const { id } = req.params;
       const { password, newPassword } = req.body;
 
-      await datosBancariosService.updatePassword(id, password, newPassword);
+      const rsp = await datosBancariosService.updatePassword(id, password, newPassword);
 
-      res.status(200).json({
-        success: true,
-        message: "Contraseña actualizada",
-      });
+      if (rsp) res.status(200).json({ success: true, message: "Contraseña actualizada" });
     } catch (error) {
       return res.status(500).json({
         success: false,

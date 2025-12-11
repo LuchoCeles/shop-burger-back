@@ -6,13 +6,13 @@ class AuthAdminController {
       const { nombre, password } = req.body;
       const result = await authAdminService.login(nombre, password);
 
-      res.status(201).json({
+      return res.status(201).json({
         success: true,
         message: 'Login exitoso',
         data: result
       });
     } catch (error) {
-      res.status(403).json({
+      return res.status(403).json({
         success: false,
         message: error.message
       });
@@ -24,13 +24,13 @@ class AuthAdminController {
       const { nombre, password } = req.body;
       const result = await authAdminService.register(nombre, password);
 
-      res.status(201).json({
+      return res.status(201).json({
         success: true,
         message: 'Administrador registrado exitosamente',
         data: result
       });
     } catch (error) {
-      res.status(403).json({
+      return res.status(403).json({
         success: false,
         message: error.message
       });

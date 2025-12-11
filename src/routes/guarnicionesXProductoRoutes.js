@@ -11,7 +11,6 @@ router.post('/create', authAdmin, validateRequest, [
   body("idGuarnicion").notEmpty().isInt({ min: 1 })
 ], guarnicionXProductosController.create);
 
-router.delete("/:id", authAdmin, validateRequest, [
-], guarnicionXProductosController.delete);
+router.delete("/:id", authAdmin, guarnicionXProductosController.delete);
 
 module.exports = router;

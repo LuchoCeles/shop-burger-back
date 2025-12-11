@@ -50,15 +50,12 @@ router.post('/', authAdmin, handleUpload,validateRequest, [
 ],  productosController.createProduct);
 
 router.patch('/:id', authAdmin, handleUpload,validateRequest, [
-
   param('id').isInt({ min: 1 }).withMessage('El ID del producto debe ser un número válido.'),
-
   body('nombre').optional().trim().notEmpty().withMessage('El nombre no puede estar vacío.'),
   body('descripcion').optional().trim(),
   body('stock').optional({ checkFalsy: true }).isNumeric().withMessage('El stock debe ser un número.'),
-  body('idCategoria').optional().isNumeric().withMessage('idCategoria debe ser un número.'),
-  body('idTamAntigua').optional().isNumeric().withMessage('idTamAntigua debe ser un número.'),
-  body('idCategoriaAntigua').optional().isNumeric().withMessage('idCategoriaAntigua debe ser un número.'),
+  body('idCategoria').optional().toInt().isNumeric().withMessage('idCategoria debe ser un número.'),
+  body('idTamAntigua').optional().toInt().isNumeric().withMessage('idTamAntigua debe ser un número.'),
   body('descuento').optional({ checkFalsy: true }).isNumeric().withMessage('El descuento debe ser un número.'),
   body('isPromocion').optional().isIn(['true', 'false']).toBoolean(),
   body('tam')

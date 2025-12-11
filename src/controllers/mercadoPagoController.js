@@ -9,7 +9,7 @@ class MercadoPagoController {
       const webhook = req.query;
 
       if (!webhook.id) {
-        return res.status(400).json({ message: "Invalid webhook data" });
+        return res.status(400).json({ message: "Invalid webhook data", success: false });
       }
 
       if (webhook.type === "payment" || webhook.topic === "payment") {
@@ -32,12 +32,12 @@ class MercadoPagoController {
 
       if (data.status === "approved") {
         await this.paymentSuccess(id, io);
-        return res.sendStatus(200);
+        return res.status(200).json({ success: true, message: "Pago aprobado" });
       }
 
       if (data.status === "rejected") {
         await this.paymentRejected(id, io);
-        return res.sendStatus(200);
+        return res.status(401).json({ success: false, message: "Pago rechazado" });
       }
     } catch (error) {
       throw new Error(`Error al procesar pago: ${error.message}`);
@@ -51,9 +51,9 @@ class MercadoPagoController {
         id,
         message: "Pago aprobado",
       });
-      return;
+      return res.status(200).json({ success: true, message: "Pago aprobado" });
     } catch (error) {
-      throw new Error(`Error procesando pago: ${error.message}`);
+      return res.status(500).json({ message: error.message, success: false });
     }
   }
 
@@ -64,20 +64,18 @@ class MercadoPagoController {
         id,
         message: "Pago rechazado",
       });
-      return;
+      return res.status(401).json({ success: false, message: "Pago rechazado" });
     } catch (error) {
-      throw new Error(`Error procesando pago rechazado: ${error.message}`);
+      return res.status(500).json({ message: error.message, success: false });
     }
   }
 
   async updateOrderByMp(id, estado) {
     try {
       await pagosService.updateMp(id, estado);
-      return true;
+      return res.status(200).json({ success: true, message: "Pago actualizado" });
     } catch (error) {
-      throw new Error(
-        `Error al actualizar pedido con Mercado Pago: ${error.message}`
-      );
+      return res.status(500).json({ message: error.message, success: false });
     }
   }
 
@@ -85,11 +83,9 @@ class MercadoPagoController {
     try {
       const pedido = await pedidoService.cancel(id);
       await pagosService.updateMp(id, estado);
-      return pedido;
+      return res.status(200).json({ success: true, message: "Pago Cancelado", data: pedido });
     } catch (error) {
-      throw new Error(
-        `Error al cancelar pedido con Mercado Pago: ${error.message}`
-      );
+      return res.status(500).json({ message: error.message, success: false });
     }
   }
 }

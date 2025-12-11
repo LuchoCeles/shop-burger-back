@@ -13,7 +13,7 @@ router.post('/', authAdmin, validateRequest, [
   body('idCategoria').notEmpty().isInt({ min: 1 }).withMessage('La categoría es obligatoria'),
 ], TamController.create);
 
-router.patch('/:id',[
+router.patch('/:id', [
   body('nombre').optional().notEmpty(),
   body('idCategoria').optional().notEmpty()
 ], authAdmin, TamController.updateTam);
