@@ -1,14 +1,17 @@
 const { preference, payment } = require('../config/mercadoPago');
+const { sequelize } = require('../config/db');
 require('dotenv').config();
 
 class MercadoPagoService {
   async create(body) {
+    const transaction = await sequelize.transaction();
     try {
-      const rsp = await preference.create({ body });
+      const rsp = await preference.create({ body }, { transaction });
+      await transaction.commit();
       return rsp;
     } catch (error) {
-      console.error("MercadoPago createPreference error:", error);
-      throw error;
+      await transaction.rollback();
+      throw new Error(`Error al crear preferencia: ${error.message}`);
     }
   }
 
@@ -17,8 +20,7 @@ class MercadoPagoService {
       const rsp = await payment.get({ id });
       return rsp;
     } catch (error) {
-      console.error("MercadoPago payment.findById error:", error);
-      throw error;
+      throw new Error(`Error al obtener el pago: ${error.message}`);
     }
   }
 }
