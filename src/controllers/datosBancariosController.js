@@ -31,7 +31,7 @@ class DatosBancariosController {
   async get(req, res) {
     try {
       const datos = await datosBancariosService.get();
-      res.status(200).json({
+      return res.status(200).json({
         success: true,
         data: datos,
       });
@@ -46,7 +46,7 @@ class DatosBancariosController {
   async getPublic(req, res) {
     try {
       const datos = await datosBancariosService.get();
-      res.status(200).json({
+      return res.status(200).json({
         success: true,
         message: "Acceso autorizado",
         data: {
@@ -109,7 +109,7 @@ class DatosBancariosController {
 
       const rsp = await datosBancariosService.updatePassword(id, password, newPassword);
 
-      if (rsp) res.status(200).json({ success: true, message: "Contraseña actualizada"});
+      if (rsp) res.status(200).json({ success: true, message: "Contraseña actualizada" });
     } catch (error) {
       return res.status(500).json({
         success: false,

@@ -4,7 +4,7 @@ class AdicionalesXProductosController {
   async create(req, res) {
     try {
       const registro = await adicionalesXProductosService.create(req.body);
-      res.status(201).json({
+      return res.status(201).json({
         success: true,
         message: "Adicional agregado",
         data: registro,
@@ -22,9 +22,9 @@ class AdicionalesXProductosController {
       const { id } = req.params;
       const resultado = await adicionalesXProductosService.delete(id);
 
-      if (resultado) res.status(200).json({ success: true, message: "Adicional eliminado." });
+      if (resultado) return res.status(200).json({ success: true, message: "Adicional eliminado." });
     } catch (error) {
-      res.status(500).json({
+      return res.status(500).json({
         success: false,
         message: error.message,
       });

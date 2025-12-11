@@ -5,7 +5,7 @@ class AdicionalesController {
     const isActive = req.query.isActive === 'true';
     try {
       const adicionales = await adicionalesService.getAll(isActive);
-      res.json({
+      return res.json({
         success: true,
         message: 'Adicionales obtenidos exitosamente',
         data: adicionales
@@ -23,7 +23,7 @@ class AdicionalesController {
       const { nombre, precio, stock, maxCantidad } = req.body;
 
       const nuevoAdicional = await adicionalesService.create({ nombre, precio, stock, maxCantidad });
-      res.status(201).json({
+      return res.status(201).json({
         success: true,
         message: 'Adicional creado exitosamente',
         data: nuevoAdicional
@@ -48,7 +48,7 @@ class AdicionalesController {
       }
 
       const adicionalActualizado = await adicionalesService.update(id, { nombre, precio, stock, maxCantidad });
-      res.json({
+      return res.json({
         success: true,
         message: 'Adicional actualizado exitosamente',
         data: adicionalActualizado
@@ -91,7 +91,7 @@ class AdicionalesController {
         });
       }
       const adicional = await adicionalesService.changeState(id);
-      res.json({
+      return res.json({
         success: true,
         message: 'Estado del adicional cambiado exitosamente',
         data: adicional
