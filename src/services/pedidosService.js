@@ -12,21 +12,23 @@ const {
   Guarniciones,
   ProductosXTam,
   Tam,
-  GuarnicionesXProducto,
 } = require("../models");
 const { Op } = require("sequelize");
 const { sequelize } = require("../config/db");
 
 class PedidosService {
   async Create(datosPedido) {
+    const transaction = await sequelize.transaction();
     try {
       const pedido = await sequelize.query("CALL createPedido(:datos)", {
         replacements: {
           datos: JSON.stringify(datosPedido),
-        },
+        }, transaction
       });
+      await transaction.commit();
       return pedido[0];
     } catch (error) {
+      await transaction.rollback();
       throw new Error(`Error al crear pedido: ${error.message}`);
     }
   }
@@ -191,9 +193,7 @@ class PedidosService {
       const where = this.buildWhereFilters(filtros);
       const pedidos = await this.fetchPedidos(where);
       return this.formatPedidos(pedidos);
-
     } catch (error) {
-
       throw new Error(`Error al obtener pedidos: ${error.message}`);
     }
   }
@@ -207,22 +207,21 @@ class PedidosService {
 
       return pedido;
     } catch (error) {
-      throw new Error(
-        `Error al obtener el precio del pedido: ${error.message}`
-      );
+      throw new Error(`Error al obtener el precio del pedido: ${error.message}`);
     }
   }
 
   async updateStatus(id, nuevoEstado) {
+    const transaction = await sequelize.transaction();
     try {
       const pedido = await Pedido.findByPk(id);
 
-      await pedido.update({ estado: nuevoEstado });
+      await pedido.update({ estado: nuevoEstado }, { transaction });
 
       if (nuevoEstado === "Cancelado") {
         const pago = await Pago.findOne({ where: { idPedido: id } });
         if (pago) {
-          await pago.update({ estado: "Cancelado" });
+          await pago.update({ estado: "Cancelado" }, { transaction });
         }
       }
 
@@ -233,8 +232,12 @@ class PedidosService {
           { model: Pago, as: "pago" },
         ],
       });
+
+      await transaction.commit();
+
       return rsp;
     } catch (error) {
+      await transaction.rollback();
       throw new Error(`Error al actualizar estado: ${error.message}`);
     }
   }
@@ -316,9 +319,8 @@ class PedidosService {
   }
 
   async cancel(id) {
+    const transaction = await sequelize.transaction();
     try {
-      const transaction = await sequelize.transaction();
-
       const pedido = await this.getCompletOrderById(id, transaction);
 
       if (!pedido) throw new Error("Pedido no encontrado");
@@ -367,24 +369,9 @@ class PedidosService {
         },
       });
 
-      return {
-        ok: true,
-        message: "Pedido actualizado correctamente",
-        data: result,
-      };
+      return result;
     } catch (error) {
-      if (error.original?.sqlMessage) {
-        return {
-          ok: false,
-          message: error.original.sqlMessage,
-        };
-      }
-
-      return {
-        ok: false,
-        message: "Error interno al actualizar el pedido",
-        error: error.message,
-      };
+      throw new Error(`Error al actualizar el pedido: ${error.message}`);
     }
   }
 

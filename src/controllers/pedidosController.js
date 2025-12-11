@@ -29,7 +29,7 @@ class PedidosController {
           },
         });
       }
-      
+
       return res.status(201).json({
         success: true,
         message: "Pedido creado exitosamente",
@@ -38,7 +38,6 @@ class PedidosController {
         },
       });
     } catch (error) {
-      console.error("Error al crear pedido:", error);
       return res.status(500).json({
         success: false,
         error: error.message,
@@ -79,19 +78,7 @@ class PedidosController {
         init_point: mpResponse.init_point,
       };
     } catch (error) {
-      throw new Error(
-        `Error al crear pedido con Mercado Pago: ${error.message}`
-      );
-    }
-  }
-
-  async getOrderById(id) {
-    try {
-      const pedido = await pedidoService.getCompletOrderById(id);
-      return pedido;
-    } catch (error) {
-      console.error("Error al obtener pedido:", error);
-      throw error;
+      throw new Error(`Error al crear pedido con Mercado Pago: ${error.message}`);
     }
   }
 
@@ -138,7 +125,8 @@ class PedidosController {
 
       if (!estado) {
         return res.status(400).json({
-          error: "El campo estado es requerido",
+          success: false,
+          message: "El campo 'estado' es obligatorio",
         });
       }
 
@@ -224,7 +212,7 @@ class PedidosController {
 
       return res.status(200).json({
         success: true,
-        message: "Pedidoa actualizado",
+        message: "Pedido actualizado",
         data: result,
       });
     } catch (error) {
