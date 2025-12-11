@@ -87,7 +87,7 @@ class PedidosController {
 
   async getOrderById(id) {
     try {
-      const pedido = await pedidoService.getById(id);
+      const pedido = await pedidoService.getCompletOrderById(id);
       return pedido;
     } catch (error) {
       console.error("Error al obtener pedido:", error);
@@ -122,7 +122,7 @@ class PedidosController {
     try {
       const { id, estado } = req.body;
 
-      const pedidoActual = await pedidoService.getById(id);
+      const pedidoActual = await pedidoService.getStateById(id);
 
       if (!pedidoActual) {
         throw new Error("Pedido no encontrado");
