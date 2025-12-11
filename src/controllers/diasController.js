@@ -30,23 +30,6 @@ class DiasController {
     }
   }
 
-  async create(req, res) {
-    try {
-      const { idDia, rangos } = req.body;
-      const nuevoDia = await diasService.create(idDia, rangos);
-      return res.status(201).json({
-        success: true,
-        data: nuevoDia,
-        message: "Día creado correctamente",
-      });
-    } catch (error) {
-      return res.status(500).json({ 
-        message: error.message, 
-        success: false 
-      });
-    }
-  }
-
   async update(req, res) {
     try {
       const { id } = req.params;
@@ -62,23 +45,6 @@ class DiasController {
       return res.status(500).json({ 
         message: error.message, 
         success: false 
-      });
-    }
-  }
-  async delete(req,res){
-    try {
-      const {id}= req.params;
-      const {horarios} = req.body;
-
-      const horarioEliminado = await diasService.delete(id,horarios);
-      return res.status(200).json({
-        success:true,
-        data: horarioEliminado,
-      });
-    } catch (error) {
-      return res.status(500).json({
-        success: false,
-        message: error.message
       });
     }
   }

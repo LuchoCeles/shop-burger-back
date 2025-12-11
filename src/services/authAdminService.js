@@ -33,8 +33,8 @@ class AuthAdminService {
   }
 
   async register(nombre, password) {
+    const transaction = await sequelize.transaction();
     try {
-      const transaction = await sequelize.transaction();
       const hashedPassword = await bcrypt.hash(password, 12);
 
       const admin = await sequelize.query("CALL createAdmin(:nombre, :password);", {

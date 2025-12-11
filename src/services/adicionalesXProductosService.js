@@ -4,8 +4,8 @@ const { sequelize } = require("../config/db");
 class AdicionalesXProductosService {
 
   async create(data) {
+    const transaction = await sequelize.transaction();
     try {
-      const transaction = await sequelize.transaction();
       const { idProducto, idAdicional } = data;
 
       const registro = await AdicionalesXProducto.create(
@@ -22,8 +22,8 @@ class AdicionalesXProductosService {
   }
 
   async delete(id) {
+    const transaction = await sequelize.transaction();
     try {
-      const transaction = await sequelize.transaction();
       const registro = await AdicionalesXProducto.findByPk(id);
 
       if (!registro) throw new Error(`Adicional no encontrado`);

@@ -11,8 +11,8 @@ class CategoriasService {
   }
 
   async createCategorie(categoriaData) {
+    const transaction = await sequelize.transaction();
     try {
-      const transaction = await sequelize.transaction();
       const categoria = await sequelize.query("CALL createCategorie(:nombre);", {
         replacements: {
           nombre: categoriaData.nombre,
@@ -28,8 +28,8 @@ class CategoriasService {
   }
 
   async updateCategorie(id, nombre) {
+    const transaction = await sequelize.transaction();
     try {
-      const transaction = await sequelize.transaction();
       const categoria = await sequelize.query("CALL updateCategorie(:id, :nombre);", {
         replacements: {
           id, nombre
@@ -46,8 +46,8 @@ class CategoriasService {
   }
 
   async updateEstate(id, nuevoEstado) {
+    const transaction = await sequelize.transaction();
     try {
-      const transaction = await sequelize.transaction();
       const categoria = await sequelize.query("CALL updateCategorieState(:id, :estado);", {
         replacements: {
           id,
@@ -65,11 +65,8 @@ class CategoriasService {
   }
 
   async deleteCategory(id) {
-    let transaction;
-
+    const transaction = await sequelize.transaction();
     try {
-      transaction = await sequelize.transaction();
-
       const products = await Producto.count({
         where: { idCategoria: id },
         transaction,
@@ -88,7 +85,7 @@ class CategoriasService {
       return true;
 
     } catch (error) {
-      if (transaction) await transaction.rollback();
+      await transaction.rollback();
       throw new Error(`Error al eliminar categoría: ${error.message}`);
     }
   }

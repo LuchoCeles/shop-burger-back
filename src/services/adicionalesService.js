@@ -12,8 +12,8 @@ class AdicionalesService {
   }
 
   async create(adicional) {
+    const transaction = await sequelize.transaction();
     try {
-      const transaction = await sequelize.transaction();
 
       const newAdicional = await Adicionales.create(adicional, { transaction });
       await transaction.commit();
@@ -26,8 +26,8 @@ class AdicionalesService {
   }
 
   async update(id, adicional) {
+    const transaction = await sequelize.transaction();
     try {
-      const transaction = await sequelize.transaction();
       const existingAdicional = await Adicionales.findByPk(id);
 
       if (!existingAdicional) throw new Error("Adicional no encontrado");
@@ -43,9 +43,8 @@ class AdicionalesService {
   }
 
   async delete(id) {
+    const transaction = await sequelize.transaction();
     try {
-      const transaction = await sequelize.transaction();
-
       await sequelize.query("CALL deleteAdicional(:id)",
         { replacements: { id }, transaction }
       );
@@ -59,8 +58,8 @@ class AdicionalesService {
   }
 
   async changeState(id) {
+    const transaction = await sequelize.transaction();
     try {
-      const transaction = await sequelize.transaction();
       const existingAdicional = await Adicionales.findByPk(id);
 
       if (!existingAdicional) throw new Error("Adicional no encontrado");

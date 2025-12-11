@@ -5,8 +5,8 @@ const { Admin } = require("../models");
 
 class DatosBancariosService {
   async create(adminId, datosBancarios) {
+    const transaction = await sequelize.transaction();
     try {
-      const transaction = await sequelize.transaction();
       const adminData = await Admin.findByPk(adminId);
       const hashedPassword = await bcrypt.hash(datosBancarios.password, 12);
       const match = await bcrypt.compare(datosBancarios.password, adminData.password);
@@ -59,9 +59,8 @@ class DatosBancariosService {
   }
 
   async updatePassword(id, password, newPassword) {
+    const transaction = await sequelize.transaction();
     try {
-      const transaction = await sequelize.transaction();
-
       if (password === newPassword) throw new Error(`La nueva contraseña no puede ser igual a la anterior`);
 
       const hashedPassword = await bcrypt.hash(newPassword, 12);
@@ -80,8 +79,8 @@ class DatosBancariosService {
   }
 
   async update(id, datosActualizados) {
+    const transaction = await sequelize.transaction();
     try {
-      const transaction = await sequelize.transaction();
       const datos = await sequelize.query("CALL updateDatosBancarios(:id, :cuit, :alias, :cbu, :apellido, :nombre);", {
         replacements: {
           id,
@@ -103,8 +102,8 @@ class DatosBancariosService {
   }
 
   async updateMPState(id, mpEstado, mpAccessToken) {
+    const transaction = await sequelize.transaction();
     try {
-      const transaction = await sequelize.transaction();
       const datos = await sequelize.query("CALL updateMPState(:id, :mpEstado, :mercadoPagoAccessToken);", {
         replacements: { id, mpEstado, mercadoPagoAccessToken: mpAccessToken }
       }, { transaction });
