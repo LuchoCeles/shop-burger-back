@@ -31,162 +31,169 @@ class PedidosService {
     }
   }
 
+  buildWhereFilters(filtros) {
+    const where = {};
+
+    if (filtros.estado) {
+      where.estado = filtros.estado;
+    }
+
+    // Fecha exacta
+    if (filtros.fecha) {
+      const inicio = new Date(filtros.fecha);
+      inicio.setHours(0, 0, 0, 0);
+
+      const fin = new Date(filtros.fecha);
+      fin.setHours(23, 59, 59, 999);
+
+      where.createdAt = { [Op.between]: [inicio, fin] };
+    }
+
+    // Rango
+    if (filtros.fechaDesde && filtros.fechaHasta) {
+      const desde = new Date(filtros.fechaDesde);
+      desde.setHours(0, 0, 0, 0);
+
+      const hasta = new Date(filtros.fechaHasta);
+      hasta.setHours(23, 59, 59, 999);
+
+      where.createdAt = { [Op.between]: [desde, hasta] };
+    }
+
+    return where;
+  }
+
+  async fetchPedidos(where) {
+    return await Pedido.findAll({
+      attributes: ["id", "estado", "precioTotal", "descripcion", "createdAt"],
+      include: [
+        {
+          model: Cliente,
+          as: "cliente",
+          attributes: ["id", "telefono", "direccion"],
+        },
+        {
+          model: Envio,
+          as: "envio",
+          attributes: ["precio"],
+        },
+        {
+          model: Pago,
+          as: "pago",
+          attributes: ["id", "estado"],
+          include: [
+            {
+              model: MetodosDePago,
+              as: "MetodosDePago",
+              attributes: ["id", "nombre"],
+            },
+          ],
+        },
+        {
+          model: ProductosXPedido,
+          as: "productosxpedido",
+          attributes: ["id", "cantidad"],
+          include: [
+            {
+              model: Producto,
+              as: "producto",
+              attributes: ["id", "nombre", "descripcion"],
+              include: [
+                {
+                  model: Categoria,
+                  as: "categoria",
+                  attributes: ["id", "nombre"],
+                },
+                {
+                  model: ProductosXTam,
+                  as: "productosXTam",
+                  attributes: ["id", "precio"],
+                  include: [
+                    {
+                      model: Tam,
+                      as: "tam",
+                      attributes: ["id", "nombre"],
+                    },
+                  ],
+                },
+              ],
+            },
+            {
+              model: Guarniciones,
+              as: "guarnicion",
+              attributes: ["id", "nombre"],
+            },
+            {
+              model: AdicionalesXProductosXPedidos,
+              as: "AxPxP",
+              attributes: ["id", "cantidad", "precio"],
+              include: [
+                {
+                  model: Adicionales,
+                  as: "adicional",
+                  attributes: ["id", "nombre", "precio"],
+                },
+              ],
+            },
+          ],
+        },
+      ],
+      order: [["id", "DESC"]],
+      where,
+    });
+  }
+
+  formatProductos(items = []) {
+    return items.map((item) => ({
+      nombre: item.producto.nombre,
+      cantidad: item.cantidad,
+      precio: item.producto.productosXTam?.[0]?.precio || 0,
+      tam: item.producto.productosXTam?.[0]?.tam || null,
+      categoria: {
+        id: item.producto.categoria.id,
+        nombre: item.producto.categoria.nombre,
+      },
+      guarnicion: item.guarnicion
+        ? { id: item.guarnicion.id, nombre: item.guarnicion.nombre }
+        : null,
+      adicionales:
+        item.AxPxP?.map((ad) => ({
+          id: ad.adicional.id,
+          nombre: ad.adicional.nombre,
+          precio: Number(ad.precio),
+          cantidad: ad.cantidad,
+        })) || [],
+    }));
+  }
+
+  formatPedidos(pedidos) {
+    return pedidos.map((pedido) => ({
+      id: pedido.id,
+      estado: pedido.estado,
+      precioTotal: pedido.precioTotal,
+      descripcion: pedido.descripcion,
+      createdAt: pedido.createdAt,
+      cliente: pedido.cliente,
+      envio: pedido.envio ? { precio: pedido.envio.precio } : null,
+      pago: pedido.pago
+        ? {
+          id: pedido.pago.id,
+          estado: pedido.pago.estado,
+          metodoDePago: pedido.pago.MetodosDePago?.nombre || null,
+        }
+        : null,
+      productos: this.formatProductos(pedido.productosxpedido),
+    }));
+  }
+
   async getAll(filtros = {}) {
     try {
-      const where = {};
-
-      // Filtrar por estado
-      if (filtros.estado) {
-        where.estado = filtros.estado;
-      }
-
-      // Filtrar por fecha exacta
-      if (filtros.fecha) {
-        const fechaInicio = new Date(filtros.fecha);
-        fechaInicio.setHours(0, 0, 0, 0);
-
-        const fechaFin = new Date(filtros.fecha);
-        fechaFin.setHours(23, 59, 59, 999);
-
-        where.createdAt = {
-          [Op.between]: [fechaInicio, fechaFin],
-        };
-      }
-
-      // Filtrar por rango de fechas
-      if (filtros.fechaDesde && filtros.fechaHasta) {
-        const desde = new Date(filtros.fechaDesde);
-        desde.setHours(0, 0, 0, 0);
-
-        const hasta = new Date(filtros.fechaHasta);
-        hasta.setHours(23, 59, 59, 999);
-
-        where.createdAt = {
-          [Op.between]: [desde, hasta],
-        };
-      }
-      const pedidos = await Pedido.findAll({
-        attributes: ["id", "estado", "precioTotal", "descripcion", "createdAt"],
-        include: [
-          {
-            model: Cliente,
-            as: "cliente",
-            attributes: ["id", "telefono", "direccion"],
-          },
-          {
-            model: Envio,
-            as: "envio",
-            attributes: ["precio"],
-          },
-          {
-            model: Pago,
-            as: "pago",
-            attributes: ["id", "estado"],
-            include: [
-              {
-                model: MetodosDePago,
-                as: "MetodosDePago",
-                attributes: ["id", "nombre"],
-              },
-            ],
-          },
-          {
-            model: ProductosXPedido,
-            as: "productosxpedido", // Asegúrate de tener este alias en el modelo
-            attributes: ["id", "cantidad"],
-            include: [
-              {
-                model: Producto,
-                as: "producto",
-                attributes: ["id", "nombre", "descripcion"],
-                include: [
-                  {
-                    model: Categoria,
-                    as: "categoria",
-                    attributes: ["id", "nombre"],
-                  },
-                  {
-                    model: ProductosXTam,
-                    as: "productosXTam",
-                    attributes: ["id", "precio"],
-                    include: [
-                      {
-                        model: Tam,
-                        as: "tam",
-                        attributes: ["id", "nombre"]
-                      },
-                    ],
-                  },
-                ],
-              },
-              {
-                model: Guarniciones,
-                as: "guarnicion",
-                attributes: ["id", "nombre"],
-              },
-              {
-                model: AdicionalesXProductosXPedidos,
-                as: "AxPxP",
-                attributes: ["id", "cantidad", "precio"],
-                include: [
-                  {
-                    model: Adicionales,
-                    as: "adicional",
-                    attributes: ["id", "nombre", "precio"],
-                  },
-                ],
-              },
-            ],
-          },
-        ],
-        order: [["id", "DESC"]],
-        where,
-      });
-
-      const pedidosFormateados = pedidos.map((pedido) => {
-        const productos = pedido.productosXPedido?.map((item) => ({
-          nombre: item.producto.nombre,
-          cantidad: item.cantidad,
-          precio: item.producto.productosXTam?.[0]?.precio || 0,
-          tam: item.producto.productosXTam?.[0]?.tam || null,
-          guarnicion: item.guarnicion
-            ? { id: item.guarnicion.id, nombre: item.guarnicion.nombre }
-            : null,
-          categoria: {
-            id: item.producto.categoria.id,
-            nombre: item.producto.categoria.nombre,
-          },
-          adicionales: item.AxPxP?.map((ad) => ({
-            id: ad.adicional.id,
-            nombre: ad.adicional.nombre,
-            precio: Number(ad.precio),
-            cantidad: ad.cantidad,
-          })) || [],
-        })) || [];
-
-        return {
-          id: pedido.id,
-          estado: pedido.estado,
-          precioTotal: pedido.precioTotal,
-          descripcion: pedido.descripcion,
-          createdAt: pedido.createdAt,
-          cliente: pedido.cliente,
-          envio: pedido.envio ? { precio: pedido.envio.precio } : null,
-          Pago: pedido.pago
-            ? {
-              id: pedido.pago.id,
-              estado: pedido.pago.estado,
-              metodoDePago: pedido.pago.MetodosDePago?.nombre || null,
-            }
-            : null,
-          productos: productos,
-        };
-      });
-
-      return pedidosFormateados;
+      const where = this.buildWhereFilters(filtros);
+      const pedidos = await this.fetchPedidos(where);
+      return this.formatPedidos(pedidos);
 
     } catch (error) {
-      console.error('Error al obtener pedidos:', error);
+
       throw new Error(`Error al obtener pedidos: ${error.message}`);
     }
   }
@@ -208,17 +215,9 @@ class PedidosService {
 
   async updateStatus(id, nuevoEstado) {
     try {
-      console.log("Actualizando estado del pedido:", id, "a", nuevoEstado);
       const pedido = await Pedido.findByPk(id);
 
       await pedido.update({ estado: nuevoEstado });
-
-      if (nuevoEstado === "Entregado") {
-        const pago = await Pago.findOne({ where: { idPedido: id } });
-        if (pago) {
-          await pago.update({ estado: "Pagado" });
-        }
-      }
 
       if (nuevoEstado === "Cancelado") {
         const pago = await Pago.findOne({ where: { idPedido: id } });
