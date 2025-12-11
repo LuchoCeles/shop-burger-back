@@ -4,7 +4,7 @@ class CategoriasController {
   async getCategories(req, res) {
     try {
       const categorias = await categoriasService.getCategories();
-      res.status(200).json({
+      return res.status(200).json({
         success: true,
         data: categorias,
       });
@@ -20,7 +20,7 @@ class CategoriasController {
     try {
       const categoriaData = req.body;
       const categoria = await categoriasService.createCategorie(categoriaData);
-      res.status(201).json({
+      return res.status(201).json({
         success: true,
         message: "Categoría creada exitosamente",
         data: categoria,
@@ -39,7 +39,7 @@ class CategoriasController {
       const { estado } = req.body;
 
       const categoria = await categoriasService.updateEstate(id, estado);
-      res.status(200).json({
+      return res.status(200).json({
         success: true,
         message: "Estado actualizado",
         data: {
@@ -48,7 +48,7 @@ class CategoriasController {
         },
       });
     } catch (error) {
-      res.status(500).json({
+      return res.status(500).json({
         success: false,
         message: error.message,
       });
@@ -60,7 +60,7 @@ class CategoriasController {
       const { id } = req.params;
       const { nombre } = req.body;
       const categoria = await categoriasService.updateCategorie(id, nombre);
-      res.json({
+      return res.json({
         success: true,
         message: "Categoría actualizada exitosamente",
         data: categoria,
@@ -77,12 +77,9 @@ class CategoriasController {
     try {
       const { id } = req.params;
       const categoria = await categoriasService.deleteCategory(id);
-      res.json({
-        success: true,
-        message: categoria.message,
-      });
+      if (categoria) return res.status(200).json({ success: true, message: "Categoria eliminada correctamente", });
     } catch (error) {
-      res.status(500).json({
+      return res.status(500).json({
         success: false,
         message: error.message,
       });

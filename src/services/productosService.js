@@ -70,30 +70,33 @@ class ProductosService {
   }
 
   async createProduct(productoData, tamData, imageBuffer) {
-    let imageUrl = null;
-
-    if (imageBuffer) {
-      try {
-        const uploadResult = await cloudinaryService.uploadImage(imageBuffer);
-        imageUrl = uploadResult.secure_url;
-      } catch (uploadError) {
-        throw new Error("Error al subir la imagen: " + uploadError.message);
+    try {
+      let imageUrl = null;
+      if (imageBuffer) {
+        try {
+          const uploadResult = await cloudinaryService.uploadImage(imageBuffer);
+          imageUrl = uploadResult.secure_url;
+        } catch (uploadError) {
+          throw new Error("Error al subir la imagen: " + uploadError.message);
+        }
       }
+
+      const dataForProcedure = {
+        ...productoData,
+        url_imagen: imageUrl,
+        tam: tamData,
+      };
+
+      const [result] = await sequelize.query("CALL createProducts(:data);", {
+        replacements: { data: JSON.stringify(dataForProcedure) },
+      });
+
+      const newProductId = result[0].id;
+
+      return await this.getProductById(newProductId);
+    } catch (error) {
+      throw new Error(`Error al crear el producto: ${error.message}`);
     }
-
-    const dataForProcedure = {
-      ...productoData,
-      url_imagen: imageUrl,
-      tam: tamData,
-    };
-
-    const [result] = await sequelize.query("CALL createProducts(:data);", {
-      replacements: { data: JSON.stringify(dataForProcedure) },
-    });
-
-    const newProductId = result[0].id;
-
-    return await this.getProductById(newProductId);
   }
 
   async updateState(id, nuevoEstado) {

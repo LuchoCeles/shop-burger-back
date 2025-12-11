@@ -29,7 +29,7 @@ class GuarnicionesController {
         data: guarnicion,
       });
     } catch (error) {
-      res.status(500).json({
+      return res.status(500).json({
         success: false,
         message: error.message,
       });
@@ -43,14 +43,13 @@ class GuarnicionesController {
 
       const guarnicion = await guarnicionesService.update(id, data);
 
-
       return res.status(200).json({
         success: true,
         message: "Guarnicion actualizada correctamente",
         data: guarnicion,
       });
     } catch (error) {
-      res.status(500).json({
+      return res.status(500).json({
         success: false,
         message: error.message,
       });
@@ -66,11 +65,10 @@ class GuarnicionesController {
       return res.status(200).json({
         success: true,
         message: "Guarnicion dada de baja",
-        data:guarnicion,
-
+        data: guarnicion,
       });
     } catch (error) {
-      res.status(500).json({
+      return res.status(500).json({
         success: false,
         message: error.message,
       });
