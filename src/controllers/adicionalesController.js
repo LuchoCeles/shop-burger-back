@@ -71,8 +71,11 @@ class AdicionalesController {
         });
       }
 
-      const result = await adicionalesService.delete(id);
-      if (result) res.status(200).json({ success: true, message: "Adicional eliminado correctamente" });
+      await adicionalesService.delete(id);
+      return res.status(200).json({
+        success: true,
+        message: "Adicional eliminado correctamente"
+      });
     } catch (error) {
       return res.status(500).json({
         success: false,
