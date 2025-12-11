@@ -17,31 +17,12 @@ class AdicionalesXProductosController {
     }
   }
 
-
-  async update(req, res) {
-    try {
-      const { id } = req.params;
-      const registro = await adicionalesXProductosService.update(id, req.body);
-      res.json({
-        success: true,
-        data: registro,
-      });
-    } catch (error) {
-      res.status({
-        success: false,
-        message: error.message,
-      });
-    }
-  }
-
   async delete(req, res) {
     try {
       const { id } = req.params;
       const resultado = await adicionalesXProductosService.delete(id);
-      res.json({
-        success: true,
-        data: resultado,
-      });
+
+      if (resultado) res.status(200).json({ success: true, message: "Adicional eliminado." });
     } catch (error) {
       res.status(500).json({
         success: false,
