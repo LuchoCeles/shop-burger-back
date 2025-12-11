@@ -7,6 +7,8 @@ const authAdmin = require("../middlewares/authAdmin");
 const authBanco = require("../middlewares/authBanco");
 const validateRequest = require("../middlewares/validateRequest");
 
+router.get("/", authAdmin, datosBancariosController.get);
+
 router.post("/", authAdmin, validateRequest, [
   body("id").notEmpty().withMessage("El ID es obligatorio"),
   body("banco.cuit").notEmpty().isString().withMessage("El CUIT es obligatorio"),
@@ -16,8 +18,6 @@ router.post("/", authAdmin, validateRequest, [
   body("banco.nombre").notEmpty().withMessage("El nombre es obligatorio"),
   body("banco.password").notEmpty().withMessage("La password es obligatorio"),
 ], datosBancariosController.create);
-
-router.get("/", authAdmin, datosBancariosController.get);
 
 router.post("/login", authAdmin, validateRequest, [
   body("cuit").notEmpty().withMessage("El CUIT es obligatorio"),
