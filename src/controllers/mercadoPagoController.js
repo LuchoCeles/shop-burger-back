@@ -32,12 +32,12 @@ class MercadoPagoController {
 
       if (data.status === "approved") {
         await this.paymentSuccess(id, io);
-        return res.sendStatus(200).json({ success: true, message: "Pago aprobado" });
+        return res.status(200).json({ success: true, message: "Pago aprobado" });
       }
 
       if (data.status === "rejected") {
         await this.paymentRejected(id, io);
-        return res.sendStatus(401).json({ success: false, message: "Pago rechazado" });
+        return res.status(401).json({ success: false, message: "Pago rechazado" });
       }
     } catch (error) {
       throw new Error(`Error al procesar pago: ${error.message}`);
@@ -51,7 +51,7 @@ class MercadoPagoController {
         id,
         message: "Pago aprobado",
       });
-      return res.sendStatus(200).json({ success: true, message: "Pago aprobado" });
+      return res.status(200).json({ success: true, message: "Pago aprobado" });
     } catch (error) {
       return res.status(500).json({ message: error.message, success: false });
     }
@@ -64,7 +64,7 @@ class MercadoPagoController {
         id,
         message: "Pago rechazado",
       });
-      return res.sendStatus(401).json({ success: false, message: "Pago rechazado" });
+      return res.status(401).json({ success: false, message: "Pago rechazado" });
     } catch (error) {
       return res.status(500).json({ message: error.message, success: false });
     }
@@ -73,7 +73,7 @@ class MercadoPagoController {
   async updateOrderByMp(id, estado) {
     try {
       await pagosService.updateMp(id, estado);
-      return res.sendStatus(200).json({ success: true, message: "Pago actualizado" });
+      return res.status(200).json({ success: true, message: "Pago actualizado" });
     } catch (error) {
       return res.status(500).json({ message: error.message, success: false });
     }
@@ -83,7 +83,7 @@ class MercadoPagoController {
     try {
       const pedido = await pedidoService.cancel(id);
       await pagosService.updateMp(id, estado);
-      return res.sendStatus(200).json({ success: true, message: "Pago Cancelado", data: pedido });
+      return res.status(200).json({ success: true, message: "Pago Cancelado", data: pedido });
     } catch (error) {
       return res.status(500).json({ message: error.message, success: false });
     }
