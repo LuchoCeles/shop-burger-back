@@ -224,16 +224,17 @@ class PedidosService {
           await pago.update({ estado: "Cancelado" }, { transaction });
         }
       }
-
+      
+      await transaction.commit();
+      
       const rsp = await Pedido.findByPk(id, {
         include: [
           { model: Cliente, as: "cliente" },
           { model: Producto, as: "productos" },
           { model: Pago, as: "pago" },
-        ],
+        ]
       });
 
-      await transaction.commit();
 
       return rsp;
     } catch (error) {

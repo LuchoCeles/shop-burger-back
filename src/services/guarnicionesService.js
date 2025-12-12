@@ -30,33 +30,23 @@ class GuarnicionesService {
     }
   }
   async update(id, data) {
-    const transaction = await sequelize.transaction();
-    try {
-      const { tamId } = data;
+  const transaction = await sequelize.transaction();
+  try {
+    const guarnicion = await Guarniciones.findByPk(id, { transaction });
 
-      const guarnicion = await Guarniciones.findByPk(id);
+    guarnicion.nombre = data.nombre;
+    guarnicion.stock = data.stock;
 
-      guarnicion.nombre = data.nombre;
-      guarnicion.stock = data.stock;
-      await guarnicion.save({ transaction });
+    await guarnicion.save({ transaction });
 
-      if (tamId && Array.isArray(tamId)) await guarnicion.setTam(tamId);
-
-      const guarnicionActualizada = await Guarniciones.findByPk(id, {
-        include: {
-          model: Tam,
-          as: 'tam',
-          through: { attributes: [] }
-        }
-      });
-
-      await transaction.commit();
-      return guarnicionActualizada;
-    } catch (error) {
-      await transaction.rollback();
-      throw new Error(`Error al modificar la guarnición: ${error.message}`);
-    }
+    await transaction.commit();
+    return guarnicion;
+  } catch (error) {
+    await transaction.rollback();
+    throw new Error(`Error al modificar la guarnición: ${error.message}`);
   }
+}
+
 
   async updateEstado(id) {
     const transaction = await sequelize.transaction();
