@@ -67,36 +67,30 @@ class DiasService {
   }
 
   async rangoExisteEnDia(idDia, rango) {
-  try {
-    // Construir el where correctamente
-    const whereCondition = {
-      horarioApertura: rango.horarioApertura,
-      horarioCierre: rango.horarioCierre,
-    };
+  // Construir el where correctamente
+  const whereCondition = {
+    horarioApertura: rango.horarioApertura,
+    horarioCierre: rango.horarioCierre,
+  };
 
-    // Si es update, ignorar su propio ID
-    if (rango.idHorario) {
-      whereCondition.id = { [Op.ne]: rango.idHorario };
-    }
-
-    return await Horarios.findOne({
-      where: whereCondition,
-      include: [
-        {
-          model: HorariosXDias,
-          as: "horariosxdias",
-          where: {
-            idDia,
-          },
-          required: true, // Forzar INNER JOIN
-        },
-      ],
-    });
-  } catch (error) {
-    console.error('Error específico en findOne:', error.message);
-    console.error('Stack completo:', error.stack);
-    throw error;
+  // Si es update, ignorar su propio ID
+  if (rango.idHorario) {
+    whereCondition.id = { [Op.ne]: rango.idHorario };
   }
+
+  return await Horarios.findOne({
+    where: whereCondition,
+    include: [
+      {
+        model: HorariosXDias,
+        as: "horariosxdias",
+        where: {
+          idDia,
+        },
+        required:true
+      },
+    ],
+  });
 }
 
   async update(idDia, rangos) {

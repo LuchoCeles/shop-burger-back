@@ -1,74 +1,66 @@
-const { Dias, Horarios } = require("../models");
-const { Op } = require("sequelize");
+const diasService = require("../services/diasService");
 
-async function validateHour(req, res, next) {
+module.exports = async function validateHour(req, res, next) {
   try {
-    // Obtener el día actual (0 = Domingo, 1 = Lunes, ..., 6 = Sábado)
-    const ahora = new Date();
-    const diaActual = ahora.getDay();
-    
-    // Convertir a formato de tu BD (si usas 1 = Lunes, ..., 7 = Domingo)
-    const idDia = diaActual === 0 ? 7 : diaActual;
+    // Obtener días y horarios desde tu servicio
+    const dias = await diasService.getAll();
 
-    // Obtener el día con sus horarios
-    const dia = await Dias.findByPk(idDia, {
-      include: [
-        {
-          association: "horarios",
-          where: { estado: 1 }, // Solo horarios activos
-          required: false,
-        },
-      ],
-    });
+    const now = new Date();
+    const currentTime = now.toTimeString().split(" ")[0]; // HH:MM:SS
+    const currentDay = now.getDay(); // 0 = Domingo ... 6 = Sábado
 
-    // Verificar si el día existe y está activo
-    if (!dia || dia.estado === 0) {
-      return res.status(400).json({ 
-        message: "El local está cerrado hoy",
-        success: false 
+    const diaBD = currentDay === 0 ? 7 : currentDay;
+
+    const diaActual = dias.find((d) => d.id === diaBD);
+
+    // Si el día está apagado → cerrado
+    if (!diaActual || diaActual.estado !== 1) {
+      return res.status(403).json({
+        success: false,
+        message: "Hoy el negocio está cerrado",
       });
     }
 
-    // Verificar si hay horarios configurados
-    if (!dia.horarios || dia.horarios.length === 0) {
-      return res.status(400).json({ 
+    // Filtrar horarios activos
+    const horarios = diaActual.horarios.filter((h) => h.estado === 1);
+
+    if (horarios.length === 0) {
+      return res.status(403).json({
+        success: false,
         message: "No hay horarios configurados para hoy",
-        success: false 
       });
     }
 
-    // Obtener hora actual en formato HH:MM:SS
-    const horaActual = ahora.toTimeString().split(' ')[0]; // "15:30:45"
+    // Comprobar si la hora actual cae en alguno de los rangos válidos
+    const abierto = horarios.some((h) => {
+      const apertura = h.horarioApertura;
+      const cierre = h.horarioCierre;
 
-    // Verificar si la hora actual está dentro de algún rango
-    const estaAbierto = dia.horarios.some(horario => {
-      return horaActual >= horario.horarioApertura && 
-             horaActual <= horario.horarioCierre;
+      //Soporte para horarios nocturnos (Ej: 20:00 → 03:00)
+      if (apertura > cierre) {
+        return (
+          currentTime >= apertura || currentTime <= cierre
+        );
+      }
+
+      // Normal
+      return currentTime >= apertura && currentTime <= cierre;
     });
 
-    if (!estaAbierto) {
-      // Opcional: devolver los horarios disponibles
-      const horariosDisponibles = dia.horarios.map(h => 
-        `${h.horarioApertura.slice(0, 5)} - ${h.horarioCierre.slice(0, 5)}`
-      );
-
-      return res.status(400).json({ 
-        message: "El local está cerrado en este momento",
-        horarios: horariosDisponibles,
-        success: false 
+    if (!abierto) {
+      return res.status(403).json({
+        success: false,
+        message: "El negocio está cerrado en este horario",
       });
     }
 
-    // Si está abierto, continuar con la siguiente función
+    // Todo ok → continuar
     next();
-
   } catch (error) {
-    console.error("Error al verificar el horario:", error);
-    return res.status(500).json({ 
-      message: "Error al verificar el horario",
-      success: false 
+    console.error("Error en validateHour:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error interno validando el horario",
     });
   }
-}
-
-module.exports = validateHour;
+};
