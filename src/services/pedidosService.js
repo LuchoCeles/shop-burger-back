@@ -23,7 +23,8 @@ class PedidosService {
       const pedido = await sequelize.query("CALL createPedido(:datos)", {
         replacements: {
           datos: JSON.stringify(datosPedido),
-        }, transaction
+        },
+        transaction,
       });
       await transaction.commit();
       return pedido[0];
@@ -179,10 +180,10 @@ class PedidosService {
       envio: pedido.envio ? { precio: pedido.envio.precio } : null,
       pago: pedido.pago
         ? {
-          id: pedido.pago.id,
-          estado: pedido.pago.estado,
-          metodoDePago: pedido.pago.MetodosDePago?.nombre || null,
-        }
+            id: pedido.pago.id,
+            estado: pedido.pago.estado,
+            metodoDePago: pedido.pago.MetodosDePago?.nombre || null,
+          }
         : null,
       productos: this.formatProductos(pedido.productosxpedido),
     }));
@@ -207,11 +208,16 @@ class PedidosService {
 
       return pedido;
     } catch (error) {
-      throw new Error(`Error al obtener el precio del pedido: ${error.message}`);
+      throw new Error(
+        `Error al obtener el precio del pedido: ${error.message}`
+      );
     }
   }
 
   async updateStatus(id, nuevoEstado) {
+    if (nuevoEstado === "Cancelado") {
+      return await this.cancel(id);
+    }
     const transaction = await sequelize.transaction();
     try {
       const pedido = await Pedido.findByPk(id);
@@ -224,17 +230,16 @@ class PedidosService {
           await pago.update({ estado: "Cancelado" }, { transaction });
         }
       }
-      
+
       await transaction.commit();
-      
+
       const rsp = await Pedido.findByPk(id, {
         include: [
           { model: Cliente, as: "cliente" },
           { model: Producto, as: "productos" },
           { model: Pago, as: "pago" },
-        ]
+        ],
       });
-
 
       return rsp;
     } catch (error) {
@@ -326,18 +331,30 @@ class PedidosService {
 
       if (!pedido) throw new Error("Pedido no encontrado");
 
-      if (pedido.estado === "Cancelado") throw new Error("No se puede cambiar un pedido cancelado");
+      if (pedido.estado === "Cancelado")
+        throw new Error("No se puede cambiar un pedido cancelado");
 
-      if (pedido.estado === "Entregado") throw new Error("No se puede cancelar un pedido entregado");
+      if (pedido.estado === "Entregado")
+        throw new Error("No se puede cancelar un pedido entregado");
 
       await this.returnStock(pedido.productosxpedido, transaction);
 
       await pedido.update({ estado: "Cancelado" }, { transaction });
+      const pago = await Pago.findOne({
+        where: { idPedido: id },
+        transaction,
+      });
+
+      if (pago) {
+        await pago.update({ estado: "Cancelado" }, { transaction });
+      }
 
       await transaction.commit();
     } catch (error) {
       await transaction.rollback();
-      throw new Error(`Error durante la transacción de cancelación: ${error.message}`);
+      throw new Error(
+        `Error durante la transacción de cancelación: ${error.message}`
+      );
     }
 
     try {
