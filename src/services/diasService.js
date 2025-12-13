@@ -1,6 +1,7 @@
 const { Dias, Horarios, HorariosXDias } = require("../models");
 const { Op } = require("sequelize");
 const { sequelize } = require("../config/db");
+const { clearDiasCache } = require("../middlewares/validateHour");
 
 class DiasService {
   async getAll() {
@@ -52,6 +53,7 @@ class DiasService {
         transaction,
       }
     );
+    clearDiasCache();
   }
 
   async obtenerDiaConHorarios(idDia) {

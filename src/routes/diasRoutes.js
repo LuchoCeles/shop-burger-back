@@ -5,10 +5,11 @@ const DiasController = require('../controllers/diasController');
 const validateRequest = require('../middlewares/validateRequest');
 const authAdmin = require('../middlewares/authAdmin');
 const { body } = require('express-validator');
+const validateHour = require('../middlewares/validateHour');
 
 router.get('/', DiasController.getAll);
 
-router.patch('/:id', authAdmin, validateRequest, [
+router.patch('/:id', authAdmin, validateRequest,[
   body("rangos").isArray({ min: 1 }).withMessage("Debe proporcionar al menos un rango de horario"),
 ], DiasController.update);
 

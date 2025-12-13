@@ -1,9 +1,11 @@
 const  diasService  = require("../services/diasService")
+const { getDiasCached } = require("../cache/diasCache")
+
 
 class DiasController {
   async getAll(req, res) {
     try {
-      const dias = await diasService.getAll();     
+      const dias = await getDiasCached();
 
       const diasFormateados = dias.map(dia => ({
         id: dia.id,
@@ -11,21 +13,22 @@ class DiasController {
         estado: dia.estado,
         rangos: dia.horarios.map(horario => ({
           id: horario.id,
-          inicio: horario.horarioApertura.substring(0,5),
-          fin: horario.horarioCierre.substring(0,5),
+          inicio: horario.horarioApertura.substring(0, 5),
+          fin: horario.horarioCierre.substring(0, 5),
           estado: horario.estado
         }))
       }));
 
       return res.status(200).json({
         success: true,
-        data: diasFormateados, // Retorna el array completo
+        data: diasFormateados,
         message: "Días obtenidos correctamente",
       });
     } catch (error) {
-      return res.status(500).json({ 
-        message: error.message, 
-        success: false 
+      console.error("Error getAll dias:", error);
+      return res.status(500).json({
+        success: false,
+        message: error.message,
       });
     }
   }
