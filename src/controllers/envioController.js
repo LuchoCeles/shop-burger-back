@@ -1,3 +1,5 @@
+const envioService = require("../services/envioService");
+
 class EnvioController {
   async create(req, res) {
     try {
@@ -65,21 +67,6 @@ class EnvioController {
       });
     }
   }
-  async getById(req, res) {
-    try {
-      const { id } = req.params;
-      const envio = await envioService.getById(id);
-      return res.status(200).json({
-        success: true,
-        data: envio,
-      });
-    } catch (error) {
-      return res.status(500).json({
-        success: false,
-        message: error.message,
-      });
-    }
-  }
 }
 
-module.exports = EnvioController;
+module.exports = new EnvioController();

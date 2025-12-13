@@ -57,15 +57,6 @@ class EnvioService {
       throw new Error(`Error al actualizar el envio: ${error.message}`);
     }
   }
-  
-  async getById(id) {
-    try {
-      const envio = await Envio.findByPk(id);
-      return envio;
-    } catch (error) {
-      throw new Error(`Error al obtener el envio: ${error.message}`);
-    }
-  }
 }
 
-module.exports = EnvioService;
+module.exports = new EnvioService();

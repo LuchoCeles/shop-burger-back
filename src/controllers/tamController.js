@@ -1,7 +1,7 @@
 const tamService = require("../services/tamService");
 
 class TamController {
-  get = async (req, res) => {
+  async get(req, res) {
     try {
       const tam = await tamService.get();
       return res.status(200).json({
@@ -17,7 +17,7 @@ class TamController {
     }
   }
 
-  create = async (req, res) => {
+  async create(req, res) {
     try {
       const { data } = req.body;
 
@@ -35,7 +35,7 @@ class TamController {
     }
   }
 
-  updateEstado = async (req, res) => {
+  async updateEstado(req, res) {
     try {
       const { id } = req.params;
 
@@ -54,7 +54,7 @@ class TamController {
     }
   }
 
-  updateTam = async (req, res) => {
+  async updateTam(req, res) {
     try {
       const { id } = req.params;
       const { data } = req.body;
@@ -72,7 +72,7 @@ class TamController {
     }
   }
 
-  delete = async (req, res) => {
+  async delete(req, res) {
     try {
       const { id } = req.params;
       await tamService.delete(id);

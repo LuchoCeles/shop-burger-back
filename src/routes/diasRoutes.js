@@ -2,8 +2,8 @@
 const express = require('express');
 const router = express.Router();
 const DiasController = require('../controllers/diasController');
-const validateRequest = require('../middlewares/validateRequest');
 const authAdmin = require('../middlewares/authAdmin');
+const validateRequest = require('../middlewares/validateRequest');
 const { body } = require('express-validator');
 
 router.get('/', DiasController.getAll);
