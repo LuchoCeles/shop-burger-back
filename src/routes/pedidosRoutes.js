@@ -7,7 +7,7 @@ const pedidosController = require('../controllers/pedidosController');
 const validateHour = require('../middlewares/validateHour');
 
 // Crear un nuevo pedido con productos
-router.post('/', validateRequest, [
+router.post('/', validateRequest,validateHour, [
   body('cliente').notEmpty().withMessage('cliente es requerido'),
   body('descripcion').optional().isString().withMessage('descripcion debe ser una cadena'),
   body('productos').isArray({ min: 1 }).notEmpty().withMessage('productos debe ser un array con al menos un elemento'),
