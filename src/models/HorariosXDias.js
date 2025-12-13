@@ -28,7 +28,7 @@ module.exports = (sequelize, DataTypes) => {
       },
     },
     {
-      tableName: 'HorariosXDias', 
+      tableName: 'horariosXDias', 
     }
   );
 

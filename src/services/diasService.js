@@ -1,4 +1,5 @@
 const { Dias, Horarios, HorariosXDias } = require("../models");
+const { Op } = require("sequelize");
 const { sequelize } = require("../config/db");
 
 class DiasService {
@@ -66,38 +67,42 @@ class DiasService {
   }
 
   async rangoExisteEnDia(idDia, rango) {
-    return await Horarios.findOne({
-      where: {
-        horarioApertura: rango.horarioApertura,
-        horarioCierre: rango.horarioCierre,
-      },
-      include: [
-        {
-          model: HorariosXDias,
-          as: "horariosxdias",
-          where: {
-            idDia,
-          },
-        },
-      ],
-      // Si es update, aseguramos que ignore su propio ID
-      ...(rango.idHorario && {
-        where: {
-          id: { [Op.ne]: rango.idHorario },
-          horarioApertura: rango.horarioApertura,
-          horarioCierre: rango.horarioCierre,
-        },
-      }),
-    });
+  // Construir el where correctamente
+  const whereCondition = {
+    horarioApertura: rango.horarioApertura,
+    horarioCierre: rango.horarioCierre,
+  };
+
+  // Si es update, ignorar su propio ID
+  if (rango.idHorario) {
+    whereCondition.id = { [Op.ne]: rango.idHorario };
   }
+
+  return await Horarios.findOne({
+    where: whereCondition,
+    include: [
+      {
+        model: HorariosXDias,
+        as: "horariosxdias",
+        where: {
+          idDia,
+        },
+        required:true
+      },
+    ],
+  });
+}
 
   async update(idDia, rangos) {
     const transaction = await sequelize.transaction();
     try {
       for (const rango of rangos) {
         // Validación de duplicados
-        const existe = await this.rangoExisteEnDia(idDia, rango);
-        if (existe) throw new Error(`El rango ${rango.horarioApertura} - ${rango.horarioCierre} ya existe en este día`);
+        const existe = await this.rangoExisteEnDia(idDia, rango, transaction);
+        if (existe)
+          throw new Error(
+            `El rango ${rango.horarioApertura} - ${rango.horarioCierre} ya existe en este día`
+          );
 
         if (!rango.idHorario) {
           await this.crearHorario(idDia, rango, transaction);
@@ -108,10 +113,11 @@ class DiasService {
 
       await transaction.commit();
       return this.obtenerDiaConHorarios(idDia);
-
     } catch (error) {
       await transaction.rollback();
-      throw new Error(`Error al actualizar los horarios del día: ${error.message}`);
+      throw new Error(
+        `Error al actualizar los horarios del día: ${error.message}`
+      );
     }
   }
 }
