@@ -31,6 +31,6 @@ router.use('/admin/guarnicionesxproducto', guarnicionesXProductoRoutes);
 router.use('/api/tam', tamRoutes);
 router.use('/admin/pago', pagosRoutes);
 router.use('/api/dias', diasRoutes);
-router.use('/api/envio', enviosRoutes);
+router.use('/api/envios', enviosRoutes);
 
 module.exports = router;
