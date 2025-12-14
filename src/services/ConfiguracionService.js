@@ -3,8 +3,9 @@ const {
   OtrasPaginas,
   Direcciones,
   Telefonos,
-} = require("../models"); // Un Servicio que integra los 4 Models
-const { sequelize } = require("../config/db"); // Sequelize para transacciones
+} = require("../models"); // Modelos Sequelize
+const { sequelize } = require("../config/db");
+const cloudinaryService = require("./cloudinaryService");
 
 class ConfiguracionService {
   /**
@@ -23,7 +24,7 @@ class ConfiguracionService {
       });
 
       if (!configuracion) {
-        // inicializar si no existe, o lanzar un error
+        // Podrías inicializarla si no existe, o lanzar un error
         throw new Error("Registro de Configuración Principal no encontrado (ID 1).");
       }
 
@@ -58,15 +59,54 @@ class ConfiguracionService {
     }
   }
 
+  /**
+   * Sube una nueva imagen a Cloudinary, eliminando la versión anterior (logo o favicon).
+   * @param {Buffer} imageBuffer - Buffer del archivo subido.
+   * @param {'url_logo' | 'favicon'} fileType - Campo de la base de datos a actualizar.
+   * @returns {Promise<string>} La URL segura de la nueva imagen.
+   */
+  async updateImage(imageBuffer, fileType) {
+    try {
+      const configuracion = await ConfiguracionPagina.findByPk(1);
+      if (!configuracion) {
+        throw new Error("Configuración principal no existe.");
+      }
+      
+      const antiguaUrl = configuracion[fileType];
+
+      // 1. Eliminar imagen antigua de Cloudinary
+      if (antiguaUrl) {
+        try {
+          const publicId = cloudinaryService.getPublicIdFromUrl(antiguaUrl);
+          if (publicId) await cloudinaryService.deleteImage(publicId);
+        } catch (deleteError) {
+          // Si la eliminación falla, solo logueamos, no detenemos la subida
+          console.warn(`Error al eliminar imagen antigua de Cloudinary (${fileType}): ${deleteError.message}`);
+        }
+      }
+
+      // 2. Subir la nueva imagen
+      const uploadResult = await cloudinaryService.uploadImage(imageBuffer, {
+        folder: `configuracion/${fileType}`, // Carpeta específica en Cloudinary
+      });
+
+      // 3. Devolver la nueva URL para la actualización en DB
+      return uploadResult.secure_url;
+
+    } catch (error) {
+      // Re-lanzar un error específico si algo sale mal con la gestión de archivos
+      throw new Error(`Error al gestionar la imagen (${fileType}): ${error.message}`);
+    }
+  }
+
   // --- MÉTODOS PARA GESTIONAR SUB-RECURSOS (UNO A MUCHOS) ---
 
   /**
    * Actualiza completamente los enlaces de OtrasPaginas (destruye y recrea).
-   * Útil para sincronizar un array completo de enlaces desde un formulario.
    * @param {Array<Object>} paginasData - Array de objetos { nombre, url }.
    */
   async updateOtrasPaginas(paginasData) {
-    const idConfiguracion = 1; // Siempre apunta a la configuración principal
+    const idConfiguracion = 1; 
     const transaction = await sequelize.transaction();
     try {
       // 1. Eliminar todos los enlaces existentes para la configuración
