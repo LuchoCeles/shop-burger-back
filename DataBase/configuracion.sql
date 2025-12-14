@@ -1,15 +1,14 @@
 -- Usar la base de datos
 USE shopdb;
 
--- Eliminar tablas si existen (para facilitar la re-ejecución)
+-- Eliminar tablas si existen (en orden inverso debido a las claves foráneas)
 DROP TABLE IF EXISTS Telefonos;
 DROP TABLE IF EXISTS Direcciones;
 DROP TABLE IF EXISTS OtrasPaginas;
 DROP TABLE IF EXISTS ConfiguracionPagina;
 
----
--- 1. TABLA: ConfiguracionPagina
--- ---
+# 1. TABLA: ConfiguracionPagina
+# Esta tabla guarda la configuración de página principal (SEO, contacto, estados).
 CREATE TABLE ConfiguracionPagina (
     id INT PRIMARY KEY AUTO_INCREMENT,
     metaTitulo VARCHAR(255),
@@ -26,7 +25,7 @@ CREATE TABLE ConfiguracionPagina (
     updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
--- Inserción de datos predeterminados en ConfiguracionPagina
+# Inserción de datos predeterminados en ConfiguracionPagina
 INSERT INTO ConfiguracionPagina (
     metaTitulo,
     nombreLocal,
@@ -44,7 +43,7 @@ INSERT INTO ConfiguracionPagina (
     NULL,
     NULL,
     'Productos Premium',
-    'https://wa.me/5492231112233', -- Controlar que sean siempre MeLinks de wsp
+    'https://wa.me/5492231112233',
     'alimentosgourmet@desarrollo.com',
     '© 2025 Gourmet. Todos los derechos reservados.',
     0,
@@ -52,9 +51,8 @@ INSERT INTO ConfiguracionPagina (
 );
 
 
----
--- 2. TABLA: OtrasPaginas
--- ---
+# 2. TABLA: OtrasPaginas
+# Guarda las redes sociales y otros enlaces externos de contacto.
 CREATE TABLE OtrasPaginas (
     id INT PRIMARY KEY AUTO_INCREMENT,
     idConfiguracionPagina INT NOT NULL,
@@ -66,33 +64,31 @@ CREATE TABLE OtrasPaginas (
     FOREIGN KEY (idConfiguracionPagina) REFERENCES ConfiguracionPagina(id)
 );
 
--- Inserción de datos predeterminados en OtrasPaginas
+# Inserción de datos predeterminados en OtrasPaginas
 INSERT INTO OtrasPaginas (idConfiguracionPagina, nombre, url) VALUES
-(1, 'Facebook', 'https://www.facebook.com/'),
-(1, 'Instagram', 'https://www.instagram.com/');
+(1, 'Facebook', 'https://www.facebook.com/Gourmet'),
+(1, 'Instagram', 'https://www.instagram.com/Gourmet');
 
 
----
--- 3. TABLA: Direcciones
--- ---
+# 3. TABLA: Direcciones
+# Guarda las direcciones de las sucursales.
 CREATE TABLE Direcciones (
     id INT PRIMARY KEY AUTO_INCREMENT,
     idConfiguracionPagina INT NOT NULL,
-    direccion VARCHAR(255) UNIQUE, -- No se puede repetir la misma direccion
+    direccion VARCHAR(255) UNIQUE, 
     estado TINYINT NOT NULL DEFAULT 1,
     createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (idConfiguracionPagina) REFERENCES ConfiguracionPagina(id)
 );
 
--- Inserción de datos predeterminados en Direcciones
+# Inserción de datos predeterminados en Direcciones
 INSERT INTO Direcciones (idConfiguracionPagina, direccion) VALUES
 (1, 'Calle del Sabor 550, C.P. 7600, Mar del Plata');
 
 
----
--- 4. TABLA: Telefonos
--- ---
+# 4. TABLA: Telefonos
+# Guarda los números de contacto adicionales.
 CREATE TABLE Telefonos (
     id INT PRIMARY KEY AUTO_INCREMENT,
     idConfiguracionPagina INT NOT NULL,
@@ -103,7 +99,7 @@ CREATE TABLE Telefonos (
     FOREIGN KEY (idConfiguracionPagina) REFERENCES ConfiguracionPagina(id)
 );
 
--- Inserción de datos predeterminados en Telefonos
+# Inserción de datos predeterminados en Telefonos
 INSERT INTO Telefonos (idConfiguracionPagina, telefono) VALUES
 (1, '+54 223 475-8000'),
 (1, '+54 9 223 605-9000');

@@ -3,7 +3,9 @@ const { body } = require('express-validator');
 const ConfiguracionController = require('../controllers/configuracionesController'); 
 const authAdmin = require('../middlewares/authAdmin'); 
 const validateRequest = require('../middlewares/validateRequest'); 
-const handleUpload = require('../middlewares/multerMiddleware');
+
+// Importación del NUEVO middleware (reemplaza la importación anterior de handleUpload/uploadInstance)
+const configuracionUpload = require('../middlewares/configuracionMulter'); 
 
 const router = express.Router();
 
@@ -48,32 +50,26 @@ router.get('/', ConfiguracionController.getConfiguracion);
 
 
 // 2. CONFIGURACIÓN (Ruta Privada, requiere AuthAdmin)
-// handleUpload.fields() para aceptar logo y favicon en la misma petición.
 router.put('/', 
     authAdmin, 
-    // Multer espera 0 o 1 archivo en el campo 'logoFile' y 0 o 1 archivo en 'faviconFile'
-    handleUpload.fields([
-        { name: 'logoFile', maxCount: 1 },
-        { name: 'faviconFile', maxCount: 1 }
+    // Usamos el nuevo middleware configuracionUpload
+    configuracionUpload.fields([ 
+      { name: 'logoFile', maxCount: 1 },
+      { name: 'faviconFile', maxCount: 1 }
     ]), 
-    validateRequest, 
+    
+    // Corregimos el error [object Object] agrupando validaciones y validador final
     [
         // --- Validaciones de Campos Principales (ConfiguracionPagina) ---
         body('metaTitulo').optional().trim().isLength({ max: 70 }).withMessage('El título es muy largo.'),
         body('nombreLocal').optional().trim().isLength({ max: 255 }).withMessage('El nombre es muy largo.'),
         
-        // **IMPORTANTE:** Cuando se usa Multer, el campo puede llegar vacío si no se sube un archivo.
-        // Solo validamos la URL si el campo no es vacío y no hay archivo. Si hay archivo, 
-        // la URL será procesada por el Controller/Service.
         body('url_logo')
             .optional({ checkFalsy: true })
             .custom((value, { req }) => {
-                // Si hay un archivo, omitir la validación de URL en el body, 
-                // ya que la nueva URL vendrá de Cloudinary.
                 if (req.files && req.files.logoFile) {
                     return true;
                 }
-                // Si NO hay archivo, el valor debe ser una URL válida si se envía.
                 if (value && !/(http|https):\/\/[a-zA-Z0-9-.]+\.[a-zA-Z]{2,}(\/\S*)?/.test(value)) {
                     throw new Error('La URL del logo no es válida.');
                 }
@@ -115,7 +111,9 @@ router.put('/',
         validateSubResourceArray('telefonos', [
             { key: 'telefono', type: 'string', message: 'Falta el número de teléfono.' }
         ]),
-
+        
+        // validateRequest DEBE ser el último elemento del array de validaciones.
+        validateRequest 
     ], 
     ConfiguracionController.updateConfiguracion
 );
