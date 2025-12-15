@@ -1,74 +1,50 @@
-const configuracionService = require("../services/ConfiguracionService"); 
+const configuracionService = require("../services/ConfiguracionService");
 
 class ConfiguracionController {
-  /**
-   * Obtiene toda la configuración de la página (principal, enlaces, direcciones, teléfonos)
-   * Asume que el ID de la configuración siempre es 1.
-   * RUTA: GET /api/configuracion
-   */
+
   async getConfiguracion(req, res) {
+    // Get simple devuelve todo
     try {
       const configuracion = await configuracionService.getConfiguracionCompleta();
-
-      res.status(200).json({
-        success: true,
-        data: configuracion,
-      });
+      res.status(200).json({ success: true, data: configuracion });
     } catch (error) {
-      res.status(500).json({
-        success: false,
-        message: error.message,
-      });
+      res.status(500).json({ success: false, message: error.message });
     }
   }
 
-  /**
-   * Actualiza la configuración de la página.
-   * Recibe la configuración principal, arrays de sub-recursos y opcionalmente un archivo.
-   * RUTA: PUT /api/configuracion
-   */
   async updateConfiguracion(req, res) {
     try {
+      // 1. Extraer campos de texto
       const {
-        metaTitulo,
-        nombreLocal,
-        url_logo, // Se mantiene en body, pero solo se usa si NO hay file
-        favicon, // Se mantiene en body, pero solo se usa si NO hay file
-        slogan,
-        whatsapp,
-        email,
-        copyright,
-        modoMantenimiento,
-        estado,
-        fileType, // Campo nuevo para indicar si es 'url_logo' o 'favicon'
-        // Sub-recursos que vienen como strings JSON o arrays
+        metaTitulo, nombreLocal, slogan, whatsapp, email, copyright,
+        modoMantenimiento, estado,
+        url_logo, favicon, // URLs manuales si no se sube archivo
         otrasPaginas: otrasPaginasJson,
         direcciones: direccionesJson,
         telefonos: telefonosJson,
       } = req.body;
 
-      const fileBuffer = req.file ? req.file.buffer : null;
-      let urlActualizacion = {}; // Objeto para guardar la nueva URL si se sube un archivo
+      // 2. Manejo de Archivos (req.files con PLURAL porque usamos upload.fields)
+      const files = req.files || {};
+      let urlActualizacion = {}; 
 
-      // --- 1. Subida y Gestión de Archivos ---
-      if (fileBuffer) {
-        // La validación de fileType ('url_logo' o 'favicon') debe hacerse en el middleware/validator
-        if (!fileType || (fileType !== 'url_logo' && fileType !== 'favicon')) {
-          return res.status(400).json({
-            success: false,
-            message: "El archivo subido debe especificar si es 'url_logo' o 'favicon' en el campo 'fileType'."
-          });
-        }
-
-        // El servicio se encarga de subir la imagen, eliminar la antigua, y devolver la nueva URL
-        const newUrl = await configuracionService.updateImage(fileBuffer, fileType);
-        
-        // Asignar la nueva URL al campo correspondiente
-        urlActualizacion[fileType] = newUrl;
+      // --- LOGO ---
+      if (files['logoFile'] && files['logoFile'].length > 0) {
+        const logoBuffer = files['logoFile'][0].buffer;
+        // Llamamos al servicio 'url_logo'
+        const newLogoUrl = await configuracionService.updateImage(logoBuffer, 'url_logo');
+        urlActualizacion['url_logo'] = newLogoUrl;
       }
 
-      // 2. Datos para la tabla principal (ConfiguracionPagina)
-      // Usamos el body (para campos de texto) y sobrescribimos con la URL subida (si existe)
+      // --- FAVICON ---
+      if (files['faviconFile'] && files['faviconFile'].length > 0) {
+        const faviconBuffer = files['faviconFile'][0].buffer;
+        // Llamamos al servicio especificando que es 'favicon'
+        const newFaviconUrl = await configuracionService.updateImage(faviconBuffer, 'favicon');
+        urlActualizacion['favicon'] = newFaviconUrl;
+      }
+
+      // 3. Preparar objeto principal
       const dataPrincipal = {
         metaTitulo,
         nombreLocal,
@@ -79,45 +55,36 @@ class ConfiguracionController {
         modoMantenimiento: modoMantenimiento !== undefined ? (modoMantenimiento === "true" || modoMantenimiento === true) : undefined,
         estado: estado !== undefined ? (estado === "true" || estado === true) : undefined,
         
-        // Se incluyen los campos originales por si se están actualizando a NULL o a una URL manual.
-        // Pero si se subió un archivo, `urlActualizacion` lo sobrescribe.
-        url_logo,
+        // Asignamos lo que venga del body (texto)
+        url_logo, 
         favicon,
 
-        // Sobrescribir los campos con la URL de Cloudinary si hubo subida
+        // Sobrescribimos con las URLs nuevas si hubo subida de archivos
         ...urlActualizacion, 
       };
 
-      // Limpieza final de undefined/nulls
+      // Limpieza de undefined
       Object.keys(dataPrincipal).forEach(
         (key) => (dataPrincipal[key] === undefined || dataPrincipal[key] === null) && delete dataPrincipal[key]
       );
-      
-      // 3. Parsear arrays de sub-recursos
-      let otrasPaginas = [];
-      let direcciones = [];
-      let telefonos = [];
 
+      // 4. Parseo de Arrays (JSON)
+      let otrasPaginas = [], direcciones = [], telefonos = [];
       try {
         if (otrasPaginasJson) otrasPaginas = JSON.parse(otrasPaginasJson);
         if (direccionesJson) direcciones = JSON.parse(direccionesJson);
         if (telefonosJson) telefonos = JSON.parse(telefonosJson);
       } catch (e) {
-        return res.status(400).json({
-          success: false,
-          message: "Error de formato: Los arrays 'otrasPaginas', 'direcciones' o 'telefonos' deben ser JSON válidos.",
-        });
+        return res.status(400).json({ success: false, message: "Error de formato JSON en arrays." });
       }
 
-      // 4. Llamar al servicio para actualizar la configuración principal (con la nueva URL si aplica)
+      // 5. Actualizaciones en BDD
       await configuracionService.updateConfiguracionPrincipal(dataPrincipal);
-
-      // 5. Llamar a los servicios para actualizar los sub-recursos
       await configuracionService.updateOtrasPaginas(otrasPaginas);
       await configuracionService.updateDirecciones(direcciones);
       await configuracionService.updateTelefonos(telefonos);
 
-      // 6. Devolver la configuración completa actualizada
+      // 6. Respuesta final
       const configuracionActualizada = await configuracionService.getConfiguracionCompleta();
 
       return res.status(200).json({
@@ -125,7 +92,9 @@ class ConfiguracionController {
         message: "Configuración actualizada exitosamente.",
         data: configuracionActualizada,
       });
+
     } catch (error) {
+      console.error(error);
       return res.status(500).json({
         success: false,
         message: `Error al actualizar la configuración: ${error.message}`,
