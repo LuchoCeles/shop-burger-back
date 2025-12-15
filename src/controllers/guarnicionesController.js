@@ -2,7 +2,7 @@ const guarnicionesService = require("../services/guarnicionesService");
 
 class GuarnicionesController {
 
-  getAll = async (req, res) => {
+  async getAll(req, res) {
     try {
       const guarniciones = await guarnicionesService.getAll();
 
@@ -18,7 +18,7 @@ class GuarnicionesController {
     }
   }
 
-  create = async (req, res) => {
+  async create(req, res) {
     try {
       const data = req.body;
       const guarnicion = await guarnicionesService.createGuarnicion(data);
@@ -36,7 +36,7 @@ class GuarnicionesController {
     }
   }
 
-  update = async (req, res) => {
+  async update(req, res) {
     try {
       const { id } = req.params;
       const data = req.body;
@@ -56,7 +56,7 @@ class GuarnicionesController {
     }
   }
 
-  updateEstado = async (req, res) => {
+  async updateEstado(req, res) {
     try {
       const { id } = req.params;
 
