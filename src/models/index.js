@@ -22,6 +22,10 @@ const Guarniciones = require('./Guarniciones');
 const Tam = require('./Tam');
 const GuarnicionesXProducto = require('./GuarnicionesXProducto');
 const ProductosXTam = require('./ProductosXTam');
+const ConfiguracionPagina = require('./ConfiguracionPagina');
+const OtrasPaginas = require('./OtrasPaginas');
+const Direcciones = require('./Direcciones');
+const Telefonos = require('./Telefonos');
 
 
 // Inicializar modelos
@@ -46,6 +50,10 @@ const models = {
   Tam: Tam(sequelize, DataTypes),
   GuarnicionesXProducto: GuarnicionesXProducto(sequelize, DataTypes),
   ProductosXTam: ProductosXTam(sequelize, DataTypes),
+  ConfiguracionPagina: ConfiguracionPagina(sequelize, DataTypes),
+  OtrasPaginas: OtrasPaginas(sequelize, DataTypes),
+  Direcciones: Direcciones(sequelize, DataTypes),
+  Telefonos: Telefonos(sequelize, DataTypes),
 };
 
 // Definir relaciones
